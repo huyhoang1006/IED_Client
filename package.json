@@ -1,0 +1,91 @@
+{
+  "name": "ied-client",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "main": "electron/main.js",
+  "scripts": {
+    "dev": "vite",
+    "preview": "vite preview",
+    "build:web": "vite build",
+    "build:app": "npm run build:web && electron-builder",
+    "start": "concurrently \"npm run dev\" \"wait-on tcp:5173 && cross-env NODE_ENV=development electron .\"",
+    "rebuild": "electron-rebuild --force",
+    "lint": "eslint src --ext .js,.vue"
+  },
+  "dependencies": {
+    "@vue-leaflet/vue-leaflet": "^0.10.1",
+    "@vue/compat": "^3.5.22",
+    "ag-grid-community": "^34.2.0",
+    "ag-grid-vue3": "^34.2.0",
+    "axios": "^1.12.2",
+    "csv-parse": "^6.1.0",
+    "element-plus": "^2.11.4",
+    "exceljs": "^4.4.0",
+    "leaflet": "^1.9.4",
+    "module-alias": "^2.2.3",
+    "plotly.js-dist-min": "^3.1.0",
+    "puppeteer": "^24.22.3",
+    "sqlite3": "^5.1.7",
+    "upath": "^2.0.1",
+    "uuid": "^13.0.0",
+    "vue": "^3.5.22",
+    "vue-loading-overlay": "^6.0.6",
+    "vue-router": "^4.5.1",
+    "vue3-plotly": "^0.0.7",
+    "vuex": "^4.1.0"
+  },
+  "devDependencies": {
+    "@babel/eslint-parser": "^7.28.4",
+    "@vitejs/plugin-vue": "^6.0.1",
+    "concurrently": "^9.2.1",
+    "cross-env": "^10.0.0",
+    "electron": "^38.2.0",
+    "electron-builder": "^26.0.12",
+    "electron-rebuild": "^3.2.9",
+    "eslint-plugin-vue": "^10.5.0",
+    "sass-embedded": "^1.93.2",
+    "vite": "^7.1.7",
+    "vite-plugin-eslint": "^1.8.1",
+    "vue-eslint-parser": "^10.2.0",
+    "wait-on": "^9.0.1"
+  },
+  "build": {
+    "appId": "com.atdigital.iedclient",
+    "productName": "AT Digital IED",
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "src/preload.js",
+      "src/**/*"
+    ],
+    "extraResources": [
+      "./database/**",
+      "./icon/**",
+      "./attachment/**",
+      "./etrc-icon/**",
+      "./template/**"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "icon/icon.ico"
+    },
+    "nsis": {
+      "guid": "ATDigitalIED",
+      "oneClick": false,
+      "include": "build/installer.nsh",
+      "installerIcon": "icon/icon.ico",
+      "uninstallerIcon": "icon/icon.ico",
+      "license": "build/license.txt",
+      "shortcutName": "ATDigital IED",
+      "perMachine": false,
+      "createDesktopShortcut": true,
+      "allowToChangeInstallationDirectory": true,
+      "uninstallDisplayName": "ATDigital IED uninstaller",
+      "allowElevation": false
+    }
+  },
+  "_moduleAliases": {
+    "@": "src"
+  }
+}
