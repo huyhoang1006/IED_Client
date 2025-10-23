@@ -124,7 +124,6 @@ export default {
                     }
                 }
                 
-                console.log("loadData called with:", { tab, index });
                 if (tab.mode === 'substation') {
                     const [dataLocation, dataPerson, dataEntity] = await Promise.all([
                         window.electronAPI.getLocationByOrganisationId(tab.parentId),
@@ -171,7 +170,6 @@ export default {
                         parentName: tab.parentName,
                         isNew: true
                     };
-                    console.log("Loading empty organisation data for new tab:", emptyOrgData);
                     
                     // Đợi component được render trước khi load data
                     this.$nextTick(() => {

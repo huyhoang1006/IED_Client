@@ -1,29 +1,27 @@
 'use strict'
 import {ipcMain} from 'electron'
-import {cimFunc} from "../../../function/index.js"
+import {cimFunc} from "@/function"
 
-export const getParentOrganizationByMrid = () => {
-    ipcMain.handle('getParentOrganizationByMrid', async function (event, mrid) {
+export const getPersonByMrid = () => {
+    ipcMain.handle('getPersonByMrid', async function (event, mrid) {
         try {
-            const rs = await cimFunc.parentOrganizationFunc.getParentOrganizationById(mrid)
+            const rs = await cimFunc.personFunc.getPersonById(mrid)
             if (rs.success === true) {
                 return {
                     success: true,
-                    message: "Success",
-                    data: {
-                        ...rs.data,
-                        mode: 'organisation'
-                    }
+                    message: rs.message || "Success",
+                    data: rs.data
                 }
             } else {
                 return {
                     success: false,
-                    message: "fail",
+                    message: rs.message || "fail",
                 }
             }
         } catch (error) {
             console.log(error)
             return {
+                error: error,
                 success: false,
                 message: (error && error.message) ? error.message : "Internal error",
             }
@@ -31,30 +29,26 @@ export const getParentOrganizationByMrid = () => {
     })
 }
 
-export const getParentOrganizationByParentMrid = () => {
-    ipcMain.handle('getParentOrganizationByParentMrid', async function (event, mrid) {
+export const getPersonByOrganisationId = () => {
+    ipcMain.handle('getPersonByOrganisationId', async function (event, organisationId) {
         try {
-            const rs = await cimFunc.parentOrganizationFunc.getParentOrganizationByParentId(mrid)
+            const rs = await cimFunc.personFunc.getPersonByOrganisationId(organisationId)
             if (rs.success === true) {
-                const mappedData = rs.data.map(item => ({
-                    ...item,
-                    mode: 'organisation'
-                }));
                 return {
                     success: true,
-                    message: "Success",
-                    data: mappedData
+                    message: rs.message || "Success",
+                    data: rs.data
                 }
-            }
-            else {
+            } else {
                 return {
                     success: false,
-                    message: "fail",
+                    message: rs.message || "fail",
                 }
             }
         } catch (error) {
             console.log(error)
             return {
+                error: error,
                 success: false,
                 message: (error && error.message) ? error.message : "Internal error",
             }
@@ -62,26 +56,27 @@ export const getParentOrganizationByParentMrid = () => {
     })
 }
 
-export const insertParentOrganization = () => {
-    ipcMain.handle('insertParentOrganization', async function (event, data) {
-        const rs = await cimFunc.parentOrganizationFunc.insertParentOrganisation(data)
+export const insertPerson = () => {
+    ipcMain.handle('insertPerson', async function (event, data) {
+        const rs = await cimFunc.personFunc.insertPerson(data)
         try {
             if (rs.success == true) {
                 return {
                     success: true,
-                    message: "Success",
-                    data: { ...rs.data }
+                    message: rs.message || "Success",
+                    data : rs.data
                 }
             }
             else {
                 return {
                     success: false,
-                    message: "fail",
+                    message: rs.message || "fail",
                 }
             }
         } catch (error) {
             console.log(error)
             return {
+                error: error,
                 success: false,
                 message: (error && error.message) ? error.message : "Internal error",
             }
@@ -89,25 +84,25 @@ export const insertParentOrganization = () => {
     })
 }
 
-export const updateParentOrganizationByMrid = () => {
-    ipcMain.handle('updateParentOrganizationByMrid', async function (event, mrid, data) {
+export const deletePersonByMrid = () => {
+    ipcMain.handle('deletePersonByMrid', async function (event, mrid) {
         try {
-            const rs = await cimFunc.parentOrganizationFunc.updateParentOrganizationById(mrid, data)
+            const rs = await cimFunc.personFunc.deletePersonById(mrid)
             if (rs.success == true) {
                 return {
                     success: true,
-                    message: "Success",
+                    message: rs.message || "Success",
                 }
-            }
-            else {
+            } else {
                 return {
                     success: false,
-                    message: "fail",
+                    message: rs.message || "fail",
                 }
             }
         } catch (error) {
             console.log(error)
             return {
+                error: error,
                 success: false,
                 message: (error && error.message) ? error.message : "Internal error",
             }
@@ -115,25 +110,26 @@ export const updateParentOrganizationByMrid = () => {
     })
 }
 
-export const deleteParentOrganizationByMrid = () => {
-    ipcMain.handle('deleteParentOrganizationByMrid', async function (event, mrid) {
+export const updatePersonByMrid = () => {
+    ipcMain.handle('updatePersonByMrid', async function (event, mrid, data) {
         try {
-            const rs = await cimFunc.parentOrganizationFunc.deleteParentOrganizationById(mrid)
+            const rs = await cimFunc.personFunc.updatePersonById(mrid, data)
             if (rs.success == true) {
                 return {
                     success: true,
-                    message: "Success",
+                    message: rs.message || "Success",
                 }
             }
             else {
                 return {
                     success: false,
-                    message: "fail",
+                    message: rs.message || "fail",
                 }
             }
         } catch (error) {
             console.log(error)
             return {
+                error: error,
                 success: false,
                 message: (error && error.message) ? error.message : "Internal error",
             }
@@ -142,9 +138,9 @@ export const deleteParentOrganizationByMrid = () => {
 }
 
 export const active = () => {
-    getParentOrganizationByMrid()
-    getParentOrganizationByParentMrid()
-    insertParentOrganization()
-    updateParentOrganizationByMrid()
-    deleteParentOrganizationByMrid()
+    getPersonByMrid()
+    getPersonByOrganisationId()
+    insertPerson()
+    updatePersonByMrid()
+    deletePersonByMrid()
 }

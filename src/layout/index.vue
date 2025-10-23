@@ -1,6 +1,6 @@
 <template>
     <div id="windows">
-        <top-bar id="top-bar"></top-bar>
+        <top-bar v-if="!isLoginPage" id="top-bar"></top-bar>
         <section id="main-windows">
             <router-view ref="mainWindows" ></router-view>
         </section>
@@ -33,6 +33,11 @@ export default {
             showOutLine : false
         }
     },
+    computed: {
+        isLoginPage() {
+            return this.$route.path === '/login'
+        }
+    },
     watch: {
         $route(to) {
             if (to.path === '/login') {
@@ -41,7 +46,7 @@ export default {
                 this.$nextTick(() => {
                     const mainWindows = document.querySelector("#main-windows");
                     if (mainWindows) {
-                        mainWindows.style.height = "calc(100% - 6vh)";
+                        mainWindows.style.height = "100%";
                     }
                 })
             } else {

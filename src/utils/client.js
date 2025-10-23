@@ -1,42 +1,58 @@
 import axios from 'axios'
-import { API_BASE_URL } from './config'
+import store from '@/store'
+import {afterLogout} from './helper'
 
 const client = axios.create({
-  baseURL: API_BASE_URL,
-  timeout: 10000,
-  headers: {
-    'Content-Type': 'application/json'
-  }
+    withCredentials: false
 })
 
-// Request interceptor
 client.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token')
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
+    function (config) {
+        // Chỉ kiểm tra serverAddr nếu không phải là Electron app
+        if (typeof window !== 'undefined' && window.electronAPI) {
+            // Đang chạy trong Electron, không cần serverAddr
+            return config
+        }
+        
+        // Chỉ kiểm tra serverAddr nếu đang gọi API HTTP
+        if (!store.state.serverAddr && config.url && !config.url.startsWith('data:')) {
+            console.warn('Server address not configured, but making HTTP request to:', config.url)
+            // Không reject, chỉ warning
+        }
+        return config
+    },
+    function (error) {
+        return Promise.reject(error)
     }
-    return config
-  },
-  (error) => {
-    return Promise.reject(error)
-  }
 )
 
-// Response interceptor
 client.interceptors.response.use(
-  (response) => {
-    return response
-  },
-  (error) => {
-    if (error.response?.status === 401) {
-      // Handle unauthorized access
-      localStorage.removeItem('token')
-      localStorage.removeItem('user')
-      window.location.href = '/login'
+    function (response) {
+        if (!response.data.success) {
+            console.error(response.data.message)
+            return Promise.reject(new Error(response.data.message))
+        }
+        return response.data.data
+    },
+    function (error) {
+        if (error.response) {
+            // Token hết hạn
+            if (error.response.status === 401) {
+                afterLogout()
+                // Import router dynamically để tránh circular dependency
+                import('@/router').then(({ default: router }) => {
+                    router.push({ name: 'login' })
+                })
+            }
+
+            // Lỗi code backend
+            if (error.response.data?.message) {
+                console.error(error.response.data.message)
+                return Promise.reject(new Error(error.response.data.message))
+            }
+        }
+        return Promise.reject(error)
     }
-    return Promise.reject(error)
-  }
 )
 
 export default client

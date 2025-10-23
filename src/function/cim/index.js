@@ -2,13 +2,14 @@
 import * as organisationFunc from './parentOrganization/organisation/index.js'
 import * as parentOrganizationFunc from './parentOrganization/index.js'
 import * as substationFunc from './substation/index.js'
+import * as substationEntityFunc from '../entity/substation/index.js'
+import * as locationFunc from './location/index.js'
+import * as personFunc from './person/index.js'
 
 // Placeholder exports for missing CIM modules
 // TODO: Implement these modules as needed
 const identifiedObjectFunc = {}
 const electronicAddressFunc = {}
-const locationFunc = {}
-const personFunc = {}
 const personRoleFunc = {}
 const psrTypeFunc = {}
 const streetAddressFunc = {}
@@ -34,7 +35,7 @@ const valueToAliasFunc = {}
 const valueAliasSetFunc = {}
 const bushingFunc = {}
 
-export {identifiedObjectFunc, substationFunc, electronicAddressFunc, locationFunc,
+export {identifiedObjectFunc, substationFunc, substationEntityFunc, electronicAddressFunc, locationFunc,
     personFunc, personRoleFunc, psrTypeFunc, streetAddressFunc, streetDetailFunc,
     townDetailFunc, telephoneNumberFunc, organisationFunc, parentOrganizationFunc,
     activityRecordFunc, configurationEventFunc, positionPointFunc, voltageFunc, baseVoltageFunc,

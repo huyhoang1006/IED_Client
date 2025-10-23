@@ -10,7 +10,7 @@ export const getBayByMrid = () => {
                 return {
                     success: true,
                     message: rs.message || "Success",
-                    data: rs.data
+                    data: { ...rs.data }
                 }
             } else {
                 return {
@@ -21,7 +21,6 @@ export const getBayByMrid = () => {
         } catch (error) {
             console.log(error)
             return {
-                error: error,
                 success: false,
                 message: (error && error.message) ? error.message : "Internal error",
             }
@@ -37,7 +36,7 @@ export const getBayByVoltageBySubstationId = () => {
                 return {
                     success: true,
                     message: rs.message || "Success",
-                    data: rs.data
+                    data: { ...rs.data }
                 }
             } else {
                 return {
@@ -48,7 +47,6 @@ export const getBayByVoltageBySubstationId = () => {
         } catch (error) {
             console.log(error)
             return {
-                error: error,
                 success: false,
                 message: (error && error.message) ? error.message : "Internal error",
             }
@@ -64,7 +62,7 @@ export const insertBay = () => {
                 return {
                     success: true,
                     message: rs.message || "Success",
-                    data: rs.data
+                    data: { ...rs.data }
                 }
             } else {
                 return {
@@ -75,7 +73,6 @@ export const insertBay = () => {
         } catch (error) {
             console.log(error)
             return {
-                error: error,
                 success: false,
                 message: (error && error.message) ? error.message : "Internal error",
             }
@@ -92,7 +89,7 @@ export const updateBayByMrid = () => {
                 return {
                     success: true,
                     message: rs.message || "Success",
-                    data : rs.data
+                    data: { ...rs.data }
                 }
             }
             else {
@@ -104,7 +101,6 @@ export const updateBayByMrid = () => {
         } catch (error) {
             console.log(error)
             return {
-                error: error,
                 success: false,
                 message: (error && error.message) ? error.message : "Internal error",
             }
@@ -130,7 +126,6 @@ export const deleteBayByMrid = () => {
         } catch (error) {
             console.log(error)
             return {
-                error: error,
                 success: false,
                 message: (error && error.message) ? error.message : "Internal error",
             }

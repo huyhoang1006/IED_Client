@@ -36,8 +36,10 @@ export const updateOwnerTable = async () => {
         var check = await updatOwner.createOwner(db)
         if(check == true) {
             var dataOwner = {
-                name : 'root',
-                user_id : EMPTY
+                id: '00000000-0000-0000-0000-000000000000',
+                name : 'Root',
+                user_id : EMPTY,
+                mode: 'organisation'
             }
             var is = await insertOwner(dataOwner)
             if(is.success) {
@@ -46,12 +48,14 @@ export const updateOwnerTable = async () => {
             
         }
     } else {
-        var rt = await getOwnerByName("root")
+        var rt = await getOwnerByName("Root")
         if(rt.success) {
             if(rt.data.length == 0) {
                 var dataOwner = {
-                    name : 'root',
-                    user_id : EMPTY
+                    id: '00000000-0000-0000-0000-000000000000',
+                    name : 'Root',
+                    user_id : EMPTY,
+                    mode: 'organisation'
                 }
                 var is = await insertOwner(dataOwner)
                 if(is.success) {

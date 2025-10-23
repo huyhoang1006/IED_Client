@@ -25,7 +25,11 @@ if (process.env.NODE_ENV === 'development') {
 
 // Nếu chưa có database ở userData, copy từ source vào
 if (!fs.existsSync(userDBPath)) {
-  fs.copyFileSync(sourceDBPath, userDBPath)
+  try {
+    fs.copyFileSync(sourceDBPath, userDBPath)
+  } catch (error) {
+    console.error('Error copying database:', error)
+  }
 }
 
 // Luôn mở database ở userData (production), còn development thì mở ở source
@@ -35,6 +39,7 @@ if (process.env.NODE_ENV === 'development') {
 } else {
   db = new sqlite3.Database(userDBPath)
 }
+
 db.run('PRAGMA foreign_keys=ON')
 
 export default db

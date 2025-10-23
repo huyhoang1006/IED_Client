@@ -59,6 +59,13 @@
       "src/preload.js",
       "src/**/*"
     ],
+    "asarUnpack": [
+      "database/**",
+      "icon/**",
+      "attachment/**",
+      "etrc-icon/**",
+      "template/**"
+    ],
     "extraResources": [
       "./database/**",
       "./icon/**",

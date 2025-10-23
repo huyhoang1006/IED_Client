@@ -28,7 +28,7 @@ export const insertUser = async (user) => {
             ],
             function (err) {
                 if (err) return reject({ success: false, err, message: 'Insert user failed' })
-                return resolve({ success: true, data: user, message: 'Insert user completed' })
+                return resolve({ success: true, data: { ...user }, message: 'Insert user completed' })
             }
         )
     })
@@ -61,7 +61,7 @@ export const insertUserTransaction = async (user, dbsql) => {
             ],
             function (err) {
                 if (err) return reject({ success: false, err, message: 'Insert user failed' })
-                return resolve({ success: true, data: user, message: 'Insert user completed' })
+                return resolve({ success: true, data: { ...user }, message: 'Insert user completed' })
             }
         )
     })
@@ -73,7 +73,7 @@ export const getUserById = async (user_id) => {
         db.get("SELECT * FROM user WHERE user_id = ?", [user_id], (err, row) => {
             if (err) return reject({ success: false, err, message: 'Get user failed' })
             if (!row) return resolve({ success: false, data: null, message: 'User not found' })
-            return resolve({ success: true, data: row, message: 'Get user completed' })
+            return resolve({ success: true, data: { ...row }, message: 'Get user completed' })
         })
     })
 }
@@ -100,7 +100,7 @@ export const updateUserById = async (user_id, user) => {
             function (err) {
                 if (err) return reject({ success: false, err, message: 'Update user failed' })
                 if (this.changes === 0) return resolve({ success: false, message: 'User not found' })
-                return resolve({ success: true, data: user, message: 'Update user completed' })
+                return resolve({ success: true, data: { ...user }, message: 'Update user completed' })
             }
         )
     })
