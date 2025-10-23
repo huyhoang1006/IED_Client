@@ -111,13 +111,22 @@ export default {
     computed: mapState(['user', 'serverAddr']),
     methods: {
         closeApp() {
-            window.electronAPI.closeApp()
+            if (typeof window !== 'undefined' && window.electronAPI) {
+                window.electronAPI.closeApp()
+            } else {
+                // Fallback for browser environment
+                window.close()
+            }
         },
         minimizeApp() {
-            window.electronAPI.minimizeApp()
+            if (typeof window !== 'undefined' && window.electronAPI) {
+                window.electronAPI.minimizeApp()
+            }
         },
         maximizeApp() {
-            window.electronAPI.maximizeApp()
+            if (typeof window !== 'undefined' && window.electronAPI) {
+                window.electronAPI.maximizeApp()
+            }
         },
         handleCommand(command) {
             switch (command) {

@@ -1,27 +1,23 @@
-import { createApp } from 'vue'
+import {createApp} from 'vue'
 import App from './App.vue'
 import router from './router'
 import store from './store'
-
 import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
-
 // Import Leaflet CSS
 import 'leaflet/dist/leaflet.css'
-
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
-
 // Import helper và common utilities
 import * as helper from '@/utils/helper'
 import * as common from '@/utils/common'
-import * as constant from '@/utils/constant'
+import constant from '@/utils/constant'
 
 // Tạo app Vue
 const app = createApp(App)
 
 // Đăng ký toàn bộ icons Element Plus
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
-  app.component(key, component)
+    app.component(key, component)
 }
 
 // Inject helper, common và constant vào Vue instance
@@ -34,10 +30,6 @@ app.use(router)
 app.use(store)
 app.use(ElementPlus)
 
-// Load user from localStorage on app start
-const storedUser = helper.getStoredUser()
-if (storedUser) {
-  store.dispatch('login', storedUser)
-}
-
 app.mount('#app')
+
+helper.initApp()

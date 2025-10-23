@@ -28,17 +28,20 @@ export const createOrganisationRoot = async () => {
         
         // Kiểm tra xem root organisation đã tồn tại chưa
         const existing = await organisationFunc.getOrganisationById(rootOwner.id)
+        
         if (existing.success && existing.data) {
             return { success: true, data: existing.data, message: 'Root organisation already exists' }
         }
         
         // Tạo mới nếu chưa tồn tại
-        const result = await organisationFunc.insertOrganisationTransaction(rootOwner)
+        const result = await organisationFunc.insertOrganisationTransaction(rootOwner, null)
+        
         if (!result.success) {
             return { success: false, message: 'Create organisation root failed', err: result.err }
         }
         return { success: true, data: result.data, message: 'Create organisation root completed' }
     } catch (err) {
+        console.error('Error in createOrganisationRoot:', err)
         return { success: false, err, message: 'Create organisation root failed' }
     }
 }

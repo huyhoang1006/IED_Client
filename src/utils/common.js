@@ -1,15 +1,15 @@
-export const simulateLoading = () => {
-  return new Promise(resolve => {
-    setTimeout(resolve, 1000)
-  })
+export const simulateLoading = (time = 800) => {
+    return new Promise((resolve) => {
+        setTimeout(resolve, time)
+    })
 }
 
-export const formatDate = (date) => {
-  if (!date) return ''
-  return new Date(date).toLocaleDateString('vi-VN')
-}
-
-export const formatDateTime = (date) => {
-  if (!date) return ''
-  return new Date(date).toLocaleString('vi-VN')
+export function randomStr(length = 6) {
+    let result = ''
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+    const charactersLength = characters.length
+    for (let i = 0; i < length; i++) {
+        result += characters.charAt(Math.floor(Math.random() * charactersLength))
+    }
+    return result
 }

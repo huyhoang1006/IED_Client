@@ -28,7 +28,6 @@ export default {
         },
 
         loadData(data) {
-            console.log("Loading organisation data:", data)
             // Ensure all properties are properly set
             this.properties = {
                 organisationId: data.organisationId || '',
@@ -80,7 +79,6 @@ export default {
                 this.attachmentData = []
             }
             
-            console.log("Loaded organisation properties:", this.properties)
         },
 
         async saveOrganisation() {
@@ -98,9 +96,7 @@ export default {
                     const dto = JSON.parse(JSON.stringify(this.properties))
                     const dtoData = this.checkOrganisation(dto)
                     const data = orgMapper.OrgDtoToOrgEntity(dtoData)
-                    console.log("Organisation data to save:", data)
                     const result = await window.electronAPI.insertParentOrganizationEntity(data)
-                    console.log("API result:", result)
                     if(result.success) {
                         // Emit event để thông báo cho parent component
                         this.$emit('organisation-saved', {

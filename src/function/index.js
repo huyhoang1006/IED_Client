@@ -3,7 +3,7 @@
 import * as locationUploadFunc from './customTemplate/location/location.js'
 import * as ownerFunc from './organisation/index.js'
 import * as cimFunc from './cim/index.js'
-import * as userFunc from './entity/user/index.js'
+import * as userFunc from './transformer/user.js'
 
 // Placeholder exports for missing modules (to prevent import errors)
 // TODO: Implement these modules or remove unused imports

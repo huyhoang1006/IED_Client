@@ -10,7 +10,7 @@ export const insertBayEntity = () => {
                 return {
                     success: true,
                     message: "Success",
-                    data : rs.data
+                    data: { ...rs.data }
                 }
             }
             else {
@@ -21,7 +21,6 @@ export const insertBayEntity = () => {
             }
         } catch (error) {
             return {
-                error: error,
                 success: false,
                 message: (error && error.message) ? error.message : "Internal error",
             }
@@ -37,7 +36,7 @@ export const getBayEntityByMrid = () => {
                 return {
                     success: true,
                     message: "Success",
-                    data : rs.data
+                    data: { ...rs.data }
                 }
             }
             else {
@@ -48,7 +47,6 @@ export const getBayEntityByMrid = () => {
             }
         } catch (error) {
             return {
-                error: error,
                 success: false,
                 message: (error && error.message) ? error.message : "Internal error",
             }
@@ -75,7 +73,6 @@ export const deleteBayEntityByMrid = () => {
             }
         } catch (error) {
             return {
-                error: error,
                 success: false,
                 message: (error && error.message) ? error.message : "Internal error",
             }

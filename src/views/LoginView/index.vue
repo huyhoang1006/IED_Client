@@ -133,50 +133,77 @@ export default {
     methods: {
         async login() {
             let valid = await this.$refs.form.validate()
-            if (!valid) {
-                return
-            }
+            if (!valid) return
+
             this.loadingLogin = true
             await this.$common.simulateLoading()
-            userApi
-                .login(this.model)
-                .then((response) => {
-                    // Debug: Log response để xem cấu trúc
-                    console.log('Login response:', response)
-                    console.log('Response data:', response.data)
 
-                    // Tạo userData object với cấu trúc đúng
-                    const userData = {
+            try {
+                let userData = null
+
+                // If running inside Electron with the preload API exposed, use IPC login
+                if (typeof window !== 'undefined' && window.electronAPI && typeof window.electronAPI.login === 'function') {
+                    // Convert Vue Proxy to plain object
+                    const plainPayload = {
+                        username: this.model.username,
+                        password: this.model.password
+                    }
+                    
+                    console.log('IPC LOGIN - Sending payload:', plainPayload)
+                    console.log('IPC LOGIN - Payload type:', typeof plainPayload, Object.keys(plainPayload || {}))
+                    console.log('IPC LOGIN - Payload preview:', JSON.stringify(plainPayload).slice(0, 1000))
+                    
+                    const resp = await window.electronAPI.login(plainPayload)
+                    console.log('IPC login response:', resp)
+
+                    if (!resp || resp.success !== true) {
+                        // login failed
+                        this.$message.error(resp?.message || 'Login failed')
+                        return
+                    }
+
+                    const user = resp.user || resp.data || {}
+                    userData = {
                         name: this.model.username,
-                        token: response.data?.token || response.token || response.data?.access_token || response.access_token || null,
-                        role: response.data?.role || response.role || 'user',
-                        user_id: response.data?.user_id || response.user_id || null,
-                        ...response.data // Spread các field khác nếu có
+                        token: resp.token || null,
+                        role: user.role || 'user',
+                        user_id: user.id || user.user_id || null,
+                        ...user
                     }
-
-                    console.log('UserData created:', userData)
-
-                    // Kiểm tra token trước khi tiếp tục
-                    if (!userData.token) {
-                        this.$message.warning('Login successful but no token received')
-                        console.warn('No token found in response:', response)
+                } else {
+                    // Fallback to HTTP API
+                    const response = await userApi.login(this.model)
+                    console.log('HTTP login response:', response)
+                    const data = response.data || response
+                    userData = {
+                        name: this.model.username,
+                        token: data?.token || response?.token || data?.access_token || response?.access_token || null,
+                        role: data?.role || response?.role || 'user',
+                        user_id: data?.user_id || response?.user_id || null,
+                        ...data
                     }
+                }
 
-                    this.$message.success('Login successfully')
-                    this.$helper.afterLogin(this.remember, userData)
+                console.log('UserData created:', userData)
 
-                    // Cập nhật store với user data
-                    this.$store.dispatch('login', userData)
+                if (!userData.token) {
+                    this.$message.warning('Login successful but no token received')
+                    console.warn('No token found in response for user:', userData)
+                }
 
-                    // Chuyển đến dashboard sau khi login thành công
-                    this.$router.push({path: '/dashboard', query: this.otherQuery})
-                })
-                .catch((error) => {
-                    this.$message.error(error.message)
-                })
-                .finally(async () => {
-                    this.loadingLogin = false
-                })
+                this.$message.success('Login successfully')
+                this.$helper.afterLogin(this.remember, userData)
+
+                // Update store with user data
+                this.$store.dispatch('login', userData)
+
+                // Navigate to dashboard
+                this.$router.push({ path: '/dashboard', query: this.otherQuery })
+            } catch (error) {
+                this.$message.error(error?.message || String(error))
+            } finally {
+                this.loadingLogin = false
+            }
         },
         getOtherQuery(query) {
             return Object.keys(query).reduce((acc, cur) => {

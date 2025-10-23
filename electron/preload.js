@@ -156,4 +156,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   
   // Parent Organization API
   getParentOrganizationByMrid: (mrid) => ipcRenderer.invoke('getParentOrganizationByMrid', mrid)
+  ,
+  // Authentication (login) via ipc
+  login: (user) => ipcRenderer.invoke('login', user)
 })

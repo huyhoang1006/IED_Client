@@ -1,87 +1,107 @@
 'use strict'
 
-import { app, protocol, BrowserWindow, ipcMain, dialog, screen } from 'electron'
+// Utility function to safely serialize data for IPC
+function safeSerialize(data) {
+    if (data === null || data === undefined) return data
+    if (typeof data === 'boolean' || typeof data === 'number' || typeof data === 'string') return data
+    if (Array.isArray(data)) return data.map(item => safeSerialize(item))
+    if (typeof data === 'object') {
+        const result = {}
+        for (const [key, value] of Object.entries(data)) {
+            if (typeof value !== 'function' && typeof value !== 'symbol') {
+                result[key] = safeSerialize(value)
+            }
+        }
+        return result
+    }
+    return data
+}
+
+import {app, protocol, BrowserWindow, ipcMain, dialog, screen} from 'electron'
 // import { remote } from 'electron' // Deprecated - removed
 // import { createProtocol } from 'vue-cli-plugin-electron-builder/lib' // Removed - not needed for Vite
 // import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer' // Removed - not needed
 import sqlite3 from 'sqlite3'
-import * as updateModule from "../src/update/index.js"
-import path, { resolve } from 'path'
-import { fileURLToPath } from 'url'
+import * as updateModule from '../src/update/index.js'
+import path, {resolve} from 'path'
+import {fileURLToPath} from 'url'
 
 // Fix __dirname for ES modules
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 import fs from 'fs'
-import { v4 as newUuid } from 'uuid'
-import { NIL as EMPTY } from 'uuid'
-import { parse } from 'csv-parse'
-import { userFunc, locationFunc, assetFunc, jobFunc, importHavec1pha1capFunc, importHavec3pha1capFunc, importHavec3pha2capFunc } from '../src/function/index.js'
-import {circuitFunc, jobAssetFunc, jobCircuitFunc, currentTransFunc, voltageTransFunc, disconnectorFunc, surgeArresterFunc, powerCableFunc} from "../src/function/index.js"
+import {v4 as newUuid} from 'uuid'
+import {NIL as EMPTY} from 'uuid'
+import {parse} from 'csv-parse'
+import {userFunc, locationFunc, assetFunc, jobFunc, importHavec1pha1capFunc, importHavec3pha1capFunc, importHavec3pha2capFunc} from '../src/function/index.js'
+import {
+    circuitFunc,
+    jobAssetFunc,
+    jobCircuitFunc,
+    currentTransFunc,
+    voltageTransFunc,
+    disconnectorFunc,
+    surgeArresterFunc,
+    powerCableFunc
+} from '../src/function/index.js'
 import {currentTransJobFunc, voltageTransJobFunc, disconnectorJobFunc, surgeArresterJobFunc, powerCableJobFunc} from '../src/function/index.js'
 // import {ipcCircuit, ipcJobCircuit, ipcTransformer, ipcCurrentTrans, ipcVoltageTrans, ipcDisconnector, ipcSurgeArrester, ipcPowerCable} from '../src/ipcmain/index.js' // Modules not found
 // import { ipcJobCurrent, ipcJobVoltage, ipcJobDisconnector, ipcJobSurge, ipcJobPower, ipcJobTransformer } from '../src/ipcmain/index.js' // Modules not found
 // import { ipcUploadCustom, ipcUpdateManu } from '../src/ipcmain/index.js' // ipcUpdateManu not found
-import { ipcOwner } from '../src/ipcmain/index.js'
-import { ipcCim, ipcEntity } from '../src/ipcmain/index.js'
-let win;
+import {ipcOwner} from '../src/ipcmain/index.js'
+import {ipcCim, ipcEntity} from '../src/ipcmain/index.js'
+let win
 
 const nameDB = 'database.db'
 const pathDB = path.join(__dirname, `/../database/${nameDB}`)
-const pathTemplate = path.join(__dirname,`/../template`)
+const pathTemplate = path.join(__dirname, `/../template`)
 const pathUpload = path.join(__dirname, `/../attachment`)
-const db = new sqlite3.Database(pathDB);
-db.run("PRAGMA foreign_keys=ON");
+const db = new sqlite3.Database(pathDB)
+db.run('PRAGMA foreign_keys=ON')
 
-
-
-
-const isDevelopment = process.env.NODE_ENV !== 'development'
+const isDevelopment = process.env.NODE_ENV === 'development'
 
 // const {dialog} = require('@electron/remote')
 // Scheme must be registered before the app is ready
-protocol.registerSchemesAsPrivileged([
-    { scheme: 'app', privileges: { secure: true, standard: true } }
-])
-
+protocol.registerSchemesAsPrivileged([{scheme: 'app', privileges: {secure: true, standard: true}}])
 
 function adjustWindowSize() {
-    const primaryDisplay = screen.getPrimaryDisplay();
-    const { width, height } = primaryDisplay.workAreaSize; // Lấy kích thước mà không bao gồm taskbar
+    const primaryDisplay = screen.getPrimaryDisplay()
+    const {width, height} = primaryDisplay.workAreaSize // Lấy kích thước mà không bao gồm taskbar
 
-    win.setBounds({ x: 0, y: 0, width, height }); // Cập nhật kích thước cửa sổ
+    win.setBounds({x: 0, y: 0, width, height}) // Cập nhật kích thước cửa sổ
 }
-
 
 async function createWindow() {
     // Create the browser window.
     win = new BrowserWindow({
-    show: false,
-    frame: false,
-    autoHideMenuBar: true,
-    webPreferences: {
-
+        show: false,
+        frame: false,
+        autoHideMenuBar: true,
+        webPreferences: {
             // Use pluginOptions.nodeIntegration, leave this alone
             // See nklayman.github.io/vue-cli-plugin-electron-builder/guide/security.html#node-integration for more info
             nodeIntegration: true,
             contextIsolation: !process.env.ELECTRON_NODE_INTEGRATION,
-      preload: path.join(__dirname, 'preload.js'),
-            devTools: true,
+            preload: path.join(__dirname, 'preload.js'),
+            devTools: true
         }
     })
 
     // full screen
     adjustWindowSize()
-    win.show();
+    
+    win.show()
 
-    if (process.env.WEBPACK_DEV_SERVER_URL) {
+    if (isDevelopment) {
         // Load the url of the dev server if in development mode
-        await win.loadURL(process.env.WEBPACK_DEV_SERVER_URL)
+        await win.loadURL('http://localhost:5173')
         if (!process.env.IS_TEST) win.webContents.openDevTools()
     } else {
-        // createProtocol('app') // Removed - not needed for Vite
         // Load the index.html when not in development
         win.loadFile(path.join(__dirname, '../dist/index.html'))
+        // Tạm thời bật DevTools để debug
+        win.webContents.openDevTools()
     }
 }
 
@@ -102,7 +122,7 @@ const getWindow = async () => BrowserWindow.getFocusedWindow()
 
 const getAllInforAsset = async () => {
     return new Promise((resolve, reject) => {
-        db.all("SELECT * FROM assets", [], (err, row) => {
+        db.all('SELECT * FROM assets', [], (err, row) => {
             if (err) reject(err)
             resolve(row)
         })
@@ -122,7 +142,7 @@ const importHavec3pha1cap = async (location_id, filePath) => {
 
 const getAssetId = async () => {
     return new Promise((resolve, reject) => {
-        db.get("SELECT last_insert_rowid() as id FROM assets;", [], (err, row) => {
+        db.get('SELECT last_insert_rowid() as id FROM assets;', [], (err, row) => {
             if (err) reject(err)
             resolve(row)
         })
@@ -130,7 +150,7 @@ const getAssetId = async () => {
 }
 const getJobId = async () => {
     return new Promise((resolve, reject) => {
-        db.get("SELECT last_insert_rowid() as id FROM jobs", [], (err, row) => {
+        db.get('SELECT last_insert_rowid() as id FROM jobs', [], (err, row) => {
             if (err) reject(err)
             resolve(row)
         })
@@ -421,12 +441,31 @@ const importHavecBushing = async (asset_id) => {
         }
     }
     return new Promise((resolve, reject) => {
-        db.run('INSERT INTO bushings(asset_id, asset_type, serial_no, manufacturer, manufacturer_type,manufacturer_year, insull_level, voltage_gr, max_sys_voltage, rate_current, df_c1, cap_c1, df_c2, cap_c2, insulation_type)' +
-            'VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-            [asset_id, JSON.stringify(bushing.asset_type), JSON.stringify(bushing.serial_no), JSON.stringify(bushing.manufacturer), JSON.stringify(bushing.manufacturer_type), JSON.stringify(bushing.manufacturer_year), JSON.stringify(bushing.insull_level), JSON.stringify(bushing.voltage_gr), JSON.stringify(bushing.max_sys_voltage), JSON.stringify(bushing.rate_current), JSON.stringify(bushing.df_c1), JSON.stringify(bushing.cap_c1), JSON.stringify(bushing.df_c2), JSON.stringify(bushing.cap_c2), JSON.stringify(bushing.insulation_type)], (err) => {
+        db.run(
+            'INSERT INTO bushings(asset_id, asset_type, serial_no, manufacturer, manufacturer_type,manufacturer_year, insull_level, voltage_gr, max_sys_voltage, rate_current, df_c1, cap_c1, df_c2, cap_c2, insulation_type)' +
+                'VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            [
+                asset_id,
+                JSON.stringify(bushing.asset_type),
+                JSON.stringify(bushing.serial_no),
+                JSON.stringify(bushing.manufacturer),
+                JSON.stringify(bushing.manufacturer_type),
+                JSON.stringify(bushing.manufacturer_year),
+                JSON.stringify(bushing.insull_level),
+                JSON.stringify(bushing.voltage_gr),
+                JSON.stringify(bushing.max_sys_voltage),
+                JSON.stringify(bushing.rate_current),
+                JSON.stringify(bushing.df_c1),
+                JSON.stringify(bushing.cap_c1),
+                JSON.stringify(bushing.df_c2),
+                JSON.stringify(bushing.cap_c2),
+                JSON.stringify(bushing.insulation_type)
+            ],
+            (err) => {
                 if (err) reject(err)
                 resolve(true)
-            })
+            }
+        )
     })
 }
 
@@ -439,7 +478,6 @@ const importHavec3pha2cap = async (location_id, filePath) => {
     var job_id = await getJobId()
     await importHavec3pha2capFunc.importTest3pha2cap(job_id.id, data.Test, db)
     await importHavecBushing(asset_id.id)
-
 }
 
 const importHavec1pha1cap = async (location_id, filePath) => {
@@ -451,7 +489,6 @@ const importHavec1pha1cap = async (location_id, filePath) => {
     var job_id = await getJobId()
     await importHavec1pha1capFunc.importTest1pha1cap(job_id.id, data.Test, db)
     await importHavecBushing(asset_id.id)
-
 }
 
 // const importJob = (assetId, data) => {
@@ -479,25 +516,20 @@ const importHavec1pha1cap = async (location_id, filePath) => {
 
 const uploadAttachment = async (id_foreign, type, info) => {
     return new Promise((resolve, reject) => {
-        db.run('INSERT INTO attachment(id, id_foreign, type, name)' +
-        ' VALUES(?, ?, ?, ?)',
-        [
-            newUuid(), id_foreign , type, JSON.stringify(info)
-        ], function (err) {
-            if (err) reject(err)
-            resolve(true)
-        }) 
-    });
+        db.run(
+            'INSERT INTO attachment(id, id_foreign, type, name)' + ' VALUES(?, ?, ?, ?)',
+            [newUuid(), id_foreign, type, JSON.stringify(info)],
+            function (err) {
+                if (err) reject(err)
+                resolve(true)
+            }
+        )
+    })
 }
 
 const updateAttachment = async (id, info) => {
     return new Promise((resolve, reject) => {
-        db.run('UPDATE attachment' +
-        ' SET name = ?' +
-        ' WHERE id_foreign = ?',
-        [
-            JSON.stringify(info), id,
-        ], function (err) {
+        db.run('UPDATE attachment' + ' SET name = ?' + ' WHERE id_foreign = ?', [JSON.stringify(info), id], function (err) {
             if (err) reject(err)
             resolve(true)
         })
@@ -506,17 +538,16 @@ const updateAttachment = async (id, info) => {
 
 const getAllAttachment = async (id_foreign, type) => {
     return new Promise((resolve, reject) => {
-        db.all("SELECT * FROM attachment where id_foreign=? and type=?", [id_foreign, type], (err, row) => {
+        db.all('SELECT * FROM attachment where id_foreign=? and type=?', [id_foreign, type], (err, row) => {
             if (err) reject(err)
             resolve(row)
         })
     })
 }
 
-
 const deleteAttachment = (id_foreign) => {
     return new Promise((resolve, reject) => {
-        db.all("DELETE FROM attachment WHERE id_foreign = ?", [id_foreign], (err, row) => {
+        db.all('DELETE FROM attachment WHERE id_foreign = ?', [id_foreign], (err, row) => {
             if (err) reject(err)
             resolve(row)
         })
@@ -526,7 +557,7 @@ const deleteAttachment = (id_foreign) => {
 // testing condition
 const getTestingCondition = (id_foreign) => {
     return new Promise((resolve, reject) => {
-        db.all("SELECT * FROM testing_condition where id_foreign=?", [id_foreign], (err, row) => {
+        db.all('SELECT * FROM testing_condition where id_foreign=?', [id_foreign], (err, row) => {
             if (err) reject(err)
             resolve(row)
         })
@@ -535,34 +566,33 @@ const getTestingCondition = (id_foreign) => {
 
 const insertTestingCondition = (id_foreign, info) => {
     return new Promise((resolve, reject) => {
-        db.run('INSERT INTO testing_condition(id, id_foreign, condition, equipment, comment)' +
-        ' VALUES(?, ?, ?, ?, ?)',
-        [
-            newUuid(), id_foreign , JSON.stringify(info.condition), JSON.stringify(info.equipment), info.comment
-        ], function (err) {
-            if (err) reject(err)
-            resolve(true)
-        }) 
-    });
+        db.run(
+            'INSERT INTO testing_condition(id, id_foreign, condition, equipment, comment)' + ' VALUES(?, ?, ?, ?, ?)',
+            [newUuid(), id_foreign, JSON.stringify(info.condition), JSON.stringify(info.equipment), info.comment],
+            function (err) {
+                if (err) reject(err)
+                resolve(true)
+            }
+        )
+    })
 }
 
 const updateTestingCondition = async (id_foreign, info) => {
     return new Promise((resolve, reject) => {
-        db.run('UPDATE testing_condition' +
-        ' SET condition = ?, equipment=?, comment=?' +
-        ' WHERE id_foreign = ?',
-        [
-            JSON.stringify(info.condition), JSON.stringify(info.equipment) ,info.comment, id_foreign
-        ], function (err) {
-            if (err) reject(err)
-            resolve(true)
-        })
+        db.run(
+            'UPDATE testing_condition' + ' SET condition = ?, equipment=?, comment=?' + ' WHERE id_foreign = ?',
+            [JSON.stringify(info.condition), JSON.stringify(info.equipment), info.comment, id_foreign],
+            function (err) {
+                if (err) reject(err)
+                resolve(true)
+            }
+        )
     })
 }
 
 const deleteTestingCondition = (id_foreign) => {
     return new Promise((resolve, reject) => {
-        db.all("DELETE FROM testing_condition WHERE id_foreign = ?", [id_foreign], (err, row) => {
+        db.all('DELETE FROM testing_condition WHERE id_foreign = ?', [id_foreign], (err, row) => {
             if (err) reject(err)
             resolve(true)
         })
@@ -571,7 +601,7 @@ const deleteTestingCondition = (id_foreign) => {
 
 const getTestTypes = () => {
     return new Promise((resolve, reject) => {
-        db.all("SELECT * FROM test_types", [], (err, rows) => {
+        db.all('SELECT * FROM test_types', [], (err, rows) => {
             if (err) reject(err)
             resolve(rows)
         })
@@ -580,48 +610,46 @@ const getTestTypes = () => {
 
 const updateFmeca = (fmeca) => {
     return new Promise((resolve, reject) => {
-        db.run('UPDATE fmeca' +
-            ' SET table_fmeca = ?, table_calculate = ?, total = ?, name=?' +
-            ' WHERE id = ?',
-            [
-                JSON.stringify(fmeca.table_fmeca),  JSON.stringify(fmeca.table_calculate), JSON.stringify(fmeca.total), fmeca.name, fmeca.id
-            ], function (err) {
+        db.run(
+            'UPDATE fmeca' + ' SET table_fmeca = ?, table_calculate = ?, total = ?, name=?' + ' WHERE id = ?',
+            [JSON.stringify(fmeca.table_fmeca), JSON.stringify(fmeca.table_calculate), JSON.stringify(fmeca.total), fmeca.name, fmeca.id],
+            function (err) {
                 if (err) reject(err)
                 resolve(true)
-            })
+            }
+        )
     })
 }
 
 const updateFmecaByName = (fmeca, name) => {
     return new Promise((resolve, reject) => {
-        db.run('UPDATE fmeca' +
-            ' SET table_fmeca = ?, table_calculate = ?, total = ?' +
-            ' WHERE name = ?',
-            [
-                JSON.stringify(fmeca.table_fmeca),  JSON.stringify(fmeca.table_calculate), JSON.stringify(fmeca.total), name,
-            ], function (err) {
+        db.run(
+            'UPDATE fmeca' + ' SET table_fmeca = ?, table_calculate = ?, total = ?' + ' WHERE name = ?',
+            [JSON.stringify(fmeca.table_fmeca), JSON.stringify(fmeca.table_calculate), JSON.stringify(fmeca.total), name],
+            function (err) {
                 if (err) reject(err)
                 resolve(true)
-            })
+            }
+        )
     })
 }
 
 const insertFmeca = (fmeca) => {
     return new Promise((resolve, reject) => {
-        db.run('INSERT INTO fmeca(id, table_fmeca , table_calculate , total, name)' +
-            ' VALUES(?, ?, ?, ?, ? )',
-            [
-                fmeca.id, JSON.stringify(fmeca.table_fmeca), JSON.stringify(fmeca.table_calculate), JSON.stringify(fmeca.total), fmeca.name
-            ], function (err) {
+        db.run(
+            'INSERT INTO fmeca(id, table_fmeca , table_calculate , total, name)' + ' VALUES(?, ?, ?, ?, ? )',
+            [fmeca.id, JSON.stringify(fmeca.table_fmeca), JSON.stringify(fmeca.table_calculate), JSON.stringify(fmeca.total), fmeca.name],
+            function (err) {
                 if (err) reject(err)
                 resolve(true)
-            })
+            }
+        )
     })
 }
 
 const getFmeca = (id) => {
     return new Promise((resolve, reject) => {
-        db.get("SELECT * FROM fmeca", (err, row) => {
+        db.get('SELECT * FROM fmeca', (err, row) => {
             if (err) reject(err)
             resolve(row)
         })
@@ -630,7 +658,7 @@ const getFmeca = (id) => {
 
 const getFmecaByName = (name) => {
     return new Promise((resolve, reject) => {
-        db.get("SELECT * FROM fmeca WHERE name=?", [name], (err, row) => {
+        db.get('SELECT * FROM fmeca WHERE name=?', [name], (err, row) => {
             if (err) reject(err)
             resolve(row)
         })
@@ -639,7 +667,7 @@ const getFmecaByName = (name) => {
 
 const getFmecaName = () => {
     return new Promise((resolve, reject) => {
-        db.all("SELECT name FROM fmeca", (err, row) => {
+        db.all('SELECT name FROM fmeca', (err, row) => {
             if (err) reject(err)
             resolve(row)
         })
@@ -648,7 +676,7 @@ const getFmecaName = () => {
 
 const checkFmecaExist = () => {
     return new Promise((resolve, reject) => {
-        db.all("SELECT * FROM fmeca", (err, row) => {
+        db.all('SELECT * FROM fmeca', (err, row) => {
             if (err) reject(err)
             resolve(row)
         })
@@ -657,7 +685,7 @@ const checkFmecaExist = () => {
 
 const deleteFmeca = (id) => {
     return new Promise((resolve, reject) => {
-        db.get("DELETE FROM fmeca WHERE id = ?", [id], (err, row) => {
+        db.get('DELETE FROM fmeca WHERE id = ?', [id], (err, row) => {
             if (err) reject(err)
             resolve(row)
         })
@@ -666,7 +694,7 @@ const deleteFmeca = (id) => {
 
 const deleteFmecaByName = (name) => {
     return new Promise((resolve, reject) => {
-        db.get("DELETE FROM fmeca WHERE name = ?", [name], (err, row) => {
+        db.get('DELETE FROM fmeca WHERE name = ?', [name], (err, row) => {
             if (err) reject(err)
             resolve(row)
         })
@@ -675,7 +703,7 @@ const deleteFmecaByName = (name) => {
 
 const getOnlineMonitoringData = (assetId) => {
     return new Promise((resolve, reject) => {
-        db.all("SELECT * FROM online_monitor where asset_id=?", [assetId], (err, row) => {
+        db.all('SELECT * FROM online_monitor where asset_id=?', [assetId], (err, row) => {
             if (err) reject(err)
             resolve(row)
         })
@@ -684,37 +712,74 @@ const getOnlineMonitoringData = (assetId) => {
 
 const updateOnlineMonitoringData = (online_monitoring) => {
     return new Promise((resolve, reject) => {
-        db.run('UPDATE online_monitor' +
-            ' SET ageing_insulation = ?, moisture_insulation = ?, bushings_online = ?, patital_discharge = ?, dga = ?, bushing_df_worst = ?,  bushing_df_average= ?, bushing_c_worst   = ?, bushing_c_average = ?, condition_mois    = ?, health_index      = ?, weight_bushing_df = ?, weight_bushing_c  = ?, weight_mois = ?' +
-            ' WHERE asset_id = ?',
+        db.run(
+            'UPDATE online_monitor' +
+                ' SET ageing_insulation = ?, moisture_insulation = ?, bushings_online = ?, patital_discharge = ?, dga = ?, bushing_df_worst = ?,  bushing_df_average= ?, bushing_c_worst   = ?, bushing_c_average = ?, condition_mois    = ?, health_index      = ?, weight_bushing_df = ?, weight_bushing_c  = ?, weight_mois = ?' +
+                ' WHERE asset_id = ?',
             [
-                JSON.stringify(online_monitoring.aois),  JSON.stringify(online_monitoring.moip), JSON.stringify(online_monitoring.bushings), JSON.stringify(online_monitoring.pd), JSON.stringify(online_monitoring.dga), online_monitoring.bushing_df_worst, online_monitoring.bushing_df_average, online_monitoring.bushing_c_worst, online_monitoring.bushing_c_average, online_monitoring.condition_mois, online_monitoring.health_index,  online_monitoring.weight_bushing_df, online_monitoring.weight_bushing_c, online_monitoring.weight_mois, online_monitoring.asset_id
-            ], function (err) {
+                JSON.stringify(online_monitoring.aois),
+                JSON.stringify(online_monitoring.moip),
+                JSON.stringify(online_monitoring.bushings),
+                JSON.stringify(online_monitoring.pd),
+                JSON.stringify(online_monitoring.dga),
+                online_monitoring.bushing_df_worst,
+                online_monitoring.bushing_df_average,
+                online_monitoring.bushing_c_worst,
+                online_monitoring.bushing_c_average,
+                online_monitoring.condition_mois,
+                online_monitoring.health_index,
+                online_monitoring.weight_bushing_df,
+                online_monitoring.weight_bushing_c,
+                online_monitoring.weight_mois,
+                online_monitoring.asset_id
+            ],
+            function (err) {
                 if (err) reject(err)
                 resolve(true)
-            })
+            }
+        )
     })
 }
 
 const insertOnlineMonitoringData = (assetId, online_monitoring) => {
     // const id = online_monitoring.id || newUuid()
     return new Promise((resolve, reject) => {
-        db.run('INSERT INTO online_monitor(id, asset_id, ageing_insulation, moisture_insulation, bushings_online, patital_discharge, dga, bushing_df_worst, bushing_df_average, bushing_c_worst, bushing_c_average, condition_mois, health_index, weight_bushing_df, weight_bushing_c, weight_mois, created_on, created_by, updated_on, updated_by )' +
-            ' VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? )',
-            [online_monitoring.id,assetId,
-                JSON.stringify(online_monitoring.aois), JSON.stringify(online_monitoring.moip), JSON.stringify(online_monitoring.bushings), JSON.stringify(online_monitoring.pd), JSON.stringify(online_monitoring.dga), online_monitoring.bushing_df_worst,
-                online_monitoring.bushing_df_average, online_monitoring.bushing_c_worst, online_monitoring.bushing_c_average, online_monitoring.condition_mois, online_monitoring.health_index, online_monitoring.weight_bushing_df, online_monitoring.weight_bushing_c, online_monitoring.weight_mois,
-                online_monitoring.created_on, online_monitoring.created_by, online_monitoring.updated_on, online_monitoring.updated_by
-            ], function (err) {
+        db.run(
+            'INSERT INTO online_monitor(id, asset_id, ageing_insulation, moisture_insulation, bushings_online, patital_discharge, dga, bushing_df_worst, bushing_df_average, bushing_c_worst, bushing_c_average, condition_mois, health_index, weight_bushing_df, weight_bushing_c, weight_mois, created_on, created_by, updated_on, updated_by )' +
+                ' VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? )',
+            [
+                online_monitoring.id,
+                assetId,
+                JSON.stringify(online_monitoring.aois),
+                JSON.stringify(online_monitoring.moip),
+                JSON.stringify(online_monitoring.bushings),
+                JSON.stringify(online_monitoring.pd),
+                JSON.stringify(online_monitoring.dga),
+                online_monitoring.bushing_df_worst,
+                online_monitoring.bushing_df_average,
+                online_monitoring.bushing_c_worst,
+                online_monitoring.bushing_c_average,
+                online_monitoring.condition_mois,
+                online_monitoring.health_index,
+                online_monitoring.weight_bushing_df,
+                online_monitoring.weight_bushing_c,
+                online_monitoring.weight_mois,
+                online_monitoring.created_on,
+                online_monitoring.created_by,
+                online_monitoring.updated_on,
+                online_monitoring.updated_by
+            ],
+            function (err) {
                 if (err) reject(err)
                 resolve(true)
-            })
+            }
+        )
     })
 }
 
 const deleteMonitorsByAssetId = (asset_id) => {
     return new Promise((resolve, reject) => {
-        db.get("DELETE FROM online_monitor WHERE asset_id = ?", [asset_id], (err, row) => {
+        db.get('DELETE FROM online_monitor WHERE asset_id = ?', [asset_id], (err, row) => {
             if (err) reject(err)
             resolve(row)
         })
@@ -856,7 +921,7 @@ export const importBushingXls = (assetId, data) => {
     })
 }
 
- const importTapChangersXls = (asset_id, data) => {
+const importTapChangersXls = (asset_id, data) => {
     return new Promise((resolve, reject) => {
         db.run(
             'INSERT INTO tap_changers(id, asset_id, mode, serial_no, manufacturer, manufacturer_type, winding, tap_scheme, no_of_taps, voltage_table)' +
@@ -881,7 +946,7 @@ export const importBushingXls = (assetId, data) => {
     })
 }
 
- const xlsToObject = (xlsData) => {
+const xlsToObject = (xlsData) => {
     return new Promise((resolve, reject) => {
         var data = String(xlsData).split('\n')
         var data_arr = []
@@ -934,7 +999,7 @@ app.on('ready', async () => {
     await updateModule.updateLocationTable()
     await updateModule.insertTestType()
     await updateModule.active()
-    
+
     // Configuration Events handler
     ipcMain.handle('getAllConfigurationEvents', async function (event) {
         try {
@@ -963,27 +1028,58 @@ app.on('ready', async () => {
                 data: []
             }
         }
-    });
+    })
 
     // Parent Organization handler - moved to src/ipcmain/cim/parentOrganization/index.js
-    
+
     ipcMain.handle('login', async function (event, user) {
-        const _user = await userFunc.getUser(user)
-        if (_user === undefined) return false
-        else return _user
+        try {
+            const _user = await userFunc.getUser(user)
+            
+            if (_user === undefined || _user === null) {
+                return {success: false, message: 'Invalid credentials'}
+            }
+
+            // Generate token (UUID). For a more secure approach use JWT with expiry.
+            let token
+            try {
+                token = newUuid()
+            } catch (tokenError) {
+                // Fallback token
+                token = 'fallback-token-' + Date.now()
+            }
+
+            // Optionally: keep a simple in-memory session map (not persisted)
+            if (!global._sessions) global._sessions = {}
+            global._sessions[token] = {
+                user_id: _user.id || _user.user_id || null,
+                username: _user.username || _user.name || null,
+                created_at: new Date().toISOString()
+            }
+
+            // Return structured response with token and user info
+            return {
+                success: true,
+                token: token,
+                user: safeSerialize(_user)
+            }
+        } catch (error) {
+            console.error('IPC LOGIN - Error:', error)
+            return {success: false, message: error?.message || String(error)}
+        }
     })
 
     ipcMain.handle('getAllInforAsset', async function (event, locationId) {
         const data = await getAllInforAsset()
-        return data
+        return safeSerialize(data)
     })
 
     ipcMain.handle('uploadAttachment', async function (event, id_foreign, type, info) {
-        const rs = await uploadAttachment(id_foreign, type, info);
+        const rs = await uploadAttachment(id_foreign, type, info)
         if (rs === true) {
             return {
                 success: true,
-                message: "Success",
+                message: 'Success'
             }
         }
     })
@@ -991,26 +1087,25 @@ app.on('ready', async () => {
     ipcMain.handle('updateAttachment', async function (event, id, info, type) {
         const rt = await getAllAttachment(id, type)
         let rs
-        if(rt.length === 0) {
+        if (rt.length === 0) {
             rs = await uploadAttachment(id, type, info)
-        }
-        else {
-            rs = await updateAttachment(id, info);
+        } else {
+            rs = await updateAttachment(id, info)
         }
         if (rs === true) {
             return {
                 success: true,
-                message: "Success",
-                data : rs
+                message: 'Success',
+                data: rs
             }
         }
     })
     ipcMain.handle('getAllAttachment', async function (event, id_foreign, type) {
         try {
-            const rs = await getAllAttachment(id_foreign, type);
+            const rs = await getAllAttachment(id_foreign, type)
             return {
                 success: true,
-                message: "",
+                message: '',
                 data: rs
             }
         } catch (error) {
@@ -1026,23 +1121,22 @@ app.on('ready', async () => {
             fs.unlinkSync(path.join(pathUpload, `/${name}`))
             return {
                 success: true,
-                message: "",
+                message: ''
             }
         } catch (error) {
             return {
                 success: false,
-                message: error,
+                message: error
             }
         }
     })
 
-
     ipcMain.handle('deleteAttachment', async function (event, id_foreign) {
-        const rs = await deleteAttachment(id_foreign);
+        const rs = await deleteAttachment(id_foreign)
         if (rs === true) {
             return {
                 success: true,
-                message: "Success",
+                message: 'Success'
             }
         }
     })
@@ -1053,7 +1147,7 @@ app.on('ready', async () => {
             const rs = await getTestingCondition(id_foreign)
             return {
                 success: true,
-                message: "",
+                message: '',
                 data: rs
             }
         } catch (error) {
@@ -1066,100 +1160,97 @@ app.on('ready', async () => {
     })
 
     ipcMain.handle('insertTestingCondition', async function (event, id_foreign, info) {
-        const rs = await insertTestingCondition(id_foreign, info);
+        const rs = await insertTestingCondition(id_foreign, info)
         if (rs === true) {
             return {
                 success: true,
-                message: "Success",
+                message: 'Success'
             }
         }
     })
 
     ipcMain.handle('updateTestingCondition', async function (event, id_foreign, info) {
-        const rs = await updateTestingCondition(id_foreign, info);
+        const rs = await updateTestingCondition(id_foreign, info)
         if (rs === true) {
             return {
                 success: true,
-                message: "Success",
-                data : rs
+                message: 'Success',
+                data: rs
             }
         }
     })
     ipcMain.handle('deleteTestingCondition', async function (event, id_foreign, type) {
-        const rs = await deleteTestingCondition(id_foreign);
+        const rs = await deleteTestingCondition(id_foreign)
         if (rs === true) {
             return {
                 success: true,
-                message: "Success",
+                message: 'Success'
             }
         }
     })
 
     // circuit breaker
     ipcMain.handle('insertCircuit', async function (event, location_id, asset) {
-        const rs = await circuitFunc.insertCircuit(location_id, asset);
+        const rs = await circuitFunc.insertCircuit(location_id, asset)
         if (rs.success === true) {
             return {
                 success: true,
-                message: "Success",
+                message: 'Success'
             }
-        }
-        else {
+        } else {
             return {
                 success: false,
-                message: "fail",
+                message: 'fail'
             }
         }
     })
 
     ipcMain.handle('getCircuitByLocationId', async function (event, location_id) {
-        const rs = await circuitFunc.getCircuitByLocationId(location_id);
+        const rs = await circuitFunc.getCircuitByLocationId(location_id)
         if (rs.success === true) {
             return {
                 success: true,
-                message: "Success",
-                data : rs.data
+                message: 'Success',
+                data: rs.data
             }
-        }
-        else {
+        } else {
             return {
                 success: false,
-                message: "fail",
+                message: 'fail'
             }
         }
     })
 
     ipcMain.handle('getCircuitId', async function (event, id) {
-        const rs = await circuitFunc.getCircuitId(id);
+        const rs = await circuitFunc.getCircuitId(id)
         if (rs.success === true) {
             return {
                 success: true,
-                message: "Success",
-                data : rs.data
+                message: 'Success',
+                data: rs.data
             }
-        }
-        else {
+        } else {
             return {
                 success: false,
-                message: "fail",
+                message: 'fail'
             }
         }
     })
 
     ipcMain.handle('deleteCircuit', async function (event, ids) {
         try {
-            for(let k in ids) {
+            for (let k in ids) {
                 let element = ids[k]
                 let jobs = await jobCircuitFunc.getJobByAssetId(element)
-                for(let i in jobs) {
+                for (let i in jobs) {
                     let jobId = jobs[i].id
                     let testList = await jobCircuitFunc.getTestByJobId(jobId)
-                    for(let j in testList) {
+                    for (let j in testList) {
                         await deleteTestingCondition(testList[j].id)
-                        const rs = await getAllAttachment(testList[j].id, "test")
-                        if(rs.length != 0) {
-                            for(let n in rs) {
-                                JSON.parse(rs[n].name).forEach(e => {
+                        const rs = await getAllAttachment(testList[j].id, 'test')
+                        if (rs.length != 0) {
+                            for (let n in rs) {
+                                JSON.parse(rs[n].name).forEach((e) => {
                                     let pathFile = path.join(pathUpload, `/${e.path}`)
                                     fs.unlinkSync(pathFile)
                                 })
@@ -1172,10 +1263,10 @@ app.on('ready', async () => {
             }
             return {
                 success: true,
-                message: "",
+                message: '',
                 data: null
             }
-        } catch(error) {
+        } catch (error) {
             return {
                 success: false,
                 message: error,
@@ -1184,27 +1275,26 @@ app.on('ready', async () => {
         }
     })
     ipcMain.handle('updateCircuit', async function (event, asset) {
-        const rs = await circuitFunc.updateCircuit(asset);
+        const rs = await circuitFunc.updateCircuit(asset)
         if (rs.success === true) {
             return {
                 success: true,
-                message: "Success",
+                message: 'Success'
             }
-        }
-        else {
+        } else {
             return {
                 success: false,
-                message: "fail",
+                message: 'fail'
             }
         }
     })
 
     ipcMain.handle('getTestCircuitTypes', async function (event) {
         try {
-            const rows = await circuitFunc.getTestCircuitTypes();
+            const rows = await circuitFunc.getTestCircuitTypes()
             return {
                 success: true,
-                message: "",
+                message: '',
                 data: rows
             }
         } catch (error) {
@@ -1223,7 +1313,7 @@ app.on('ready', async () => {
     // ipcJobCircuit.saveJobCircuit()
     // ipcJobCircuit.saveTestCircuit()
     // ipcJobCircuit.getTestCircuitByJobId()
-    
+
     // ipcTransformer.exportEtrc()
 
     //current Trans - Commented out - modules not found
@@ -1343,7 +1433,7 @@ app.on('ready', async () => {
     ipcCim.active()
 
     //entity
-  ipcEntity.active()
+    ipcEntity.active()
 
     ipcMain.handle('importHavec3pha1cap', async function (event, locationId) {
         const rs = await dialog.showOpenDialog({
@@ -1363,11 +1453,10 @@ app.on('ready', async () => {
                 success: true,
                 message: ''
             }
-        }
-        else {
+        } else {
             return {
                 success: false,
-                message: ""
+                message: ''
             }
         }
     })
@@ -1390,11 +1479,10 @@ app.on('ready', async () => {
                 success: true,
                 message: ''
             }
-        }
-        else {
+        } else {
             return {
                 success: false,
-                message: ""
+                message: ''
             }
         }
     })
@@ -1417,20 +1505,18 @@ app.on('ready', async () => {
                 success: true,
                 message: ''
             }
-        }
-        else {
+        } else {
             return {
                 success: false,
-                message: ""
+                message: ''
             }
         }
     })
 
     ipcMain.handle('getAllUser', async function (event) {
         const _users = await userFunc.getAllUser()
-        if (_users === undefined)
-            return false
-        else return _users
+        if (_users === undefined) return false
+        else return safeSerialize(_users)
     })
 
     ipcMain.handle('signup', async function (event, user) {
@@ -1440,14 +1526,14 @@ app.on('ready', async () => {
             if (rs === true) {
                 return {
                     success: true,
-                    message: "Success",
+                    message: 'Success'
                 }
             }
-        }
-        else return {
-            success: false,
-            message: "User is exist"
-        }
+        } else
+            return {
+                success: false,
+                message: 'User is exist'
+            }
     })
 
     ipcMain.handle('changePass', async function (event, user) {
@@ -1455,10 +1541,9 @@ app.on('ready', async () => {
         if (rs === true) {
             return {
                 success: true,
-                message: "Success"
+                message: 'Success'
             }
-        }
-        else {
+        } else {
             return {
                 success: false,
                 message: rs
@@ -1471,10 +1556,9 @@ app.on('ready', async () => {
         if (rs === true) {
             return {
                 success: true,
-                message: "Success"
+                message: 'Success'
             }
-        }
-        else {
+        } else {
             return {
                 success: false,
                 message: rs
@@ -1489,14 +1573,14 @@ app.on('ready', async () => {
             if (rs === true) {
                 return {
                     success: true,
-                    message: "Success",
+                    message: 'Success'
                 }
             }
-        }
-        else return {
-            success: false,
-            message: "User is exist"
-        }
+        } else
+            return {
+                success: false,
+                message: 'User is exist'
+            }
     })
 
     ipcMain.handle('deleteUser', async function (event, id) {
@@ -1512,7 +1596,7 @@ app.on('ready', async () => {
             await userFunc.deleteUser(id)
             return {
                 success: true,
-                message: "",
+                message: '',
                 data: null
             }
         } catch (error) {
@@ -1529,7 +1613,7 @@ app.on('ready', async () => {
             const rows = await locationFunc.getLocations(userId)
             return {
                 success: true,
-                message: "",
+                message: '',
                 data: rows
             }
         } catch (error) {
@@ -1546,7 +1630,7 @@ app.on('ready', async () => {
             const rows = await locationFunc.getLocationsData(userId, valueData)
             return {
                 success: true,
-                message: "",
+                message: '',
                 data: rows
             }
         } catch (error) {
@@ -1563,7 +1647,7 @@ app.on('ready', async () => {
             const rows = await locationFunc.getLocationByRefId(userId, valueData, refId)
             return {
                 success: true,
-                message: "",
+                message: '',
                 data: rows
             }
         } catch (error) {
@@ -1580,7 +1664,7 @@ app.on('ready', async () => {
             const row = await locationFunc.getLocationByAssetId(asset_id)
             return {
                 success: true,
-                message: "",
+                message: '',
                 data: row
             }
         } catch (error) {
@@ -1597,7 +1681,7 @@ app.on('ready', async () => {
             const row = await locationFunc.getLocationById(id)
             return {
                 success: true,
-                message: "",
+                message: '',
                 data: row
             }
         } catch (error) {
@@ -1614,24 +1698,23 @@ app.on('ready', async () => {
             ids.forEach(async (id) => {
                 // let Transformer = await assetFunc.getAssets(id)
                 await locationFunc.deleteLocation(id)
-                const atm = await getAllAttachment(id, "location")
+                const atm = await getAllAttachment(id, 'location')
                 const condi = await getTestingCondition(id)
-                if(atm.length !== 0) {
-                    atm.forEach(element => {
+                if (atm.length !== 0) {
+                    atm.forEach((element) => {
                         JSON.parse(element.name).forEach((e) => {
                             fs.unlinkSync(path.join(pathUpload, `/${e.path}`))
                         })
                     })
                     await deleteAttachment(id)
                 }
-                if(condi.length !== 0) {
+                if (condi.length !== 0) {
                     await deleteTestingCondition(id)
                 }
-
             })
             return {
                 success: true,
-                message: "",
+                message: '',
                 data: null
             }
         } catch (error) {
@@ -1674,14 +1757,13 @@ app.on('ready', async () => {
             if (check) {
                 return {
                     success: false,
-                    message: "Name already exists"
+                    message: 'Name already exists'
                 }
-            }
-            else {
+            } else {
                 await locationFunc.updateLocation(location)
                 return {
                     success: true,
-                    message: "Success"
+                    message: 'Success'
                 }
             }
         } catch (error) {
@@ -1696,25 +1778,22 @@ app.on('ready', async () => {
         const rs = await dialog.showSaveDialog({
             title: 'Select the file path to save',
             buttonLabel: 'Save',
-            filters: [
-                { name: 'xls', extensions: ['xls'] }
-            ],
+            filters: [{name: 'xls', extensions: ['xls']}],
             properties: []
         })
 
         try {
             if (!rs.canceled) {
                 const _data = objectToXls(data)
-                fs.writeFileSync(rs.filePath.toString(), _data);
+                fs.writeFileSync(rs.filePath.toString(), _data)
                 return {
                     success: true,
-                    message: ""
+                    message: ''
                 }
-            }
-            else {
+            } else {
                 return {
                     success: false,
-                    message: "cancel"
+                    message: 'cancel'
                 }
             }
         } catch (error) {
@@ -1723,16 +1802,13 @@ app.on('ready', async () => {
                 message: error
             }
         }
-
     })
 
     ipcMain.handle('exportCSV', async function (event, data) {
         const rs = await dialog.showSaveDialog({
             title: 'Select the file path to save',
             buttonLabel: 'Save',
-            filters: [
-                { name: 'json', extensions: ['json'] }
-            ],
+            filters: [{name: 'json', extensions: ['json']}],
             properties: []
         })
         try {
@@ -1743,7 +1819,7 @@ app.on('ready', async () => {
                     success: true,
                     message: ''
                 }
-      } else {
+            } else {
                 return {
                     success: false,
                     message: 'cancel'
@@ -1765,25 +1841,25 @@ app.on('ready', async () => {
                 {
                     name: 'xls',
                     extensions: ['xls']
-                },],
+                }
+            ],
             properties: ['openFile']
         })
 
         if (!rs.canceled) {
-            const xlsData = fs.readFileSync(rs.filePaths[0].toString(), { encoding: 'utf-8' })
+            const xlsData = fs.readFileSync(rs.filePaths[0].toString(), {encoding: 'utf-8'})
             var data = await xlsToObject(xlsData)
             await importAssetXls(locationId, data[0])
             await importBushingXls(data[0].Id, data[1])
             await importTapChangersXls(data[0].Id, data[2])
             return {
                 success: true,
-                message: ""
+                message: ''
             }
-        }
-        else {
+        } else {
             return {
                 success: false,
-                message: "Import cancel"
+                message: 'Import cancel'
             }
         }
     })
@@ -1796,31 +1872,32 @@ app.on('ready', async () => {
                 {
                     name: 'json',
                     extensions: ['json']
-                },],
+                }
+            ],
             properties: ['openFile']
         })
 
-            try {
-                 if (!rs.canceled) {
-                     const jsonStr = fs.readFileSync(rs.filePaths[0].toString(), {encoding: 'utf-8'})
-                     const locations = JSON.parse(jsonStr)
-                     console.log(locations)
-                     locations.forEach(async (location, index, arr) => {
-                        try {
-                            await locationFunc.importLocation(userId, location)
-                        } catch (error) {}
-                     })
+        try {
+            if (!rs.canceled) {
+                const jsonStr = fs.readFileSync(rs.filePaths[0].toString(), {encoding: 'utf-8'})
+                const locations = JSON.parse(jsonStr)
+                console.log(locations)
+                locations.forEach(async (location, index, arr) => {
+                    try {
+                        await locationFunc.importLocation(userId, location)
+                    } catch (error) {}
+                })
 
-                     return {
-                         success: true,
-                         message: ''
-                     }
-                 } else {
-                     return {
-                         success: false,
-                         message: 'Import cancel'
-                     }
-                 }   
+                return {
+                    success: true,
+                    message: ''
+                }
+            } else {
+                return {
+                    success: false,
+                    message: 'Import cancel'
+                }
+            }
         } catch (error) {
             return {
                 success: false,
@@ -1849,24 +1926,24 @@ app.on('ready', async () => {
                 fullAssets.forEach(async (fullAsset, index, arr) => {
                     try {
                         const {asset, bushing, tap_changer} = fullAsset
-                        if(asset.asset == "Transformer") {
+                        if (asset.asset == 'Transformer') {
                             const assetId = await assetFunc.importAsset(locationId, asset)
                             await assetFunc.importBushing(bushing, assetId)
                             await assetFunc.importTapChanger(tap_changer, assetId)
-                        } else if(asset.asset == "Circuit breaker") {
+                        } else if (asset.asset == 'Circuit breaker') {
                             circuitFunc.importAsset(asset, locationId)
-                        } else if(asset.asset == "Current transformer") {
+                        } else if (asset.asset == 'Current transformer') {
                             currentTransFunc.importAsset(asset, locationId)
-                        } else if(asset.asset == "Voltage transformer") {
+                        } else if (asset.asset == 'Voltage transformer') {
                             voltageTransFunc.importAsset(asset, locationId)
-                        } else if(asset.asset == "Disconnector") {
+                        } else if (asset.asset == 'Disconnector') {
                             disconnectorFunc.importAsset(asset, locationId)
-                        } else if(asset.asset == "Surge arrester") {
+                        } else if (asset.asset == 'Surge arrester') {
                             surgeArresterFunc.importAsset(asset, locationId)
-                        } else if(asset.asset == "Power cable") {
+                        } else if (asset.asset == 'Power cable') {
                             powerCableFunc.importAsset(asset, locationId)
                         }
-                    } catch (error) { }
+                    } catch (error) {}
                 })
 
                 return {
@@ -1879,7 +1956,7 @@ app.on('ready', async () => {
                     message: 'Import cancel'
                 }
             }
-    } catch (error) {
+        } catch (error) {
             return {
                 success: false,
                 message: error.message
@@ -1889,37 +1966,37 @@ app.on('ready', async () => {
 
     ipcMain.handle('getAllTestByJobId', async function (event, jobId) {
         try {
-                    const testList = await jobFunc.getAllTestByJobId(jobId)
-                    return {
-                        success: true,
-                        message: '',
-                        data: testList
-                    }
-    } catch (error) {
-                    return {
-                        success: false,
-                        message: error.message,
-                        data: null
-                    }
-                }
+            const testList = await jobFunc.getAllTestByJobId(jobId)
+            return {
+                success: true,
+                message: '',
+                data: testList
+            }
+        } catch (error) {
+            return {
+                success: false,
+                message: error.message,
+                data: null
+            }
+        }
     })
 
     ipcMain.handle('getTestByJobId', async function (event, jobId) {
         try {
-                    let testList = await jobFunc.getTestByJobId(jobId)
-                    testList = testList.map((test) => ({...test, job_id: jobId}))
-                    return {
-                        success: true,
-                        message: '',
-                        data: testList
-                    }
-                } catch (error) {
-                    return {
-                        success: false,
-                        message: error.message,
-                        data: null
-                    }
-                }
+            let testList = await jobFunc.getTestByJobId(jobId)
+            testList = testList.map((test) => ({...test, job_id: jobId}))
+            return {
+                success: true,
+                message: '',
+                data: testList
+            }
+        } catch (error) {
+            return {
+                success: false,
+                message: error.message,
+                data: null
+            }
+        }
     })
 
     ipcMain.handle('getAssets', async function (event, locationId) {
@@ -1927,7 +2004,7 @@ app.on('ready', async () => {
             const rows = await assetFunc.getAssets(locationId)
             return {
                 success: true,
-                message: "",
+                message: '',
                 data: rows
             }
         } catch (error) {
@@ -1945,16 +2022,15 @@ app.on('ready', async () => {
             if (check) {
                 return {
                     success: false,
-                    message: "Serial number is exist"
+                    message: 'Serial number is exist'
                 }
-            }
-            else {
+            } else {
                 const assetId = await assetFunc.insertAsset(locationId, asset)
                 await assetFunc.insertTapChanger(tapChangers, assetId)
                 await assetFunc.insertBushings(bushings, assetId)
                 return {
                     success: true,
-                    message: "Success"
+                    message: 'Success'
                 }
             }
         } catch (error) {
@@ -1971,17 +2047,16 @@ app.on('ready', async () => {
             if (check) {
                 return {
                     success: false,
-                    message: "Serial number is exist"
+                    message: 'Serial number is exist'
                 }
-            }
-            else {
+            } else {
                 await assetFunc.updateAsset(asset)
                 await assetFunc.updateTapChanger(tapChangers)
                 await assetFunc.updateBushings(bushings)
                 // await jobFunc.updateJobRelated(asset.properties.id, tapChangers)
                 return {
                     success: true,
-                    message: "Success"
+                    message: 'Success'
                 }
             }
         } catch (error) {
@@ -1997,7 +2072,7 @@ app.on('ready', async () => {
             await assetFunc.relocateAsset(asset)
             return {
                 success: true,
-                message: "Success"
+                message: 'Success'
             }
         } catch (error) {
             return {
@@ -2018,7 +2093,7 @@ app.on('ready', async () => {
             const bushings = await assetFunc.getBushingsByAssetId(id)
             return {
                 success: true,
-                message: "",
+                message: '',
                 data: {
                     asset,
                     tap_changer: tapChanger,
@@ -2039,7 +2114,7 @@ app.on('ready', async () => {
             const tapChanger = await assetFunc.getTapChangerByAssetId(id)
             return {
                 success: true,
-                message: "",
+                message: '',
                 data: tapChanger
             }
         } catch (error) {
@@ -2056,7 +2131,7 @@ app.on('ready', async () => {
             const bushings = await assetFunc.getBushingsByAssetId(id)
             return {
                 success: true,
-                message: "",
+                message: '',
                 data: bushings
             }
         } catch (error) {
@@ -2078,7 +2153,7 @@ app.on('ready', async () => {
             const bushing = await assetFunc.getBushingsByAssetId(assetId)
             return {
                 success: true,
-                message: "",
+                message: '',
                 data: {
                     asset,
                     location,
@@ -2100,7 +2175,7 @@ app.on('ready', async () => {
             const rows = await jobFunc.getJobs(assetId)
             return {
                 success: true,
-                message: "",
+                message: '',
                 data: rows
             }
         } catch (error) {
@@ -2117,7 +2192,7 @@ app.on('ready', async () => {
             const rows = await jobFunc.getTestbyAssetId(assetId, typeId)
             return {
                 success: true,
-                message: "",
+                message: '',
                 data: rows
             }
         } catch (error) {
@@ -2137,25 +2212,23 @@ app.on('ready', async () => {
             if (check) {
                 return {
                     success: false,
-                    message: "Name already exists"
+                    message: 'Name already exists'
                 }
-            }
-            else {
-                let i = 0;
+            } else {
+                let i = 0
                 //insert job
                 const jobId = await jobFunc.insertJob(assetId, properties)
 
                 //insert test
-                if(!(testConditionArr == undefined) && !(attachmentArr == undefined)) {
-                    for(const item of testList) {
+                if (!(testConditionArr == undefined) && !(attachmentArr == undefined)) {
+                    for (const item of testList) {
                         const testId = await jobFunc.insertTest(jobId, item)
                         await insertTestingCondition(testId, testConditionArr[i])
-                        await uploadAttachment(testId, "test", attachmentArr[i])
+                        await uploadAttachment(testId, 'test', attachmentArr[i])
                         i = i + 1
                     }
-                }
-                else {
-                    for(const item of testList) {
+                } else {
+                    for (const item of testList) {
                         await jobFunc.insertTest(jobId, item)
                     }
                 }
@@ -2180,23 +2253,23 @@ app.on('ready', async () => {
                 const testIds = await jobFunc.getTestIdByJobId(jobId)
                 testIds.forEach(async (element) => {
                     const testId = element.id
-                    const rs = await getAllAttachment(testId, "test")
-                        if(rs.length !== 0) {
-                            rs.forEach(element => {
-                                JSON.parse(element.name).forEach(e => {
-                                    let pathFile = path.join(pathUpload, `/${e.path}`)
-                                    fs.unlinkSync(pathFile)
-                                })
+                    const rs = await getAllAttachment(testId, 'test')
+                    if (rs.length !== 0) {
+                        rs.forEach((element) => {
+                            JSON.parse(element.name).forEach((e) => {
+                                let pathFile = path.join(pathUpload, `/${e.path}`)
+                                fs.unlinkSync(pathFile)
                             })
-                            await deleteAttachment(testId)
-                        }
+                        })
+                        await deleteAttachment(testId)
+                    }
                     await deleteTestingCondition(testId)
                 })
                 await jobFunc.deleteJob(jobId)
             })
             return {
                 success: true,
-                message: ""
+                message: ''
             }
         } catch (error) {
             return {
@@ -2204,7 +2277,7 @@ app.on('ready', async () => {
                 message: error
             }
         }
-    }) 
+    })
 
     ipcMain.handle('getJobById', async function (event, id) {
         try {
@@ -2214,7 +2287,7 @@ app.on('ready', async () => {
             testList = testList.map((test) => ({...test, job_id}))
             return {
                 success: true,
-                message: "",
+                message: '',
                 data: {
                     job,
                     testList
@@ -2235,10 +2308,9 @@ app.on('ready', async () => {
             if (check) {
                 return {
                     success: false,
-                    message: "Name already exists"
+                    message: 'Name already exists'
                 }
-            }
-            else {
+            } else {
                 // update job
                 const jobId = properties.id
                 await jobFunc.updateJob(properties)
@@ -2248,36 +2320,33 @@ app.on('ready', async () => {
                     let testId = item.id
 
                     // testId khác 0 là test cũ nên cập nhật vào db, ngược lại thêm vào db
-                    if (testId != EMPTY ) {
+                    if (testId != EMPTY) {
                         await jobFunc.updateTest(item)
                         const rs = await getTestingCondition(testId)
-                        if(rs.length !== 0) {
+                        if (rs.length !== 0) {
                             await updateTestingCondition(testId, testConditionArr[index])
-      } else {
+                        } else {
                             await insertTestingCondition(testId, testConditionArr[index])
                         }
-                        const rt = await getAllAttachment(testId, "test")
-                        if(rt.length !== 0) {
+                        const rt = await getAllAttachment(testId, 'test')
+                        if (rt.length !== 0) {
                             await updateAttachment(testId, attachmentArr[index])
+                        } else {
+                            await uploadAttachment(testId, 'test', attachmentArr[index])
                         }
-                        else {
-                            await uploadAttachment(testId,"test",attachmentArr[index])
-                        }
-                    }
-                    else {
+                    } else {
                         let id = await jobFunc.insertTest(jobId, item)
                         await insertTestingCondition(id, testConditionArr[index])
-                        await uploadAttachment(id,"test",attachmentArr[index])
+                        await uploadAttachment(id, 'test', attachmentArr[index])
                     }
-
                 })
 
                 return {
                     success: true,
-                    message: "Success"
+                    message: 'Success'
                 }
-      }
-    } catch (error) {
+            }
+        } catch (error) {
             return {
                 success: false,
                 message: error
@@ -2291,20 +2360,20 @@ app.on('ready', async () => {
             await deleteTestingCondition(id)
             let fileData = await getAllAttachment(id, 'test')
             await deleteAttachment(id)
-            for(let i in fileData) {
+            for (let i in fileData) {
                 let name = fileData[i].name
-                for(let j in name) {
+                for (let j in name) {
                     let path = name[j].path
-                    if(fs.existsSync(path)) {
+                    if (fs.existsSync(path)) {
                         fs.unlinkSync(path)
                     }
                 }
             }
             return {
                 success: true,
-                message: ""
+                message: ''
             }
-    } catch (error) {
+        } catch (error) {
             return {
                 success: false,
                 message: error
@@ -2320,10 +2389,9 @@ app.on('ready', async () => {
             if (check) {
                 return {
                     success: false,
-                    message: "Name already exists"
+                    message: 'Name already exists'
                 }
-            }
-            else {
+            } else {
                 properties.id = newUuid()
                 //insert job_asset
                 await jobAssetFunc.insertJobasset(assetId, properties.id)
@@ -2334,7 +2402,7 @@ app.on('ready', async () => {
                 testList.forEach(async (item, index) => {
                     const testId = await jobCircuitFunc.insertTest(jobId, item)
                     const testCondition = await insertTestingCondition(testId, testConditionArr[index])
-                    const attachment = await uploadAttachment(testId, "test", attachmentArr[index])
+                    const attachment = await uploadAttachment(testId, 'test', attachmentArr[index])
                 })
 
                 return {
@@ -2343,7 +2411,7 @@ app.on('ready', async () => {
                     data: jobId
                 }
             }
-    } catch (error) {
+        } catch (error) {
             return {
                 success: false,
                 message: error
@@ -2357,36 +2425,34 @@ app.on('ready', async () => {
             if (check) {
                 return {
                     success: false,
-                    message: "Name already exists"
+                    message: 'Name already exists'
                 }
-            }
-            else {
+            } else {
                 // update job
                 const jobId = properties.id
                 await jobCircuitFunc.updateJob(properties)
 
-                for(let i in testList) {
+                for (let i in testList) {
                     let testId = testList[i].id
-                    if (testId != EMPTY ) {
+                    if (testId != EMPTY) {
                         await jobCircuitFunc.updateTest(testList[i])
                         const rs = await getTestingCondition(testId)
-                        if(rs.length !== 0) {
+                        if (rs.length !== 0) {
                             await updateTestingCondition(testId, testConditionArr[i])
                         } else {
                             await insertTestingCondition(testId, testConditionArr[i])
                         }
 
-                        const rt = await getAllAttachment(testId, "test")
-                        if(rt.length !== 0) {
+                        const rt = await getAllAttachment(testId, 'test')
+                        if (rt.length !== 0) {
                             await updateAttachment(testId, attachmentArr[i])
-                        }
-                        else {
-                            await uploadAttachment(testId,"test",attachmentArr[i])
+                        } else {
+                            await uploadAttachment(testId, 'test', attachmentArr[i])
                         }
                     } else {
                         let id = await jobCircuitFunc.insertTest(jobId, testList[i])
                         await insertTestingCondition(id, testConditionArr[i])
-                        await uploadAttachment(id,"test",attachmentArr[i])
+                        await uploadAttachment(id, 'test', attachmentArr[i])
                     }
                 }
 
@@ -2415,17 +2481,17 @@ app.on('ready', async () => {
                 //         await jobCircuitFunc.insertTest(jobId, item)
                 //         await insertTestingCondition(testId, testConditionArr[index])
                 //         await uploadAttachment(testId,"test",attachmentArr[index])
-                        
+
                 //     }
 
                 // })
 
                 return {
                     success: true,
-                    message: "Success"
+                    message: 'Success'
                 }
             }
-    } catch (error) {
+        } catch (error) {
             return {
                 success: false,
                 message: error
@@ -2438,10 +2504,10 @@ app.on('ready', async () => {
             const rows = await jobCircuitFunc.getJobs(assetId)
             return {
                 success: true,
-                message: "",
+                message: '',
                 data: rows
             }
-    } catch (error) {
+        } catch (error) {
             return {
                 success: false,
                 message: error,
@@ -2458,13 +2524,13 @@ app.on('ready', async () => {
             const location = await locationFunc.getLocationById(locationId)
             return {
                 success: true,
-                message: "",
+                message: '',
                 data: {
                     asset,
-                    location,
+                    location
                 }
             }
-    } catch (error) {
+        } catch (error) {
             return {
                 success: false,
                 message: error,
@@ -2481,7 +2547,7 @@ app.on('ready', async () => {
             testList = testList.map((test) => ({...test, job_id}))
             return {
                 success: true,
-                message: "",
+                message: '',
                 data: {
                     job,
                     testList
@@ -2501,16 +2567,16 @@ app.on('ready', async () => {
                 const testIds = await jobCircuitFunc.getTestIdByJobId(jobId)
                 testIds.forEach(async (element) => {
                     const testId = element.id
-                    const rs = await getAllAttachment(testId, "test")
-                        if(rs.length !== 0) {
-                            rs.forEach(element => {
-                                JSON.parse(element.name).forEach(e => {
-                                    let pathFile = path.join(pathUpload, `/${e.path}`)
-                                    fs.unlinkSync(pathFile)
-                                })
+                    const rs = await getAllAttachment(testId, 'test')
+                    if (rs.length !== 0) {
+                        rs.forEach((element) => {
+                            JSON.parse(element.name).forEach((e) => {
+                                let pathFile = path.join(pathUpload, `/${e.path}`)
+                                fs.unlinkSync(pathFile)
                             })
-                            await deleteAttachment(testId)
-                        }
+                        })
+                        await deleteAttachment(testId)
+                    }
                     await deleteTestingCondition(testId)
                 })
                 await jobCircuitFunc.deleteJob(jobId)
@@ -2518,7 +2584,7 @@ app.on('ready', async () => {
             })
             return {
                 success: true,
-                message: ""
+                message: ''
             }
         } catch (error) {
             return {
@@ -2527,7 +2593,7 @@ app.on('ready', async () => {
             }
         }
     })
-    
+
     ipcMain.handle('importJobCSV', async function (event, assetId, assetType) {
         const rs = await dialog.showOpenDialog({
             title: 'Select the file to be uploaded',
@@ -2536,7 +2602,8 @@ app.on('ready', async () => {
                 {
                     name: 'json',
                     extensions: ['json']
-                },],
+                }
+            ],
             properties: ['openFile']
         })
 
@@ -2545,44 +2612,44 @@ app.on('ready', async () => {
                 const jsonStr = fs.readFileSync(rs.filePaths[0].toString(), {encoding: 'utf-8'})
                 const fullJobs = JSON.parse(jsonStr)
                 fullJobs.forEach(async (fullJob) => {
-                    const { job, tests } = fullJob
-                    if(assetType == "Transformer") {
+                    const {job, tests} = fullJob
+                    if (assetType == 'Transformer') {
                         const jobId = await jobFunc.importJob(assetId, job)
                         tests.forEach(async (test) => {
                             await jobFunc.importTest(jobId, test)
                         })
-                    } else if(assetType == "Circuit breaker") {
+                    } else if (assetType == 'Circuit breaker') {
                         await jobAssetFunc.insertJobasset(assetId, job.id)
                         const jobId = await jobCircuitFunc.insertJob(assetId, job)
                         tests.forEach(async (test) => {
                             test.data = JSON.parse(test.data)
                             await jobCircuitFunc.insertTest(jobId, test)
                         })
-                    } else if(assetType == "Current transformer") {
+                    } else if (assetType == 'Current transformer') {
                         const jobId = await currentTransJobFunc.insertJob(assetId, job)
                         tests.forEach(async (test) => {
                             test.data = JSON.parse(test.data)
                             await currentTransJobFunc.insertTest(jobId, test)
                         })
-                    } else if(assetType == "Voltage transformer") {
+                    } else if (assetType == 'Voltage transformer') {
                         const jobId = await voltageTransJobFunc.insertJob(assetId, job)
                         tests.forEach(async (test) => {
                             test.data = JSON.parse(test.data)
                             await voltageTransJobFunc.insertTest(jobId, test)
                         })
-                    } else if(assetType == "Disconnector") {
+                    } else if (assetType == 'Disconnector') {
                         const jobId = await disconnectorJobFunc.insertJob(assetId, job)
                         tests.forEach(async (test) => {
                             test.data = JSON.parse(test.data)
                             await disconnectorJobFunc.insertTest(jobId, test)
                         })
-                    } else if(assetType == "Surge arrester") {
+                    } else if (assetType == 'Surge arrester') {
                         const jobId = await surgeArresterJobFunc.insertJob(assetId, job)
                         tests.forEach(async (test) => {
                             test.data = JSON.parse(test.data)
                             await surgeArresterJobFunc.insertTest(jobId, test)
                         })
-                    } else if(assetType == "Power cable") {
+                    } else if (assetType == 'Power cable') {
                         const jobId = await powerCableJobFunc.insertJob(assetId, job)
                         tests.forEach(async (test) => {
                             test.data = JSON.parse(test.data)
@@ -2613,10 +2680,10 @@ app.on('ready', async () => {
             const rows = await getTestTypes()
             return {
                 success: true,
-                message: "",
+                message: '',
                 data: rows
             }
-    } catch (error) {
+        } catch (error) {
             return {
                 success: false,
                 message: error,
@@ -2630,9 +2697,9 @@ app.on('ready', async () => {
             await updateFmeca(fmeca)
             return {
                 success: true,
-                message: "Success"
+                message: 'Success'
             }
-        }catch (error) {
+        } catch (error) {
             return {
                 success: false,
                 message: error
@@ -2645,9 +2712,9 @@ app.on('ready', async () => {
             await updateFmecaByName(fmeca, name)
             return {
                 success: true,
-                message: "Success"
+                message: 'Success'
             }
-        }catch (error) {
+        } catch (error) {
             return {
                 success: false,
                 message: error
@@ -2660,24 +2727,7 @@ app.on('ready', async () => {
             const fmeca = await getFmecaByName(name)
             return {
                 success: true,
-                message: "",
-                fmeca
-            }
-    } catch (error) {
-            return {
-                success: false,
-                message: error,
-                data: null
-            }
-        }
-    }),
-
-    ipcMain.handle('getFmecaName', async function (event) {
-        try {
-            const fmeca = await getFmecaName()
-            return {
-                success: true,
-                message: "",
+                message: '',
                 fmeca
             }
         } catch (error) {
@@ -2688,68 +2738,81 @@ app.on('ready', async () => {
             }
         }
     }),
-
-    ipcMain.handle('getFmeca', async function (event, id) {
-        try {
-            const fmeca = await getFmeca(id)
-            return {
-                success: true,
-                message: "",
-                data: {
+        ipcMain.handle('getFmecaName', async function (event) {
+            try {
+                const fmeca = await getFmecaName()
+                return {
+                    success: true,
+                    message: '',
                     fmeca
                 }
-            }
-        } catch (error) {
-            return {
-                success: false,
-                message: error,
-                data: null
-            }
-        }
-    }),
-
-    ipcMain.handle('checkFmecaExist', async function (event) {
-        try {
-            const fmeca = await checkFmecaExist()
-            return {
-                success: true,
-                message: "",
-                data: {
-                    fmeca
+            } catch (error) {
+                return {
+                    success: false,
+                    message: error,
+                    data: null
                 }
             }
-        } catch (error) {
-            return {
-                success: false,
-                message: error,
-                data: null
+        }),
+        ipcMain.handle('getFmeca', async function (event, id) {
+            try {
+                const fmeca = await getFmeca(id)
+                return {
+                    success: true,
+                    message: '',
+                    data: {
+                        fmeca
+                    }
+                }
+            } catch (error) {
+                return {
+                    success: false,
+                    message: error,
+                    data: null
+                }
             }
-        }
-    }),
-
-    ipcMain.handle('insertFmeca', async function (event, fmeca) {
-        try {
-            await insertFmeca(fmeca)
-            return {
-                success: true,
-                message: "Success"
+        }),
+        ipcMain.handle('checkFmecaExist', async function (event) {
+            try {
+                const fmeca = await checkFmecaExist()
+                return {
+                    success: true,
+                    message: '',
+                    data: {
+                        fmeca
+                    }
+                }
+            } catch (error) {
+                return {
+                    success: false,
+                    message: error,
+                    data: null
+                }
             }
-        }catch (error) {
-            return {
-                success: false,
-                message: error
+        }),
+        ipcMain.handle('insertFmeca', async function (event, fmeca) {
+            try {
+                await insertFmeca(fmeca)
+                return {
+                    success: true,
+                    message: 'Success'
+                }
+            } catch (error) {
+                return {
+                    success: false,
+                    message: error
+                }
             }
-        }
-    })
+        })
 
     ipcMain.handle('deleteFmeca', async function (event, id) {
         try {
             await deleteFmeca(id)
             return {
                 success: true,
-                message: "Success"
+                message: 'Success'
             }
-        }catch (error) {
+        } catch (error) {
             return {
                 success: false,
                 message: error
@@ -2762,9 +2825,9 @@ app.on('ready', async () => {
             await deleteFmecaByName(name)
             return {
                 success: true,
-                message: "Success"
+                message: 'Success'
             }
-        }catch (error) {
+        } catch (error) {
             return {
                 success: false,
                 message: error
@@ -2777,9 +2840,9 @@ app.on('ready', async () => {
             await updateOnlineMonitoringData(online_monitoring)
             return {
                 success: true,
-                message: "Success"
+                message: 'Success'
             }
-        }catch (error) {
+        } catch (error) {
             return {
                 success: false,
                 message: error
@@ -2792,9 +2855,9 @@ app.on('ready', async () => {
             await deleteMonitorsByAssetId(assetId)
             return {
                 success: true,
-                message: "Success"
+                message: 'Success'
             }
-        }catch (error) {
+        } catch (error) {
             return {
                 success: false,
                 message: error
@@ -2807,7 +2870,7 @@ app.on('ready', async () => {
             const rows = await getOnlineMonitoringData(assetId)
             return {
                 success: true,
-                message: "",
+                message: '',
                 data: rows
             }
         } catch (error) {
@@ -2818,110 +2881,112 @@ app.on('ready', async () => {
             }
         }
     }),
-
-    ipcMain.handle('insertOnlineMonitoringData', async function (event, assetId, online_monitoring) {
-        try {
-            await insertOnlineMonitoringData(assetId, online_monitoring)
-            return {
-                success: true,
-                message: "Success"
+        ipcMain.handle('insertOnlineMonitoringData', async function (event, assetId, online_monitoring) {
+            try {
+                await insertOnlineMonitoringData(assetId, online_monitoring)
+                return {
+                    success: true,
+                    message: 'Success'
+                }
+            } catch (error) {
+                return {
+                    success: false,
+                    message: error
+                }
             }
-        }catch (error) {
-            return {
-                success: false,
-                message: error
-            }
-        }
-    }),
+        }),
+        // Location APIs
+        ipcMain.handle('getLocationByOrganisationId', async function (event, organisationId) {
+            try {
+                // Check if table exists first
+                const tableExists = db.all(`SELECT name FROM sqlite_master WHERE type='table' AND name='location'`)
+                if (tableExists.length === 0) {
+                    return {success: true, data: []}
+                }
 
-    // Location APIs
-    ipcMain.handle('getLocationByOrganisationId', async function (event, organisationId) {
-        try {
-            // Check if table exists first
-            const tableExists = db.all(`SELECT name FROM sqlite_master WHERE type='table' AND name='location'`)
-            if (tableExists.length === 0) {
-        return { success: true, data: [] }
-      }
-      
-            const result = db.all(`
+                const result = db.all(
+                    `
                 SELECT * FROM location 
                 WHERE parent_id = ?
                 ORDER BY main_address
-            `, [organisationId])
-            return { success: true, data: result }
-        } catch (error) {
-            console.error('Error getting location by organisation id:', error)
-            return { success: true, data: [] } // Return empty array instead of error
-        }
-    }),
-
-    // Person APIs  
-    ipcMain.handle('getPersonByOrganisationId', async function (event, organisationId) {
-        try {
-            // Check if table exists first
-            const tableExists = db.all(`SELECT name FROM sqlite_master WHERE type='table' AND name='person'`)
-            if (tableExists.length === 0) {
-                return { success: true, data: [] }
+            `,
+                    [organisationId]
+                )
+                return {success: true, data: safeSerialize(result)}
+            } catch (error) {
+                console.error('Error getting location by organisation id:', error)
+                return {success: true, data: []} // Return empty array instead of error
             }
-            
-            const result = db.all(`
+        }),
+        // Person APIs
+        ipcMain.handle('getPersonByOrganisationId', async function (event, organisationId) {
+            try {
+                // Check if table exists first
+                const tableExists = db.all(`SELECT name FROM sqlite_master WHERE type='table' AND name='person'`)
+                if (tableExists.length === 0) {
+                    return {success: true, data: []}
+                }
+
+                const result = db.all(
+                    `
         SELECT * FROM person 
                 WHERE parent_id = ?
         ORDER BY name
-            `, [organisationId])
-      return { success: true, data: result }
-    } catch (error) {
-      console.error('Error getting person by organisation id:', error)
-            return { success: true, data: [] } // Return empty array instead of error
-        }
-    }),
+            `,
+                    [organisationId]
+                )
+                return {success: true, data: safeSerialize(result)}
+            } catch (error) {
+                console.error('Error getting person by organisation id:', error)
+                return {success: true, data: []} // Return empty array instead of error
+            }
+        }),
+        ipcMain.on('closeApp', () => {
+            console.log('App closing...')
+            try {
+                db.close()
+            } catch (e) {
+                console.log('DB already closed')
+            }
 
-    ipcMain.on("closeApp", () => {
-        console.log('App closing...')
-        try {
-            db.close()
-        } catch (e) {
-            console.log('DB already closed')
-        }
-        
-        // Force exit with error code to kill npm script
-        process.exit(1)
-    });
+            // Force exit with error code to kill npm script
+            process.exit(1)
+        })
 
-    ipcMain.on("minimizeApp", () => {
+    ipcMain.on('minimizeApp', () => {
         win.minimize()
-    });
+    })
 
-    ipcMain.on("maximizeApp", () => {
-        win.isMaximized() ? win.unmaximize() : win.maximize();
-    });
+    ipcMain.on('maximizeApp', () => {
+        win.isMaximized() ? win.unmaximize() : win.maximize()
+    })
 
     // Add handlers for window:minimize, window:maximize, window:close
-    ipcMain.handle("window:minimize", () => {
+    ipcMain.handle('window:minimize', () => {
         win.minimize()
-    });
+    })
 
-    ipcMain.handle("window:maximize", () => {
-        win.isMaximized() ? win.unmaximize() : win.maximize();
-    });
+    ipcMain.handle('window:maximize', () => {
+        win.isMaximized() ? win.unmaximize() : win.maximize()
+    })
 
-    ipcMain.handle("window:close", () => {
+    ipcMain.handle('window:close', () => {
         console.log('Window closing...')
         try {
             db.close()
         } catch (e) {
             console.log('DB already closed')
         }
-        
+
         // Force exit with error code to kill npm script
         process.exit(1)
-    });
+    })
 
     await createWindow()
 
     screen.on('display-metrics-changed', () => {
-        adjustWindowSize();
-    });
+        adjustWindowSize()
+    })
 })
 
 // Exit cleanly on request from parent process in development mode.

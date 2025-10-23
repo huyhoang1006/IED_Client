@@ -10,7 +10,7 @@ export const insertParentOrganizationEntity = () => {
                 return {
                     success: true,
                     message: "Success",
-                    data : rs.data
+                    data: { ...rs.data }
                 }
             }
             else {
@@ -24,7 +24,6 @@ export const insertParentOrganizationEntity = () => {
         } catch (error) {
             console.log(error)
             return {
-                error: error,
                 success: false,
                 message: (error && error.message) ? error.message : "Internal error",
             }
@@ -40,7 +39,7 @@ export const getOrganisationEntityByMrid = () => {
                 return {
                     success: true,
                     message: "Success",
-                    data : rs.data
+                    data: { ...rs.data }
                 }
             }
             else {
@@ -52,7 +51,6 @@ export const getOrganisationEntityByMrid = () => {
         } catch (error) {
             console.log(error)
             return {
-                error: error,
                 success: false,
                 message: (error && error.message) ? error.message : "Internal error",
             }
@@ -68,7 +66,7 @@ export const deleteParentOrganizationEntity = () => {
                 return {
                     success: true,
                     message: "Success",
-                    data : rs.data
+                    data: { ...rs.data }
                 }
             }
             else {
@@ -80,7 +78,6 @@ export const deleteParentOrganizationEntity = () => {
         } catch (error) {
             console.log(error)
             return {
-                error: error,
                 success: false,
                 message: (error && error.message) ? error.message : "Internal error",
             }

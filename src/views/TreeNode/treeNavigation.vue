@@ -72,7 +72,7 @@
                             @clear-selection="clearSelection" @open-context-menu="openContextMenu">
                         </TreeNode>
                     </ul>
-                    <contextMenu @show-data="showData" ref="contextMenu"></contextMenu>
+                    <contextMenu @show-data="showData" @show-addOrganisation="showAddOrganisation" ref="contextMenu"></contextMenu>
                 </div>
                 <div class="page-align">
                     <page-align ref="LocationSyncPageAlign" :page-user="this.pageLocationSync"
@@ -500,7 +500,7 @@
             </template>
         </el-dialog>
 
-        <el-dialog title="Add Organisation" v-model:visible="signOrg" width="1000px" @close="handleOrgCancel">
+        <el-dialog title="Add Organisation" v-model="signOrg" width="1000px" @close="handleOrgCancel">
             <Organisation :parent="parentOrganization" ref="organisation"></Organisation>
             <template #footer>
                 <el-button size="small" type="danger" @click="handleOrgCancel">Cancel</el-button>
@@ -527,7 +527,7 @@
 
         <!-- Temporarily commented out until components are created -->
         <!--
-        <el-dialog title="Add Transformer" :visible.sync="signTransformer" width="1000px"
+        <el-dialog title="Add Transformer" v-model="signTransformer" width="1000px"
             @close="handleTransformerCancel">
             <Transformer :locationId="locationId" :parent="parentOrganization" ref="transformer"></Transformer>
             <template #footer>
@@ -536,7 +536,7 @@
             </template>
         </el-dialog>
 
-        <el-dialog title="Add Bushing" :visible.sync="signBushing" width="1000px" @close="handleBushingCancel">
+        <el-dialog title="Add Bushing" v-model="signBushing" width="1000px" @close="handleBushingCancel">
             <Bushing :locationId="locationId" :parent="parentOrganization" ref="bushing"></Bushing>
             <template #footer>
                 <el-button size="small" type="danger" @click="handleBushingCancel">Cancel</el-button>
@@ -544,7 +544,7 @@
             </template>
         </el-dialog>
 
-        <el-dialog title="Add Surge Arrester" :visible.sync="signSurge" width="1000px" @close="handleSurgeCancel">
+        <el-dialog title="Add Surge Arrester" v-model="signSurge" width="1000px" @close="handleSurgeCancel">
             <SurgeArrester :locationId="locationId" :parent="parentOrganization" ref="surgeArrester"></SurgeArrester>
             <template #footer>
                 <el-button size="small" type="danger" @click="handleSurgeCancel">Cancel</el-button>
@@ -552,7 +552,7 @@
             </template>
         </el-dialog>
 
-        <el-dialog title="Add Circuit Breaker" :visible.sync="signCircuit" width="1000px" @close="handleCircuitCancel">
+        <el-dialog title="Add Circuit Breaker" v-model="signCircuit" width="1000px" @close="handleCircuitCancel">
             <CircuitBreaker :locationId="locationId" :parent="parentOrganization" ref="circuitBreaker"></CircuitBreaker>
             <template #footer>
                 <el-button size="small" type="danger" @click="handleCircuitCancel">Cancel</el-button>
@@ -560,7 +560,7 @@
             </template>
         </el-dialog>
 
-        <el-dialog title="Add Current Transformer" :visible.sync="signCt" width="1000px" @close="handleCtCancel">
+        <el-dialog title="Add Current Transformer" v-model="signCt" width="1000px" @close="handleCtCancel">
             <CurrentTransformer :locationId="locationId" :parent="parentOrganization" ref="currentTransformer">
             </CurrentTransformer>
             <template #footer>
@@ -569,7 +569,7 @@
             </template>
         </el-dialog>
 
-        <el-dialog title="Add Voltage Transformer" :visible.sync="signVt" width="1000px" @close="handleVtCancel">
+        <el-dialog title="Add Voltage Transformer" v-model="signVt" width="1000px" @close="handleVtCancel">
             <VoltageTransformer :locationId="locationId" :parent="parentOrganization" ref="voltageTransformer">
             </VoltageTransformer>
             <template #footer>
@@ -578,7 +578,7 @@
             </template>
         </el-dialog>
 
-        <el-dialog title="Add Power Cable" :visible.sync="signPower" width="1000px" @close="handlePowerCancel">
+        <el-dialog title="Add Power Cable" v-model="signPower" width="1000px" @close="handlePowerCancel">
             <PowerCable :locationId="locationId" :parent="parentOrganization" ref="powerCable"></PowerCable>
             <template #footer>
                 <el-button size="small" type="danger" @click="handlePowerCancel">Cancel</el-button>
@@ -586,7 +586,7 @@
             </template>
         </el-dialog>
 
-        <el-dialog title="Add Disconnector" :visible.sync="signDisconnector" width="1000px"
+        <el-dialog title="Add Disconnector" v-model="signDisconnector" width="1000px"
             @close="handleDisconnectorCancel">
             <Disconnector :locationId="locationId" :parent="parentOrganization" ref="disconnector"></Disconnector>
             <template #footer>
@@ -595,7 +595,7 @@
             </template>
         </el-dialog>
 
-        <el-dialog title="Add Rotating Machine" :visible.sync="signRotating" width="1000px"
+        <el-dialog title="Add Rotating Machine" v-model="signRotating" width="1000px"
             @close="handleRotatingCancel">
             <RotatingMachine :locationId="locationId" :parent="parentOrganization" ref="rotatingMachine">
             </RotatingMachine>
@@ -862,6 +862,16 @@ export default {
         }
     },
     methods: {
+        // Stub functions for missing APIs
+        async getAssetByLocation(locationId) {
+            console.warn('assetApi.getAssetByLocation is not implemented')
+            return { data: [] }
+        },
+        async findByLocationId(locationId) {
+            console.warn('API findByLocationId is not implemented')
+            return { data: [] }
+        },
+        
         handleDropdown() {
             // Handle dropdown functionality
             // This method is called when dropdown needs to be triggered
@@ -1021,12 +1031,11 @@ export default {
                     if (rs.success) {
                         this.organisationClientList = [rs.data] || []
                     } else {
-                        // Error response
                         this.$message.error("Cannot load root organisation")
                     }
                 } catch (error) {
+                    console.error('Error in API call:', error)
                     this.$message.error("Error fetching root data")
-                    console.error("Error fetching data:", error)
                 }
             })
         },
@@ -1949,17 +1958,24 @@ export default {
 
         async handleOrgConfirm() {
             try {
+                await this.$nextTick() // Đợi DOM update
                 const org = this.$refs.organisation
-                if (org) {
+                if (org && org.saveOrganisation) {
                     const { success, data } = await org.saveOrganisation()
                     if (success) {
                         this.$message.success("Organisation saved successfully")
                         this.signOrg = false
                         let newRows = []
                         if (this.organisationClientList && this.organisationClientList.length > 0) {
+                            // Check if data exists
+                            if (!data) {
+                                console.error('handleOrgConfirm - data is undefined:', data)
+                                this.$message.error("Organisation data is missing")
+                                return
+                            }
                             const newRow = {
-                                mrid: data.organisation.mrid,
-                                name: data.organisation.name,
+                                mrid: data.mrid,
+                                name: data.name,
                                 parentId: this.parentOrganization.mrid,
                                 parentName: this.parentOrganization.name,
                                 parentArr: this.parentOrganization.parentArr || [],
@@ -1974,11 +1990,16 @@ export default {
                                 this.$message.error("Parent node not found in tree");
                             }
                         }
+                    } else {
+                        this.$message.error("Failed to save organisation")
                     }
+                } else {
+                    this.$message.error("Organisation component not ready")
+                    console.error("Organisation component reference:", org)
                 }
             } catch (error) {
-                this.$message.error("Some error occur")
-                console.error(error)
+                this.$message.error("Some error occur: " + error.message)
+                console.error("Error in handleOrgConfirm:", error)
             }
         },
 
@@ -2361,7 +2382,7 @@ export default {
 
         /* async getAssets(node, rowData) {
             let locationId = node.id
-            await assetApi.getAssetByLocation(locationId).then(async (response) => {
+            await this.getAssetByLocation(locationId).then(async (response) => {
                 if (response && response.length > 0) {
                     response.forEach(row => {
                         row.parentId = node.id;
@@ -2371,7 +2392,7 @@ export default {
                     rowData = response
                 }
             })
-            await circuitApi.findByLocationId(locationId).then(async (responseAsset) => {
+            await this.findByLocationId(locationId).then(async (responseAsset) => {
                 if (responseAsset && responseAsset.length > 0) {
                     responseAsset.forEach(row => {
                         row.parentId = node.id;
@@ -2381,7 +2402,7 @@ export default {
                     rowData = rowData.concat(responseAsset)
                 }
             })
-            await currentApi.findByLocationId(locationId).then(async (responseAsset) => {
+            await this.findByLocationId(locationId).then(async (responseAsset) => {
                 if (responseAsset && responseAsset.length > 0) {
                     responseAsset.forEach(row => {
                         row.parentId = node.id;
@@ -2391,7 +2412,7 @@ export default {
                     rowData = rowData.concat(responseAsset)
                 }
             })
-            await voltageApi.findByLocationId(locationId).then(async (responseAsset) => {
+            await this.findByLocationId(locationId).then(async (responseAsset) => {
                 if (responseAsset && responseAsset.length > 0) {
                     responseAsset.forEach(row => {
                         row.parentId = node.id;

@@ -10,7 +10,7 @@ export const getOwnerByName = () => {
             return {
                 success: true,
                 message: "Success",
-                data : rs.data
+                data: { ...rs.data }
             }
         }
         else {
@@ -29,7 +29,7 @@ export const getOwnerByPhone = () => {
             return {
                 success: true,
                 message: "Success",
-                data : rs.data
+                data: { ...rs.data }
             }
         }
         else {
@@ -48,7 +48,7 @@ export const getOwnerById = () => {
             return {
                 success: true,
                 message: "Success",
-                data : rs.data
+                data: { ...rs.data }
             }
         }
         else {
@@ -67,7 +67,7 @@ export const getOwnerByUserId = () => {
             return {
                 success: true,
                 message: "Success",
-                data : rs.data
+                data: { ...rs.data }
             }
         }
         else {
@@ -86,7 +86,7 @@ export const getOwnerByRefId = () => {
             return {
                 success: true,
                 message: "Success",
-                data : rs.data
+                data: { ...rs.data }
             }
         }
         else {
