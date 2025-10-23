@@ -1,8 +1,11 @@
 import * as ipcParentOrganization from './parentOrganization/index.js'
 import * as ipcSubstation from './substation/index.js'
 import * as ipcBay from './bay/index.js'
-import * as ipcLocation from './location/index.js'
-import * as ipcPerson from './person/index.js'
+// import * as ipcLocation from './location/index.js' // Module not found
+// import * as ipcStreetDetail from './streetDetail/index.js' // Module not found
+// import * as ipcTownDetail from './townDetail/index.js' // Module not found
+// import * as ipcStreetAddress from './streetAddress/index.js' // Module not found
+// import * as ipcPerson from './person/index.js' // Module not found
 // import * as ipcPersonRole from './personRole/index.js' // Module not found
 // import * as ipcElectronicAddress from './electronicAddress/index.js' // Module not found
 // import * as ipcTelephoneNumber from './telephoneNumber/index.js' // Module not found
@@ -28,11 +31,11 @@ export const active = () => {
     ipcParentOrganization.active()
     ipcSubstation.active()
     ipcBay.active()
-    ipcLocation.active()
-    ipcPerson.active()
+    // ipcLocation.active() // Module not found
     // ipcStreetDetail.active() // Module not found
     // ipcTownDetail.active() // Module not found
     // ipcStreetAddress.active() // Module not found
+    // ipcPerson.active() // Module not found
     // ipcPersonRole.active() // Module not found
     // ipcElectronicAddress.active() // Module not found
     // ipcTelephoneNumber.active() // Module not found

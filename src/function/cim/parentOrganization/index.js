@@ -73,9 +73,9 @@ export const getParentOrganizationByParentId = (parentId) => {
     return new Promise((resolve, reject) => {
         db.all(
             `SELECT o.*, i.*
-             FROM owner o
-             JOIN identified_object i ON o.id = i.mrid
-             WHERE o.parent_id = ?`,
+             FROM organisation o
+             JOIN identified_object i ON o.mrid = i.mrid
+             WHERE o.parent_organisation = ?`,
             [parentId],
             (err, rows) => {
                 if (err) {

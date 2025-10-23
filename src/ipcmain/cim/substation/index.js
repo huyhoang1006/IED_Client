@@ -19,7 +19,7 @@ export const getSubstationByMrid = () => {
                 }
             }
         } catch (error) {
-            console.error('Get SubstationByMrid error:', error)
+            console.log(error)
             return {
                 success: false,
                 message: (error && error.message) ? error.message : "Internal error",
@@ -50,7 +50,7 @@ export const getSubstationsInOrganisationForUser = () => {
                 }
             }
         } catch (error) {
-            console.error('Get SubstationsInOrganisationForUser error:', error)
+            console.log(error)
             return {
                 success: false,
                 message: (error && error.message) ? error.message : "Internal error",
@@ -77,7 +77,7 @@ export const insertSubstation = () => {
                 }
             }
         } catch (error) {
-            console.error('Insert Substation error:', error)
+            console.log(error)
             return {
                 success: false,
                 message: (error && error.message) ? error.message : "Internal error",
@@ -103,7 +103,7 @@ export const updateSubstationByMrid = () => {
                 }
             }
         } catch (error) {
-            console.error('Update SubstationByMrid error:', error)
+            console.log(error)
             return {
                 success: false,
                 message: (error && error.message) ? error.message : "Internal error",
@@ -129,34 +129,7 @@ export const deleteSubstationByMrid = () => {
                 }
             }
         } catch (error) {
-            console.error('Delete SubstationByMrid error:', error)
-            return {
-                success: false,
-                message: (error && error.message) ? error.message : "Internal error",
-            }
-        }
-    })
-}
-
-export const insertSubstationEntity = () => {
-    ipcMain.handle('insertSubstationEntity', async function (event, data) {
-        try {
-            const rs = await cimFunc.substationEntityFunc.insertSubstationEntity(data)
-            if (rs.success == true) {
-                return {
-                    success: true,
-                    message: "Success",
-                    data: { ...rs.data }
-                }
-            }
-            else {
-                return {
-                    success: false,
-                    message: rs.message || "fail",
-                }
-            }
-        } catch (error) {
-            console.error('Insert SubstationEntity error:', error)
+            console.log(error)
             return {
                 success: false,
                 message: (error && error.message) ? error.message : "Internal error",
@@ -169,7 +142,6 @@ export const active = () => {
     getSubstationByMrid()
     getSubstationsInOrganisationForUser()
     insertSubstation()
-    insertSubstationEntity()
     updateSubstationByMrid()
     deleteSubstationByMrid()
 }
