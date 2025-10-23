@@ -38,7 +38,10 @@ export const insertSubstationEntity = async (entity) => {
         };
         try {
             if(entity.attachment && entity.attachment.path && entity.attachment.path.length > 0) {
+                console.log('Backing up files...');
                 backupAllFilesInDir(null, null, entity.substation.mrid);
+                console.log('Files backed up successfully');
+                console.log('Syncing files with deletion...');
                 const syncResult = syncFilesWithDeletion(JSON.parse(entity.attachment.path), null, entity.substation.mrid);
                 if (!syncResult.success) {
                     restoreFiles(null, null, entity.substation.mrid);
@@ -60,6 +63,7 @@ export const insertSubstationEntity = async (entity) => {
                     }
                     return result;
                 }
+                console.log('Files synced successfully');
                 
                 await new Promise((resolve, reject) => {
                     db.serialize(async () => {
@@ -158,6 +162,7 @@ export const insertSubstationEntity = async (entity) => {
                 try {
                     restoreFiles(null, null, entity.substation.mrid);
                 } catch(err) {
+                    console.log('Error restoring files:', err);
                     console.error('Restore files failed:', err);
                     result.error = err.message;
                     result.message = 'Insert SubstationEntity failed and rollback executed';
