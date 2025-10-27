@@ -52,27 +52,90 @@ export const insertPowerSystemResourceTransaction = async (psr, dbsql) => {
                 if (!identifiedResult.success) {
                     return reject({ success: false, message: 'Insert identified object failed', err: identifiedResult.err })
                 }
-                dbsql.run(
-                    `INSERT INTO power_system_resource(
-                        mrid,
-                        psr_type_id,
-                        location
-                    ) VALUES (?, ?, ?)
-                    ON CONFLICT(mrid) DO UPDATE SET
-                        psr_type_id = excluded.psr_type_id,
-                        location = excluded.location`,
-                    [
-                        psr.mrid,
-                        psr.psr_type_id,
-                        psr.location
-                    ],
-                    function (err) {
-                        if (err) {
-                            return reject({ success: false, err, message: 'Insert powerSystemResource failed' })
-                        }
-                        return resolve({ success: true, data: psr, message: 'Insert powerSystemResource completed' })
-                    }
-                )
+                
+                // Insert reference records if they don't exist to satisfy foreign key constraints
+                const insertPromises = []
+                
+                // Insert psr_type if psr_type_id exists
+                if (psr.psr_type_id) {
+                    insertPromises.push(
+                        new Promise((res, rej) => {
+                            dbsql.run(
+                                `INSERT OR IGNORE INTO psr_type(mrid) VALUES (?)`,
+                                [psr.psr_type_id],
+                                (err) => {
+                                    if (err) rej(err)
+                                    else res()
+                                }
+                            )
+                        })
+                    )
+                }
+                
+                // Insert location if location exists
+                if (psr.location) {
+                    insertPromises.push(
+                        new Promise((res, rej) => {
+                            dbsql.run(
+                                `INSERT OR IGNORE INTO location(mrid) VALUES (?)`,
+                                [psr.location],
+                                (err) => {
+                                    if (err) rej(err)
+                                    else res()
+                                }
+                            )
+                        })
+                    )
+                }
+                
+                // Insert asset_info if asset_datasheet exists
+                if (psr.asset_datasheet) {
+                    insertPromises.push(
+                        new Promise((res, rej) => {
+                            dbsql.run(
+                                `INSERT OR IGNORE INTO asset_info(mrid) VALUES (?)`,
+                                [psr.asset_datasheet],
+                                (err) => {
+                                    if (err) rej(err)
+                                    else res()
+                                }
+                            )
+                        })
+                    )
+                }
+                
+                // Wait for all reference inserts to complete
+                Promise.all(insertPromises)
+                    .then(() => {
+                        // Now insert into power_system_resource
+                        dbsql.run(
+                            `INSERT INTO power_system_resource(
+                                mrid,
+                                psr_type_id,
+                                location,
+                                asset_datasheet
+                            ) VALUES (?, ?, ?, ?)
+                            ON CONFLICT(mrid) DO UPDATE SET
+                                psr_type_id = excluded.psr_type_id,
+                                location = excluded.location,
+                                asset_datasheet = excluded.asset_datasheet`,
+                            [
+                                psr.mrid,
+                                psr.psr_type_id,
+                                psr.location,
+                                psr.asset_datasheet || null
+                            ],
+                            function (err) {
+                                if (err) {
+                                    return reject({ success: false, err, message: 'Insert powerSystemResource failed' })
+                                }
+                                return resolve({ success: true, data: psr, message: 'Insert powerSystemResource completed' })
+                            }
+                        )
+                    })
+                    .catch(err => {
+                        return reject({ success: false, err, message: 'Insert reference records failed' })
+                    })
             })
             .catch(err => {
                 return reject({ success: false, err, message: 'Insert powerSystemResource transaction failed' })

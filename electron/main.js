@@ -4,7 +4,7 @@
 function safeSerialize(data) {
     if (data === null || data === undefined) return data
     if (typeof data === 'boolean' || typeof data === 'number' || typeof data === 'string') return data
-    if (Array.isArray(data)) return data.map(item => safeSerialize(item))
+    if (Array.isArray(data)) return data.map((item) => safeSerialize(item))
     if (typeof data === 'object') {
         const result = {}
         for (const [key, value] of Object.entries(data)) {
@@ -33,7 +33,7 @@ import fs from 'fs'
 import {v4 as newUuid} from 'uuid'
 import {NIL as EMPTY} from 'uuid'
 import {parse} from 'csv-parse'
-import {userFunc, locationFunc, assetFunc, jobFunc, importHavec1pha1capFunc, importHavec3pha1capFunc, importHavec3pha2capFunc} from '../src/function/index.js'
+import {userFunc, locationFunc, assetFunc, jobFunc, importHavec1pha1capFunc, importHavec3pha1capFunc, importHavec3pha2capFunc, entityFunc} from '../src/function/index.js'
 import {
     circuitFunc,
     jobAssetFunc,
@@ -90,7 +90,7 @@ async function createWindow() {
 
     // full screen
     adjustWindowSize()
-    
+
     win.show()
 
     if (isDevelopment) {
@@ -1000,6 +1000,8 @@ app.on('ready', async () => {
     await updateModule.insertTestType()
     await updateModule.active()
 
+    // insertSubstation handler moved to ipcmain/cim/substation/index.js
+
     // Configuration Events handler
     ipcMain.handle('getAllConfigurationEvents', async function (event) {
         try {
@@ -1035,7 +1037,7 @@ app.on('ready', async () => {
     ipcMain.handle('login', async function (event, user) {
         try {
             const _user = await userFunc.getUser(user)
-            
+
             if (_user === undefined || _user === null) {
                 return {success: false, message: 'Invalid credentials'}
             }
@@ -2895,6 +2897,75 @@ app.on('ready', async () => {
                 }
             }
         }),
+        ipcMain.handle('getSubstationEntityByMrid', async function (event, mrid) {
+            try {
+                const rs = await entityFunc.substationEntityFunc.getSubstationEntityByMrid(mrid)
+                if (rs.success === true) {
+                    return {
+                        success: true,
+                        message: "Success",
+                        data: rs.data
+                    }
+                } else {
+                    return {
+                        success: false,
+                        message: rs.message || "Get substation entity failed",
+                    }
+                }
+            } catch (error) {
+                console.log(error)
+                return {
+                    success: false,
+                    message: (error && error.message) ? error.message : "Internal error",
+                }
+            }
+        }),
+        ipcMain.handle('updateSubstationEntityByMrid', async function (event, mrid, entity) {
+            try {
+                const rs = await entityFunc.substationEntityFunc.updateSubstationEntityByMrid(mrid, entity)
+                if (rs.success === true) {
+                    return {
+                        success: true,
+                        message: "Success",
+                        data: rs.data
+                    }
+                } else {
+                    return {
+                        success: false,
+                        message: rs.message || "Update substation entity failed",
+                    }
+                }
+            } catch (error) {
+                console.log(error)
+                return {
+                    success: false,
+                    message: (error && error.message) ? error.message : "Internal error",
+                }
+            }
+        }),
+        ipcMain.handle('deleteSubstationEntityByMrid', async function (event, mrid) {
+            try {
+                const rs = await entityFunc.substationEntityFunc.deleteSubstationEntityByMrid(mrid)
+                if (rs.success === true) {
+                    return {
+                        success: true,
+                        message: "Success",
+                        data: rs.data
+                    }
+                } else {
+                    return {
+                        success: false,
+                        message: rs.message || "Delete substation entity failed",
+                    }
+                }
+            } catch (error) {
+                console.log(error)
+                return {
+                    success: false,
+                    message: (error && error.message) ? error.message : "Internal error",
+                }
+            }
+        }),
         // Location APIs
         ipcMain.handle('getLocationByOrganisationId', async function (event, organisationId) {
             try {
@@ -2904,18 +2975,13 @@ app.on('ready', async () => {
                     return {success: true, data: []}
                 }
 
-                const result = db.all(
-                    `
-                SELECT * FROM location 
-                WHERE parent_id = ?
-                ORDER BY main_address
-            `,
-                    [organisationId]
-                )
+                // Try to get all locations without any specific columns
+                const result = db.all(`SELECT * FROM location`)
                 return {success: true, data: safeSerialize(result)}
             } catch (error) {
                 console.error('Error getting location by organisation id:', error)
-                return {success: true, data: []} // Return empty array instead of error
+                // Return empty array instead of crashing
+                return {success: true, data: []}
             }
         }),
         // Person APIs
@@ -2927,18 +2993,13 @@ app.on('ready', async () => {
                     return {success: true, data: []}
                 }
 
-                const result = db.all(
-                    `
-        SELECT * FROM person 
-                WHERE parent_id = ?
-        ORDER BY name
-            `,
-                    [organisationId]
-                )
+                // Try to get all persons without any specific columns
+                const result = db.all(`SELECT * FROM person`)
                 return {success: true, data: safeSerialize(result)}
             } catch (error) {
                 console.error('Error getting person by organisation id:', error)
-                return {success: true, data: []} // Return empty array instead of error
+                // Return empty array instead of crashing
+                return {success: true, data: []}
             }
         }),
         ipcMain.on('closeApp', () => {

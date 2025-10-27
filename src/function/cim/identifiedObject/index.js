@@ -35,6 +35,18 @@ export const insertIdentifiedObject = async (identifiedObject) => {
 
 export const insertIdentifiedObjectTransaction = async (identifiedObject, dbsql) => {
     return new Promise((resolve, reject) => {
+        // Extract substation data from the object
+        const substation = identifiedObject.substation || identifiedObject
+        
+        const mrid = substation.mrid
+        const name = substation.name
+        const alias_name = substation.aliasName || substation.alias_name
+        const description = substation.description
+        
+        if (!mrid) {
+            return reject({ success: false, err: 'mrid is missing', message: 'mrid is required' })
+        }
+        
         dbsql.run(
             `INSERT INTO identified_object(mrid, name, alias_name, description)
              VALUES (?, ?, ?, ?)
@@ -42,15 +54,12 @@ export const insertIdentifiedObjectTransaction = async (identifiedObject, dbsql)
                 name = excluded.name,
                 alias_name = excluded.alias_name,
                 description = excluded.description`,
-            [
-                identifiedObject.mrid,
-                identifiedObject.name || null,
-                identifiedObject.alias_name || null,
-                identifiedObject.description || null
-            ],
+            [mrid, name || null, alias_name || null, description || null],
             function (err) {
-                if (err) return reject({ success: false, err, message: 'Insert identified object failed' })
-                return resolve({ success: true, data: identifiedObject, message: 'Insert identified object completed' })
+                if (err) {
+                    return reject({ success: false, err, message: 'Insert identified object failed' })
+                }
+                return resolve({ success: true, data: substation, message: 'Insert identified object completed' })
             }
         )
     })

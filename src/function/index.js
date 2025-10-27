@@ -4,6 +4,7 @@ import * as locationUploadFunc from './customTemplate/location/location.js'
 import * as ownerFunc from './organisation/index.js'
 import * as cimFunc from './cim/index.js'
 import * as userFunc from './transformer/user.js'
+import * as entityFunc from './entity/index.js'
 
 // Placeholder exports for missing modules (to prevent import errors)
 // TODO: Implement these modules or remove unused imports
@@ -31,7 +32,7 @@ const powerCableFunc = {}
 const powerCableJobFunc = {}
 const updateManuFunc = {}
 
-export { userFunc, locationFunc, assetFunc, jobFunc, importHavec1pha1capFunc, importHavec3pha1capFunc, importHavec3pha2capFunc, uploadFunc}
+export { userFunc, locationFunc, assetFunc, jobFunc, importHavec1pha1capFunc, importHavec3pha1capFunc, importHavec3pha2capFunc, uploadFunc, entityFunc}
 export {circuitFunc, jobAssetFunc, jobCircuitFunc, attachmentFunc, conditionFunc}
 export {currentTransFunc, currentTransJobFunc, voltageTransFunc, voltageTransJobFunc, disconnectorFunc, disconnectorJobFunc}
 export {surgeArresterFunc, surgeArresterJobFunc, powerCableFunc, powerCableJobFunc}
