@@ -51,7 +51,6 @@ export default {
         },
 
         resetForm() {
-            console.log(this.organisationId)
             this.properties = new substationDto()
             this.attachmentData = []
             this.personListData = this.personList
@@ -76,25 +75,25 @@ export default {
                     return {
                         success: false
                     }
-                } else {
-                    try {
-                        const substationEntity = subsMapper.mapDtoToEntity(dto)
-                        const result = await window.electronAPI.insertSubstationEntity(substationEntity)
+                    } else {
+                        try {
+                            const substationEntity = subsMapper.mapDtoToEntity(dto)
+                            const result = await window.electronAPI.insertSubstationEntity(substationEntity.substation)
                         if (result.success) {
                             return {
                                 data: result.data,
                                 success: true
                             }
                         } else {
-                            this.$message.error('Error saving substation: ' + result.message)
-                            console.error('Error saving substation:', result.message)
+                            const errorMessage = result?.message || 'Unknown error'
+                            this.$message.error('Error saving substation: ' + errorMessage)
+                            console.error('Error saving substation:', result)
                             return {
                                 success: false
                             }
                         }
                     } catch (error) {
-                        this.$message.error('Error saving substation: ' + error.message)
-                        console.error('Error saving substation:', error)
+                        this.$message.error('Error saving substation: ' + (error.message || JSON.stringify(error, null, 2)))
                         return {
                             success: false
                         }

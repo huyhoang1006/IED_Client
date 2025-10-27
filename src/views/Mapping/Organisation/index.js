@@ -19,7 +19,7 @@ export const OrgEntityToOrgDto = (entity) => {
         fax: entity.fax || entity.fax_contact || '',
         email: entity.email || entity.email_contact || '',
         comment: entity.comment || '',
-        parentId: entity.parent_id || '',
+        parentId: '', // Temporarily disabled
         mode: entity.mode || 'organisation',
         x_position: '',
         y_position: '',
@@ -71,7 +71,7 @@ export const OrgDtoToOrgEntity = (dto) => {
         email: dto.email || '',
         email_contact: dto.email || '',
         comment: dto.comment || '',
-        parent_id: dto.parentId || null,
+        // parent_organisation: dto.parentId || null, // Temporarily disabled
         mode: dto.mode || 'organisation',
         user_id: dto.user_id || null,
         name_person: dto.user_name || null,

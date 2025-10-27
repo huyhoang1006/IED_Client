@@ -61,8 +61,8 @@ export const getSubstationsInOrganisationForUser = () => {
 
 export const insertSubstation = () => {
     ipcMain.handle('insertSubstation', async function (event, data) {
-        const rs = await cimFunc.substationFunc.insertSubstation(data)
         try {
+            const rs = await cimFunc.substationFunc.insertSubstation(data)
             if (rs.success == true) {
                 return {
                     success: true,
@@ -73,14 +73,16 @@ export const insertSubstation = () => {
             else {
                 return {
                     success: false,
-                    message: "fail",
+                    message: rs.message || "Insert substation failed",
+                    error: JSON.stringify(rs, null, 2)
                 }
             }
         } catch (error) {
-            console.log(error)
+            console.log('insertSubstation error:', error)
             return {
                 success: false,
                 message: (error && error.message) ? error.message : "Internal error",
+                error: JSON.stringify(error, null, 2)
             }
         }
     })

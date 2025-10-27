@@ -155,8 +155,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getAllConfigurationEvents: () => ipcRenderer.invoke('getAllConfigurationEvents'),
   
   // Parent Organization API
-  getParentOrganizationByMrid: (mrid) => ipcRenderer.invoke('getParentOrganizationByMrid', mrid)
-  ,
+  getParentOrganizationByMrid: (mrid) => ipcRenderer.invoke('getParentOrganizationByMrid', mrid),
+  
+  // Substation Entity APIs
+  insertSubstationEntity: (entity) => ipcRenderer.invoke('insertSubstation', entity),
+  getSubstationEntityByMrid: (mrid) => ipcRenderer.invoke('getSubstationEntityByMrid', mrid),
+  updateSubstationEntityByMrid: (mrid, entity) => ipcRenderer.invoke('updateSubstationEntityByMrid', mrid, entity),
+  deleteSubstationEntityByMrid: (mrid) => ipcRenderer.invoke('deleteSubstationEntityByMrid', mrid),
+  
   // Authentication (login) via ipc
   login: (user) => ipcRenderer.invoke('login', user)
 })

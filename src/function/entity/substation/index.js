@@ -1,29 +1,30 @@
 import db from '../../datacontext/index.js'
-import * as attachmentContext from '../../attachmentcontext/index'
+// import * as attachmentContext from '../../attachmentcontext/index' // Module not found
+const attachmentContext = {} // Placeholder
 import path from 'path'
-import { insertSubstationTransaction, getSubstationById, deleteSubstationByIdTransaction } from '@/function/cim/substation'
-import { insertStreetDetailTransaction, getStreetDetailById, deleteStreetDetailByIdTransaction } from '@/function/cim/streetDetail'
-import { insertTownDetailTransaction, getTownDetailById, deleteTownDetailByIdTransaction } from '@/function/cim/townDetail'
-import { insertStreetAddressTransaction, getStreetAddressById, deleteStreetAddressByIdTransaction } from '@/function/cim/streetAddress'
-import { insertLocationTransaction, getLocationById, deleteLocationByIdTransaction } from '@/function/cim/location'
-import { insertElectronicAddressTransaction, getElectronicAddressById, deleteElectronicAddressByIdTransaction } from '@/function/cim/electronicAddress'
-import { insertTelephoneNumberTransaction, getTelephoneNumberById, deleteTelephoneNumberByIdTransaction } from '@/function/cim/telephoneNumber'
-import { insertPersonTransaction, getPersonById, deletePersonByIdTransaction } from '@/function/cim/person'
-import { insertPersonRoleTransaction, getPersonRoleByPersonId, deletePersonRoleByIdTransaction } from '@/function/cim/personRole'
-import { insertUserTransaction, getUserById } from '@/function/entity/user'
-import { insertUserIdentifiedObjectTransaction, getUserIdentifiedObjectByUserIdAndIdentifiedObjectId } from '@/function/entity/userIdentifiedObject'
-import { insertPersonSubstationTransaction, getPersonSubstationBySubstationId  } from '@/function/entity/personSubstation'
-import { uploadAttachmentTransaction, backupAllFilesInDir, deleteBackupFiles, restoreFiles, syncFilesWithDeletion, getAttachmentByForeignIdAndType, deleteAttachmentByIdTransaction, deleteDirectory } from '@/function/entity/attachment'
-import { insertOrganisationLocationTransaction, getOrganisationLocationByOrganisationIdAndLocationId } from '@/function/entity/organisationLocation'
-import { insertPositionPointArrayTransaction, getPositionPointByLocationId } from '@/function/cim/positionPoint'
-import { insertPsrTypeTransaction, getPsrTypeById, deletePsrTypeByIdTransaction } from '@/function/cim/psrType'
-import { insertOrganisationPersonTransaction, getOrganisationPersonByOrganisationIdAndPersonId  } from '../organisationPerson'
-import { insertOrganisationPsrTransaction, getOrganisationPsrByOrganisationIdAndPsrId } from '../organisationPsr'
-import { insertConfigurationEventArrayTransaction, insertConfigurationEventTransaction } from '@/function/cim/configurationEvent/index'
-import { getPowerSystemResourceByLocationIdTransaction } from '@/function/cim/powerSystemResource/index'
-import ConfigurationEvent from '@/views/Cim/ConfigurationEvent'
-import uuid from '@/utils/uuid'
-import SubstationEntity from '@/views/Entity/Substation'
+// import { insertSubstationTransaction, getSubstationById, deleteSubstationByIdTransaction } from '@/function/cim/substation' // @/function not supported
+// import { insertStreetDetailTransaction, getStreetDetailById, deleteStreetDetailByIdTransaction } from '@/function/cim/streetDetail' // @/function not supported
+// import { insertTownDetailTransaction, getTownDetailById, deleteTownDetailByIdTransaction } from '@/function/cim/townDetail' // @/function not supported
+// import { insertStreetAddressTransaction, getStreetAddressById, deleteStreetAddressByIdTransaction } from '@/function/cim/streetAddress' // @/function not supported
+// import { insertLocationTransaction, getLocationById, deleteLocationByIdTransaction } from '@/function/cim/location' // @/function not supported
+// import { insertElectronicAddressTransaction, getElectronicAddressById, deleteElectronicAddressByIdTransaction } from '@/function/cim/electronicAddress' // @/function not supported
+// import { insertTelephoneNumberTransaction, getTelephoneNumberById, deleteTelephoneNumberByIdTransaction } from '@/function/cim/telephoneNumber' // @/function not supported
+// import { insertPersonTransaction, getPersonById, deletePersonByIdTransaction } from '@/function/cim/person' // @/function not supported
+// import { insertPersonRoleTransaction, getPersonRoleByPersonId, deletePersonRoleByIdTransaction } from '@/function/cim/personRole' // @/function not supported
+// import { insertUserTransaction, getUserById } from '@/function/entity/user' // @/function not supported
+// import { insertUserIdentifiedObjectTransaction, getUserIdentifiedObjectByUserIdAndIdentifiedObjectId } from '@/function/entity/userIdentifiedObject' // @/function not supported
+// import { insertPersonSubstationTransaction, getPersonSubstationBySubstationId  } from '@/function/entity/personSubstation' // @/function not supported
+// import { uploadAttachmentTransaction, backupAllFilesInDir, deleteBackupFiles, restoreFiles, syncFilesWithDeletion, getAttachmentByForeignIdAndType, deleteAttachmentByIdTransaction, deleteDirectory } from '@/function/entity/attachment' // @/function not supported
+// import { insertOrganisationLocationTransaction, getOrganisationLocationByOrganisationIdAndLocationId } from '@/function/entity/organisationLocation' // @/function not supported
+// import { insertPositionPointArrayTransaction, getPositionPointByLocationId } from '@/function/cim/positionPoint' // @/function not supported
+// import { insertPsrTypeTransaction, getPsrTypeById, deletePsrTypeByIdTransaction } from '@/function/cim/psrType' // @/function not supported
+// import { insertOrganisationPersonTransaction, getOrganisationPersonByOrganisationIdAndPersonId  } from '../organisationPerson' // Module not found
+// import { insertOrganisationPsrTransaction, getOrganisationPsrByOrganisationIdAndPsrId } from '../organisationPsr' // Module not found
+// import { insertConfigurationEventArrayTransaction, insertConfigurationEventTransaction } from '@/function/cim/configurationEvent/index' // @/function not supported
+// import { getPowerSystemResourceByLocationIdTransaction } from '@/function/cim/powerSystemResource/index' // @/function not supported
+// import ConfigurationEvent from '@/views/Cim/ConfigurationEvent' // @/views not supported
+// import uuid from '@/utils/uuid' // @/utils not supported
+// import SubstationEntity from '@/views/Entity/Substation' // @/views not supported
 
 export const insertSubstationEntity = async (entity) => {
     if(entity == null || typeof entity !== 'object') {

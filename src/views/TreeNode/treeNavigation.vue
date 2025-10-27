@@ -491,7 +491,7 @@
                 </div>
             </div>
         </div>
-        <el-dialog title="Add Substation" v-model:visible="signSubs" width="1000px" @close="handleSubsCancel">
+        <el-dialog title="Add Substation" v-model="signSubs" width="1000px" @close="handleSubsCancel">
             <Substation :parentOrganization="parentOrganization" :personList="personList" :locationList="locationList"
                 :organisationId="organisationId" ref="substation"></Substation>
             <template #footer>
@@ -1932,8 +1932,8 @@ export default {
                         let newRows = []
                         if (this.organisationClientList && this.organisationClientList.length > 0) {
                             const newRow = {
-                                mrid: data.substation.mrid,
-                                name: data.substation.name,
+                                mrid: data.mrid,
+                                name: data.name,
                                 parentId: this.parentOrganization.mrid,
                                 parentName: this.parentOrganization.name,
                                 parentArr: this.parentOrganization.parentArr || [],
@@ -2877,14 +2877,16 @@ export default {
                     window.electronAPI.getPersonByOrganisationId(organisationId),
                     window.electronAPI.getParentOrganizationByMrid(organisationId)
                 ]);
-                if (dataLocation.success) {
-                    this.locationList = dataLocation.data
+                
+                // Force convert to Array
+                if (dataLocation.success && dataLocation.data) {
+                    this.locationList = Array.isArray(dataLocation.data) ? dataLocation.data : []
                 } else {
                     this.locationList = []
                 }
 
-                if (dataPerson.success) {
-                    this.personList = dataPerson.data
+                if (dataPerson.success && dataPerson.data) {
+                    this.personList = Array.isArray(dataPerson.data) ? dataPerson.data : []
                 } else {
                     this.personList = []
                 }
@@ -2918,14 +2920,15 @@ export default {
                     window.electronAPI.getLocationByOrganisationId(node.mrid),
                     window.electronAPI.getPersonByOrganisationId(node.mrid),
                 ]);
-                if (dataLocation.success) {
-                    this.locationList = dataLocation.data
+                // Force convert to Array
+                if (dataLocation.success && dataLocation.data) {
+                    this.locationList = Array.isArray(dataLocation.data) ? dataLocation.data : []
                 } else {
                     this.locationList = []
                 }
 
-                if (dataPerson.success) {
-                    this.personList = dataPerson.data
+                if (dataPerson.success && dataPerson.data) {
+                    this.personList = Array.isArray(dataPerson.data) ? dataPerson.data : []
                 } else {
                     this.personList = []
                 }

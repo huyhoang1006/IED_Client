@@ -3,7 +3,7 @@
         <el-row :gutter="20">
             <el-col :span="12">
                 <div class="col-content">
-                    <el-form :model="properties" :inline-message="true" :label-width="labelWidth" size="mini" label-position="left">
+                    <el-form :model="properties" :inline-message="true" :label-width="labelWidth" size="small" label-position="left">
                         <span class="bolder">Properties</span>
                         <el-divider class="thick-divider"></el-divider>
                         <el-form-item label="Name">
@@ -109,7 +109,7 @@
             </el-col>
             <el-col :span="12">
                 <div class="col-content">
-                    <el-form :label-width="labelWidth" size="mini" label-position="left">
+                    <el-form :label-width="labelWidth" size="small" label-position="left">
                         <span class="bolder">Contact person</span>
                         <el-divider></el-divider>
                         <el-form-item label="Name">
@@ -135,24 +135,24 @@
                     </el-form>
                 </div>
                 <div class="col-content mgt-20">
-                    <el-form :label-width="labelWidth" size="mini" label-position="left">
+                    <el-form :label-width="labelWidth" size="small" label-position="left">
                         <span class="bolder">Comment </span>
                         <el-divider></el-divider>
-                        <el-input type="textarea" rows="5" v-model="properties.comment"></el-input>
+                        <el-input type="textarea" :rows="5" v-model="properties.comment"></el-input>
                         <Attachment :dataParent="this.properties" :deleteList="deleteList" :attachment_="this.attachmentData" title="substation" height="120px" @data-attachment = "getDataAttachment"></Attachment>
                     </el-form>
                 </div>
             </el-col>        
         </el-row>
         <el-dialog
-            :visible.sync="signAddGeo"
+            v-model="signAddGeo"
             :title="titleGeo"
             width="35%"
             align-center
             :before-close="handleCloseGeo"
             :modal="false"
         >
-            <el-form :label-width="labelWidth" size="mini" label-position="left">
+            <el-form :label-width="labelWidth" size="small" label-position="left">
                 <el-form-item label="Geographic coordinate x">
                     <el-input type="number" v-model="geoChosen.x"></el-input>
                 </el-form-item>
@@ -163,10 +163,10 @@
                     <el-input type="number" v-model="geoChosen.z"></el-input>
                 </el-form-item>
             </el-form>
-            <span slot="footer" class="dialog-footer">
+            <template #footer>
                 <el-button type="danger" @click="handleCloseGeo()" size="small">Cancel</el-button>
                 <el-button type="primary" @click="handleConfirmGeo()" size="small">Confirm</el-button>
-            </span>
+            </template>
 
         </el-dialog>
     </div>
@@ -191,7 +191,7 @@ export default {
     props : {
         organisationId: {
             type: String,
-            default: '00000000-0000-0000-0000-000000000000'
+            default: ''
         },
         locationList: {
             type: Array,

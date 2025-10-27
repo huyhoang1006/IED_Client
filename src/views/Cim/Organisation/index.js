@@ -1,4 +1,4 @@
-import IdentifiedObject from "../IdentifiedObject"
+import IdentifiedObject from "../IdentifiedObject/index.js"
 
 class Organisation extends IdentifiedObject {
     constructor() {
