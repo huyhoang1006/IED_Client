@@ -3,7 +3,7 @@
         <el-row :gutter="20">
             <el-col :span="12">
                 <div class="col-content">
-                    <el-form :model="properties" :inline-message="true" :label-width="labelWidth" size="mini" label-position="left">
+                    <el-form :model="properties" :inline-message="true" :label-width="labelWidth" size="small" label-position="left">
                         <span class="bolder">Properties</span>
                         <el-divider class="thick-divider"></el-divider>
                         <el-form-item label="Bay">
@@ -26,10 +26,10 @@
             </el-col>
             <el-col :span="12">
                 <div class="col-content">
-                    <el-form :label-width="labelWidth" size="mini" label-position="left">
+                    <el-form :label-width="labelWidth" size="small" label-position="left">
                         <span class="bolder">Comment </span>
                         <el-divider></el-divider>
-                        <el-input type="textarea" rows="5" v-model="properties.comment"></el-input>
+                        <el-input type="textarea" :rows="5" v-model="properties.comment"></el-input>
                     </el-form>
                 </div>
             </el-col>        

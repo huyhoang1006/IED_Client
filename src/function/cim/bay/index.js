@@ -1,8 +1,6 @@
 import db from '../../datacontext/index.js'
 import * as equipmentContainerFunc from '../equipmentContainer/index.js'
 
-
-// Thêm mới Bay (gồm cả insert EquipmentContainer)
 export const insertBay = async (bay) => {
     return new Promise((resolve, reject) => {
         db.serialize(() => {
@@ -23,7 +21,7 @@ export const insertBay = async (bay) => {
                             bus_bar_configuration = excluded.bus_bar_configuration,
                             substation = excluded.substation,
                             voltage_level = excluded.voltage_level`,
-                        [bay.mrid, bay.bay_energy_meas_flag, bay.bay_power_meas_flag, bay.breaker_configuration, bay.bus_bar_configuration, bay.substation, bay.voltage_level],
+                        [bay.mrid, null, null, bay.breaker_configuration, bay.bus_bar_configuration, bay.substation, bay.voltage_level],
                         function (err) {
                             if (err) {
                                 db.run('ROLLBACK')
@@ -42,7 +40,6 @@ export const insertBay = async (bay) => {
     })
 }
 
-// Thêm mới Substation trong transaction (cho lớp cha gọi)
 export const insertBayTransaction = async (bay, dbsql) => {
     return new Promise((resolve, reject) => {
         equipmentContainerFunc.insertEquipmentContainerTransaction(bay, dbsql)
@@ -50,6 +47,17 @@ export const insertBayTransaction = async (bay, dbsql) => {
                 if (!result.success) {
                     return reject({ success: false, message: 'Insert EquipmentContainer failed', err: result.err })
                 }
+
+                const params = [
+                    bay.mrid, 
+                    null, // bay_energy_meas_flag - không dùng
+                    null, // bay_power_meas_flag - không dùng
+                    bay.breaker_configuration, 
+                    bay.bus_bar_configuration, 
+                    bay.substation, 
+                    bay.voltage_level
+                ];
+
                 dbsql.run(
                     `INSERT INTO bay(mrid, bay_energy_meas_flag, bay_power_meas_flag, breaker_configuration, bus_bar_configuration, substation, voltage_level)
                      VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -60,9 +68,10 @@ export const insertBayTransaction = async (bay, dbsql) => {
                         bus_bar_configuration = excluded.bus_bar_configuration,
                         substation = excluded.substation,
                         voltage_level = excluded.voltage_level`,
-                    [bay.mrid, bay.bay_energy_meas_flag, bay.bay_power_meas_flag, bay.breaker_configuration, bay.bus_bar_configuration, bay.substation, bay.voltage_level],
+                    params,
                     function (err) {
                         if (err) {
+                            console.error('insertBayTransaction SQL error:', err);
                             return reject({ success: false, err, message: 'Insert Bay failed' })
                         }
                         return resolve({ success: true, data: bay, message: 'Insert Bay completed' })
@@ -76,7 +85,6 @@ export const insertBayTransaction = async (bay, dbsql) => {
 }
 
 
-// Lấy Bay theo mrid (gộp cả cha, trả về data: data)
 export const getBayById = async (mrid) => {
     try {
         const ecResult = await equipmentContainerFunc.getEquipmentContainerById(mrid)
@@ -96,16 +104,11 @@ export const getBayById = async (mrid) => {
     }
 }
 
-// Lấy Bay theo mrid (gộp cả cha, trả về data: data)
-export const getBayByVoltageLevelOrSubstation = (voltageLevel, substation) => {
+export const getBayByVoltageLevelOrSubstation = async (voltageLevel, substation) => {
     return new Promise((resolve, reject) => {
         let sql = `
-            SELECT 
-                b.*, 
-                io.*
-            FROM bay b
-            JOIN identified_object io ON b.mrid = io.mrid
-        `;
+            SELECT b.*, io.* FROM bay b
+            JOIN identified_object io ON b.mrid = io.mrid `;
 
         const params = [];
         const conditions = [];
@@ -152,8 +155,6 @@ export const getBayByVoltageLevelOrSubstation = (voltageLevel, substation) => {
     });
 };
 
-
-// Cập nhật Bay (gồm cả EquipmentContainer)
 export const updateBayById = async (mrid, bay) => {
     return new Promise((resolve, reject) => {
         db.serialize(() => {
@@ -175,13 +176,13 @@ export const updateBayById = async (mrid, bay) => {
                             substation = ?
                          WHERE mrid = ?`,
                         [
-                            bay.bay_energy_meas_flag,
-                            bay.bay_power_meas_flag,
+                            null, // bay_energy_meas_flag - không dùng
+                            null, // bay_power_meas_flag - không dùng
                             bay.breaker_configuration,
                             bay.bus_bar_configuration,
                             bay.voltage_level,
-                            bay.substation, // ✅ Thêm dòng này
-                            mrid             // ✅ Giữ đúng vị trí cuối
+                            bay.substation,
+                            mrid            
                         ],
                         function (err) {
                             if (err) {
@@ -201,8 +202,6 @@ export const updateBayById = async (mrid, bay) => {
     });
 };
 
-
-// Cập nhật Bay trong transaction (cho lớp cha gọi)
 export const updateBayByIdTransaction = async (mrid, bay, dbsql) => {
     return new Promise((resolve, reject) => {
         equipmentContainerFunc.updateEquipmentContainerByIdTransaction(mrid, bay, dbsql)
@@ -210,16 +209,16 @@ export const updateBayByIdTransaction = async (mrid, bay, dbsql) => {
                 if (!result.success) {
                     return reject({ success: false, message: 'Update EquipmentContainer failed', err: result.err })
                 }
-                dbsql.run(
-                    `UPDATE bay SET
-                        bay_energy_meas_flag = ?,
-                        bay_power_meas_flag = ?,
-                        breaker_configuration = ?,
-                        bus_bar_configuration = ?,
-                        voltage_level = ?,
-                        substation = ?
-                     WHERE mrid = ?`,
-                    [bay.bay_energy_meas_flag, bay.bay_power_meas_flag, bay.breaker_configuration, bay.bus_bar_configuration, bay.voltage_level, bay.substation, mrid],
+                    dbsql.run(
+                        `UPDATE bay SET
+                            bay_energy_meas_flag = ?,
+                            bay_power_meas_flag = ?,
+                            breaker_configuration = ?,
+                            bus_bar_configuration = ?,
+                            voltage_level = ?,
+                            substation = ?
+                         WHERE mrid = ?`,
+                    [null, null, bay.breaker_configuration, bay.bus_bar_configuration, bay.voltage_level, bay.substation, mrid],
                     function (err) {
                         if (err) {
                             return reject({ success: false, err, message: 'Update Bay failed' })
@@ -234,7 +233,6 @@ export const updateBayByIdTransaction = async (mrid, bay, dbsql) => {
     })
 }
 
-// Xóa Bay (gồm cả EquipmentContainer, dùng cascade)
 export const deleteBayById = async (mrid) => {
     return new Promise((resolve, reject) => {
         equipmentContainerFunc.deleteEquipmentContainerByIdTransaction(mrid, db)
@@ -250,7 +248,37 @@ export const deleteBayById = async (mrid) => {
     })
 }
 
-// Xóa Bay trong transaction (cho lớp cha gọi)
 export const deleteBayByIdTransaction = async (mrid, dbsql) => {
-    return equipmentContainerFunc.deleteEquipmentContainerByIdTransaction(mrid, dbsql)
+    return new Promise((resolve, reject) => {
+        dbsql.run('DELETE FROM bay WHERE mrid = ?', [mrid], function (err) {
+            if (err) {
+                return reject({ success: false, err, message: 'Delete Bay failed' })
+            }
+            
+            equipmentContainerFunc.deleteEquipmentContainerByIdTransaction(mrid, dbsql)
+                .then(result => {
+                    if (!result.success) {
+                        const message = (result.message || '').toLowerCase()
+                        if (message.includes('not found')) {
+                            return resolve({ success: true, message: 'Delete Bay completed' })
+                        }
+                        const errorMsg = result.err?.message || result.message || 'Unknown error'
+                        return reject({ 
+                            success: false, 
+                            message: 'Delete EquipmentContainer failed: ' + errorMsg, 
+                            err: result.err || result
+                        })
+                    }
+                    return resolve({ success: true, message: 'Delete Bay (and EquipmentContainer) completed' })
+                })
+                .catch(err => {
+                    const errorMsg = err?.err?.message || err?.message || err?.toString() || 'Unknown error'
+                    return reject({ 
+                        success: false, 
+                        err: err.err || err,
+                        message: 'Delete Bay transaction failed: ' + errorMsg
+                    })
+                })
+        })
+    })
 }

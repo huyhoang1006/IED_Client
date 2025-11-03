@@ -10,7 +10,7 @@ export const getBayByMrid = () => {
                 return {
                     success: true,
                     message: rs.message || "Success",
-                    data: { ...rs.data }
+                    data: rs.data
                 }
             } else {
                 return {
@@ -36,7 +36,7 @@ export const getBayByVoltageBySubstationId = () => {
                 return {
                     success: true,
                     message: rs.message || "Success",
-                    data: { ...rs.data }
+                    data: rs.data
                 }
             } else {
                 return {
@@ -89,7 +89,7 @@ export const updateBayByMrid = () => {
                 return {
                     success: true,
                     message: rs.message || "Success",
-                    data: { ...rs.data }
+                    data: rs.data
                 }
             }
             else {
