@@ -36,9 +36,19 @@ export default {
         async saveBay() {
             if(this.properties.name === null || this.properties.name === '') {
                 this.$message.error("Bay name cannot be empty");
-                return;
+                return { success: false };
             } else {
-                const data = JSON.parse(JSON.stringify(this.properties));
+                const data = {
+                    mrid: this.properties.mrid,
+                    name: this.properties.name,
+                    comment: this.properties.comment,
+                    bay_energy_meas_flag: this.properties.bay_energy_meas_flag,
+                    bay_power_meas_flag: this.properties.bay_power_meas_flag,
+                    breaker_configuration: this.properties.breaker_configuration,
+                    bus_bar_configuration: this.properties.bus_bar_configuration,
+                    substation: this.properties.substation,
+                    voltage_level: this.properties.voltage_level,
+                };
                 const dataResult = this.checkBay(data);
                 const result = await window.electronAPI.insertBayEntity(dataResult);
                 if (result.success) {
@@ -53,18 +63,14 @@ export default {
         },
 
         checkBay(data) {
-            console.log("Checking bay data:", this.parent);
             if(data.mrid === null || data.mrid === '') {
                 data.mrid = uuid.newUuid();
-                if(this.parent) {
-                    if(this.parent.mode === 'substation') {
-                        data.substation = this.parent.mrid;
-                    } else if(this.parent.mode === 'voltageLevel') {
-                        data.voltage_level = this.parent.mrid;
-                    }
-                }
-                if(data.location === null || data.location === '') {
-                    data.location = this.locationId ? this.locationId : null;
+            }
+            if(this.parent && this.parent.mrid) {
+                if(this.parent.mode === 'substation') {
+                    data.substation = this.parent.mrid;
+                } else if(this.parent.mode === 'voltageLevel') {
+                    data.voltage_level = this.parent.mrid;
                 }
             }
             return data;
