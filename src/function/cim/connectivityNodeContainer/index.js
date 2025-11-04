@@ -1,5 +1,6 @@
 import db from '../../datacontext/index.js'
 import * as powerSystemResourceFunc from '../powerSystemResource/index.js'
+import util from 'util'
 
 // Thêm mới ConnectivityNodeContainer (gồm cả insert PowerSystemResource)
 export const insertConnectivityNodeContainer = async (cnc) => {
@@ -60,7 +61,15 @@ export const insertConnectivityNodeContainerTransaction = async (cnc, dbsql) => 
                 )
             })
             .catch((err) => {
-                return reject({success: false, err, message: 'Insert ConnectivityNodeContainer transaction failed'})
+                return reject({
+                    success: false, 
+                    err: {
+                        message: err?.message || err?.err?.message || 'Unknown error',
+                        code: err?.code || err?.err?.code,
+                        errno: err?.errno || err?.err?.errno
+                    }, 
+                    message: 'Insert ConnectivityNodeContainer transaction failed: ' + (err?.message || err?.err?.message || 'Unknown error')
+                })
             })
     })
 }

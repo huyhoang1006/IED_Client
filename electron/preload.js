@@ -163,6 +163,30 @@ contextBridge.exposeInMainWorld('electronAPI', {
   updateSubstationEntityByMrid: (mrid, entity) => ipcRenderer.invoke('updateSubstationEntityByMrid', mrid, entity),
   deleteSubstationEntityByMrid: (mrid) => ipcRenderer.invoke('deleteSubstationEntityByMrid', mrid),
   
+  // PowerSystemResource APIs
+  getLocationByPowerSystemResourceMrid: (mrid) => ipcRenderer.invoke('getLocationByPowerSystemResourceMrid', mrid),
+  
+  // VoltageLevel APIs
+  getVoltageLevelBySubstationId: (substationId) => ipcRenderer.invoke('getVoltageLevelBySubstationId', substationId),
+  getVoltageLevelByMrid: (mrid) => ipcRenderer.invoke('getVoltageLevelByMrid', mrid),
+  getVoltageLevelEntityByMrid: (mrid) => ipcRenderer.invoke('getVoltageLevelByMrid', mrid), // Alias for entity-level access
+  insertVoltageLevel: (data) => ipcRenderer.invoke('insertVoltageLevel', data),
+  insertVoltageLevelEntity: (data) => ipcRenderer.invoke('insertVoltageLevelEntity', data),
+  updateVoltageLevelByMrid: (mrid, data) => ipcRenderer.invoke('updateVoltageLevelByMrid', mrid, data),
+  deleteVoltageLevelByMrid: (mrid) => ipcRenderer.invoke('deleteVoltageLevelByMrid', mrid),
+  deleteVoltageLevelEntityByMrid: (entity) => ipcRenderer.invoke('deleteVoltageLevelByMrid', entity?.data?.mrid || entity?.mrid || entity?.voltageLevel?.mrid || entity),
+  
+  // Bay APIs
+  getBayByVoltageBySubstationId: (voltageLevel, substationId) => ipcRenderer.invoke('getBayByVoltageBySubstationId', voltageLevel, substationId),
+  insertBayEntity: (data) => ipcRenderer.invoke('insertBayEntity', data),
+  getBayEntityByMrid: (mrid) => ipcRenderer.invoke('getBayEntityByMrid', mrid),
+  deleteBayEntityByMrid: (data) => ipcRenderer.invoke('deleteBayEntityByMrid', data),
+  
+  // Asset APIs
+  getSurgeArresterByPsrId: (psrId) => ipcRenderer.invoke('getSurgeArresterByPsrId', psrId),
+  getBushingByPsrId: (psrId) => ipcRenderer.invoke('getBushingByPsrId', psrId),
+  getAssetByPsrIdAndKind: (psrId, kind) => ipcRenderer.invoke('getAssetByPsrIdAndKind', psrId, kind),
+  
   // Authentication (login) via ipc
   login: (user) => ipcRenderer.invoke('login', user)
 })

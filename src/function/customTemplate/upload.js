@@ -252,7 +252,14 @@ export const uploadReport = async (path, name, assetData, locationChosen, jobDat
             locationData.refId = locationChosen.refId
         }
     } else {
+        // Try both 'root' and 'Root'
         var dataRoot = await ownerFunc.getOwnerByName('root')
+        if (!dataRoot.success || !dataRoot.data || dataRoot.data.length === 0) {
+            dataRoot = await ownerFunc.getOwnerByName('Root')
+        }
+        if (!dataRoot.success || !dataRoot.data || dataRoot.data.length === 0) {
+            throw new Error('Root owner not found. Please ensure owner table exists and has a root record.')
+        }
         locationData.mode = 'location'
         locationData.owner_id = dataRoot.data[0].id
         locationData.refId = dataRoot.data[0].id

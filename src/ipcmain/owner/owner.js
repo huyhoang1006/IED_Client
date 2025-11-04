@@ -5,18 +5,28 @@ import { conditionFunc, attachmentFunc } from '../../function/index.js'
 
 export const getOwnerByName = () => {
     ipcMain.handle('getOwnerByName', async function (event, name) {
-        const rs = await ownerFunc.getOwnerByName(name)
-        if (rs.success == true) {
-            return {
-                success: true,
-                message: "Success",
-                data: { ...rs.data }
+        try {
+            const rs = await ownerFunc.getOwnerByName(name)
+            if (rs.success == true && rs.data && rs.data.length > 0) {
+                return {
+                    success: true,
+                    message: "Success",
+                    data: rs.data
+                }
             }
-        }
-        else {
+            else {
+                return {
+                    success: false,
+                    message: rs.message || `Owner with name '${name}' not found`,
+                    data: []
+                }
+            }
+        } catch (err) {
+            console.error('getOwnerByName error:', err)
             return {
                 success: false,
-                message: "fail",
+                message: err.message || err.toString() || "fail",
+                data: []
             }
         }
     })

@@ -95,7 +95,7 @@ export default {
                     }
                     const dto = JSON.parse(JSON.stringify(this.properties))
                     const dtoData = this.checkOrganisation(dto)
-                    const data = orgMapper.OrgDtoToOrgEntity(dtoData)
+                    const data = orgMapper.mapDtoToEntity(dtoData)
                     const result = await window.electronAPI.insertParentOrganizationEntity(data)
                     if(result.success) {
                         // Emit event để thông báo cho parent component
@@ -253,11 +253,11 @@ export default {
             const dto = this.properties
             console.log("Original DTO:", dto)
             
-            const entity = orgMapper.OrgDtoToOrgEntity(dto)
+            const entity = orgMapper.mapDtoToEntity(dto)
             console.log("Converted to Entity:", entity)
             
             console.log("=== Testing Entity -> DTO Conversion ===")
-            const backToDto = orgMapper.OrgEntityToOrgDto(entity)
+            const backToDto = orgMapper.mapEntityToDto(entity)
             console.log("Converted back to DTO:", backToDto)
             
             this.$message.success("Check console for conversion results")

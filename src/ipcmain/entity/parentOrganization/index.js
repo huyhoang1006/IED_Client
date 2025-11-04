@@ -4,8 +4,9 @@ import {cimFunc} from "../../../function/index.js"
 
 export const insertParentOrganizationEntity = () => {
     ipcMain.handle('insertParentOrganizationEntity', async function (event, data) {
-        const rs = await cimFunc.parentOrganizationFunc.insertParentOrganisation(data)
         try {
+            const rs = await cimFunc.parentOrganizationFunc.insertParentOrganisation(data);
+            
             if (rs.success == true) {
                 return {
                     success: true,
@@ -14,7 +15,6 @@ export const insertParentOrganizationEntity = () => {
                 }
             }
             else {
-                console.log("Function returned failure:", rs)
                 return {
                     success: false,
                     message: rs.message || "fail",
@@ -22,10 +22,10 @@ export const insertParentOrganizationEntity = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 success: false,
                 message: (error && error.message) ? error.message : "Internal error",
+                error: error
             }
         }
     })

@@ -1,84 +1,30 @@
-// VoltageLevel DTO
-export default class VoltageLevelDto {
+class VoltageLevelDto {
     constructor() {
-        this.mrid = null;
-        this.name = null;
-        this.description = null;
-        this.nominalVoltage = null;
-        this.voltageMultiplier = null;
-        this.voltageUnit = null;
-        this.baseVoltage = null;
-        this.substation = null;
-        this.bays = [];
-        this.createdAt = null;
-        this.updatedAt = null;
-    }
+        this.voltageLevelId = ''
+        this.name = ''
+        this.comment = ''
 
-    setMRID(mrid) {
-        this.mrid = mrid;
-    }
+        this.nominal_voltage = null
+        this.low_voltage_limit = null
+        this.high_voltage_limit = null
+        this.substation = null
+        this.base_voltage = null
 
-    setName(name) {
-        this.name = name;
-    }
+        this.highVoltageLimitId = null
+        this.lowVoltageLimitId = null
+        this.baseVoltageId = null
+        this.substationId = null
 
-    setDescription(description) {
-        this.description = description;
-    }
-
-    setNominalVoltage(voltage) {
-        this.nominalVoltage = voltage;
-    }
-
-    setVoltageMultiplier(multiplier) {
-        this.voltageMultiplier = multiplier;
-    }
-
-    setVoltageUnit(unit) {
-        this.voltageUnit = unit;
-    }
-
-    setBaseVoltage(baseVoltage) {
-        this.baseVoltage = baseVoltage;
-    }
-
-    setSubstation(substation) {
-        this.substation = substation;
-    }
-
-    addBay(bay) {
-        this.bays.push(bay);
-    }
-
-    toJSON() {
-        return {
-            mrid: this.mrid,
-            name: this.name,
-            description: this.description,
-            nominalVoltage: this.nominalVoltage,
-            voltageMultiplier: this.voltageMultiplier,
-            voltageUnit: this.voltageUnit,
-            baseVoltage: this.baseVoltage,
-            substation: this.substation,
-            bays: this.bays,
-            createdAt: this.createdAt,
-            updatedAt: this.updatedAt
-        };
-    }
-
-    static fromJSON(data) {
-        const dto = new VoltageLevelDto();
-        dto.mrid = data.mrid;
-        dto.name = data.name;
-        dto.description = data.description;
-        dto.nominalVoltage = data.nominalVoltage;
-        dto.voltageMultiplier = data.voltageMultiplier;
-        dto.voltageUnit = data.voltageUnit;
-        dto.baseVoltage = data.baseVoltage;
-        dto.substation = data.substation;
-        dto.bays = data.bays || [];
-        dto.createdAt = data.createdAt;
-        dto.updatedAt = data.updatedAt;
-        return dto;
+        this.high_voltage_limit_value = null
+        this.high_voltage_limit_multiplier = null
+        this.high_voltage_limit_unit = null
+        this.low_voltage_limit_value = null
+        this.low_voltage_limit_multiplier = null
+        this.low_voltage_limit_unit = null
+        this.base_voltage_value = null
+        this.base_voltage_multiplier = null
+        this.base_voltage_unit = null
     }
 }
+
+export default VoltageLevelDto

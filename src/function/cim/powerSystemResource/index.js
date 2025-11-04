@@ -52,62 +52,152 @@ export const insertPowerSystemResourceTransaction = async (psr, dbsql) => {
                 if (!identifiedResult.success) {
                     return reject({ success: false, message: 'Insert identified object failed', err: identifiedResult.err })
                 }
-                
+                // Normalize input: sometimes callers pass nested objects (e.g. { voltageLevel: { mrid,.. } })
+                // so extract the real data source which contains mrid/name.
+                let dataSource = psr
+                if (psr.voltageLevel && typeof psr.voltageLevel === 'object' && psr.voltageLevel.mrid) {
+                    dataSource = psr.voltageLevel
+                } else if (psr.bay && typeof psr.bay === 'object' && psr.bay.mrid) {
+                    dataSource = psr.bay
+                } else if (psr.substation && typeof psr.substation === 'object' && psr.substation.mrid) {
+                    dataSource = psr.substation
+                }
+
+                // resolve commonly used fields from either root or nested object
+                const mrid = dataSource.mrid
+                const psrTypeId = psr.psr_type_id || dataSource.psr_type_id || null
+                const locationField = psr.location || dataSource.location || null
+                const assetDatasheet = psr.asset_datasheet || dataSource.asset_datasheet || null
+
                 // Insert reference records if they don't exist to satisfy foreign key constraints
                 const insertPromises = []
-                
-                // Insert psr_type if psr_type_id exists
-                if (psr.psr_type_id) {
+
+                // Insert psr_type if psrTypeId exists
+                // Note: psr_type table may have foreign key to identified_object
+                if (psrTypeId) {
                     insertPromises.push(
-                        new Promise((res, rej) => {
-                            dbsql.run(
-                                `INSERT OR IGNORE INTO psr_type(mrid) VALUES (?)`,
-                                [psr.psr_type_id],
-                                (err) => {
-                                    if (err) rej(err)
-                                    else res()
-                                }
-                            )
+                        new Promise(async (res, rej) => {
+                            try {
+                                // Insert identified_object first if needed
+                                await identifiedObjectFunc.insertIdentifiedObjectTransaction({
+                                    mrid: psrTypeId,
+                                    name: psrTypeId // Use mrid as name if not provided
+                                }, dbsql)
+                                
+                                // Then insert psr_type
+                                dbsql.run(
+                                    `INSERT OR IGNORE INTO psr_type(mrid) VALUES (?)`,
+                                    [psrTypeId],
+                                    (err) => {
+                                        if (err) rej(err)
+                                        else res()
+                                    }
+                                )
+                            } catch (err) {
+                                rej(err)
+                            }
                         })
                     )
                 }
-                
-                // Insert location if location exists
-                if (psr.location) {
+
+                // Insert location if locationField exists
+                // Note: location table has foreign key to identified_object, so we need to insert identified_object first
+                if (locationField && typeof locationField === 'string') {
                     insertPromises.push(
-                        new Promise((res, rej) => {
-                            dbsql.run(
-                                `INSERT OR IGNORE INTO location(mrid) VALUES (?)`,
-                                [psr.location],
-                                (err) => {
-                                    if (err) rej(err)
-                                    else res()
+                        new Promise(async (res, rej) => {
+                            try {
+                                // Insert identified_object first (required for location foreign key)
+                                const identifiedResult = await identifiedObjectFunc.insertIdentifiedObjectTransaction({
+                                    mrid: locationField,
+                                    name: locationField // Use mrid as name if not provided
+                                }, dbsql)
+                                
+                                if (!identifiedResult.success) {
+                                    return rej(new Error('Failed to insert identified_object for location: ' + (identifiedResult.message || 'Unknown error')))
                                 }
-                            )
+                                
+                                // Then insert location
+                                dbsql.run(
+                                    `INSERT OR IGNORE INTO location(mrid) VALUES (?)`,
+                                    [locationField],
+                                    (err) => {
+                                        if (err) rej(err)
+                                        else res()
+                                    }
+                                )
+                            } catch (err) {
+                                rej(err)
+                            }
+                        })
+                    )
+                } else if (locationField && typeof locationField === 'object' && locationField.mrid) {
+                    insertPromises.push(
+                        new Promise(async (res, rej) => {
+                            try {
+                                // Insert identified_object first (required for location foreign key)
+                                const identifiedResult = await identifiedObjectFunc.insertIdentifiedObjectTransaction(locationField, dbsql)
+                                
+                                if (!identifiedResult.success) {
+                                    return rej(new Error('Failed to insert identified_object for location: ' + (identifiedResult.message || 'Unknown error')))
+                                }
+                                
+                                // Then insert location
+                                dbsql.run(
+                                    `INSERT OR IGNORE INTO location(mrid) VALUES (?)`,
+                                    [locationField.mrid],
+                                    (err) => {
+                                        if (err) rej(err)
+                                        else res()
+                                    }
+                                )
+                            } catch (err) {
+                                rej(err)
+                            }
                         })
                     )
                 }
-                
-                // Insert asset_info if asset_datasheet exists
-                if (psr.asset_datasheet) {
+
+                // Insert asset_info if assetDatasheet exists
+                // Note: asset_info table may have foreign key to identified_object
+                if (assetDatasheet) {
                     insertPromises.push(
-                        new Promise((res, rej) => {
-                            dbsql.run(
-                                `INSERT OR IGNORE INTO asset_info(mrid) VALUES (?)`,
-                                [psr.asset_datasheet],
-                                (err) => {
-                                    if (err) rej(err)
-                                    else res()
-                                }
-                            )
+                        new Promise(async (res, rej) => {
+                            try {
+                                // Insert identified_object first if needed
+                                await identifiedObjectFunc.insertIdentifiedObjectTransaction({
+                                    mrid: assetDatasheet,
+                                    name: assetDatasheet // Use mrid as name if not provided
+                                }, dbsql)
+                                
+                                // Then insert asset_info
+                                dbsql.run(
+                                    `INSERT OR IGNORE INTO asset_info(mrid) VALUES (?)`,
+                                    [assetDatasheet],
+                                    (err) => {
+                                        if (err) rej(err)
+                                        else res()
+                                    }
+                                )
+                            } catch (err) {
+                                rej(err)
+                            }
                         })
                     )
                 }
-                
+
                 // Wait for all reference inserts to complete
                 Promise.all(insertPromises)
                     .then(() => {
-                        // Now insert into power_system_resource
+                        // Extract location mrid if location is an object
+                        const locationMrid = (typeof locationField === 'string')
+                            ? locationField
+                            : (locationField && typeof locationField === 'object' && locationField.mrid)
+                                ? locationField.mrid
+                                : null
+
+                        // Logging removed to reduce console noise
+
+                        // Now insert into power_system_resource using the normalized mrid and fields
                         dbsql.run(
                             `INSERT INTO power_system_resource(
                                 mrid,
@@ -120,25 +210,49 @@ export const insertPowerSystemResourceTransaction = async (psr, dbsql) => {
                                 location = excluded.location,
                                 asset_datasheet = excluded.asset_datasheet`,
                             [
-                                psr.mrid,
-                                psr.psr_type_id,
-                                psr.location,
-                                psr.asset_datasheet || null
+                                mrid,
+                                psrTypeId || null,
+                                locationMrid,
+                                assetDatasheet || null
                             ],
                             function (err) {
                                 if (err) {
-                                    return reject({ success: false, err, message: 'Insert powerSystemResource failed' })
+                                    return reject({ 
+                                        success: false, 
+                                        err: {
+                                            message: err.message || 'Unknown error',
+                                            code: err.code,
+                                            errno: err.errno
+                                        }, 
+                                        message: 'Insert powerSystemResource failed: ' + err.message
+                                    })
                                 }
                                 return resolve({ success: true, data: psr, message: 'Insert powerSystemResource completed' })
                             }
                         )
                     })
                     .catch(err => {
-                        return reject({ success: false, err, message: 'Insert reference records failed' })
+                        return reject({ 
+                            success: false, 
+                            err: {
+                                message: err?.message || err?.err?.message || 'Unknown error',
+                                code: err?.code || err?.err?.code,
+                                errno: err?.errno || err?.err?.errno
+                            }, 
+                            message: 'Insert reference records failed: ' + (err?.message || err?.err?.message || 'Unknown error')
+                        })
                     })
             })
             .catch(err => {
-                return reject({ success: false, err, message: 'Insert powerSystemResource transaction failed' })
+                return reject({ 
+                    success: false, 
+                    err: {
+                        message: err?.message || err?.err?.message || 'Unknown error',
+                        code: err?.code || err?.err?.code,
+                        errno: err?.errno || err?.err?.errno
+                    }, 
+                    message: 'Insert powerSystemResource transaction failed: ' + (err?.message || err?.err?.message || 'Unknown error')
+                })
             })
     })
 }

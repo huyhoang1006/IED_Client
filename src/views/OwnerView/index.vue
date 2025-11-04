@@ -19,7 +19,7 @@
             <div class="bolder" style="margin-left: 10px; margin-right: 10px; margin-top: 10px;"> {{ titleOwner }} </div>
             <hr style="background-color: black; height:1px; margin-left: 10px; margin-right: 10px; margin-top: 10px;">
             <el-col :span="8" class="col-content">
-                <el-form :inline-message="true" :label-width="labelWidth" size="mini" label-position="left">
+                <el-form :inline-message="true" :label-width="labelWidth" size="small" label-position="left">
                     <span class="bolder">Company</span>
                     <el-divider></el-divider>
                     <el-form-item label="Name" prop="name">
@@ -51,47 +51,47 @@
             <el-col :span="8" class="col-content">
                 <span class="bolder">Contact person</span>
                 <el-divider></el-divider>
-                <el-form :label-width="labelWidth" size="mini" label-position="left">
+                <el-form :label-width="labelWidth" size="small" label-position="left">
                     <el-form-item label="Name">
                         <el-input v-model="owner.name_person"></el-input>
                     </el-form-item>
                 </el-form>
-                <el-form :label-width="labelWidth" size="mini" label-position="left">
+                <el-form :label-width="labelWidth" size="small" label-position="left">
                     <el-form-item label="Phone no. 1">
                         <el-input v-model="owner.phone1"></el-input>
                     </el-form-item>
                 </el-form>
-                <el-form :label-width="labelWidth" size="mini" label-position="left">
+                <el-form :label-width="labelWidth" size="small" label-position="left">
                     <el-form-item label="Phone no. 2">
                         <el-input v-model="owner.phone2"></el-input>
                     </el-form-item>
                 </el-form>
-                <el-form :label-width="labelWidth" size="mini" label-position="left">
+                <el-form :label-width="labelWidth" size="small" label-position="left">
                     <el-form-item label="Fax no.">
                         <el-input v-model="owner.fax_contact"></el-input>
                     </el-form-item>
                 </el-form>
-                <el-form :label-width="labelWidth" size="mini" label-position="left">
+                <el-form :label-width="labelWidth" size="small" label-position="left">
                     <el-form-item label="Email">
                         <el-input v-model="owner.email_contact"></el-input>
                     </el-form-item>
                 </el-form>
-                <el-form :label-width="labelWidth" size="mini" label-position="left">
+                <el-form :label-width="labelWidth" size="small" label-position="left">
                     <el-form-item label="Department">
                         <el-input v-model="owner.department"></el-input>
                     </el-form-item>
                 </el-form>
-                <el-form :label-width="labelWidth" size="mini" label-position="left">
+                <el-form :label-width="labelWidth" size="small" label-position="left">
                     <el-form-item label="Position">
                         <el-input v-model="owner.position"></el-input>
                     </el-form-item>
                 </el-form>
             </el-col>
             <el-col :span="8" class="col-content">
-                <el-form :label-width="labelWidth" size="mini" label-position="left">
+                <el-form :label-width="labelWidth" size="small" label-position="left">
                     <span class="bolder">Comment </span>
                     <el-divider></el-divider>
-                    <el-input type="textarea" rows="5" v-model="owner.comment"></el-input>
+                    <el-input type="textarea" :rows="5" v-model="owner.comment"></el-input>
                     <Attachment v-if="$route.query.modeSave == 'editSave'" :attachment_="this.Attachment" title="owner" height="120px" @data-attachment = "getDataAttachment"></Attachment>
                 </el-form>
             </el-col>
