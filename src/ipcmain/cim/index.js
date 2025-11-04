@@ -1,6 +1,12 @@
 import * as ipcParentOrganization from './parentOrganization/index.js'
 import * as ipcSubstation from './substation/index.js'
 import * as ipcBay from './bay/index.js'
+import * as ipcPowerSystemResource from './powerSystemResource/index.js'
+import * as ipcLocation from './location/index.js'
+import * as ipcVoltageLevel from './voltageLevel/index.js'
+import * as ipcAsset from './asset/index.js'
+import * as ipcSurgeArrester from './surgeArrester/index.js'
+import * as ipcBushing from './bushing/index.js'
 // import * as ipcLocation from './location/index.js' // Module not found
 // import * as ipcStreetDetail from './streetDetail/index.js' // Module not found
 // import * as ipcTownDetail from './townDetail/index.js' // Module not found
@@ -31,6 +37,12 @@ export const active = () => {
     ipcParentOrganization.active()
     ipcSubstation.active()
     ipcBay.active()
+    ipcPowerSystemResource.active()
+    ipcVoltageLevel.active()
+    ipcAsset.active()
+    ipcLocation.active()
+    ipcSurgeArrester.active()
+    ipcBushing.active()
     // ipcLocation.active() // Module not found
     // ipcStreetDetail.active() // Module not found
     // ipcTownDetail.active() // Module not found

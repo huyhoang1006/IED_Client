@@ -2,7 +2,13 @@ import db from '../../datacontext/index.js'
 // import * as attachmentContext from '../../attachmentcontext/index' // Module not found
 const attachmentContext = {} // Placeholder
 import path from 'path'
-// import { insertSubstationTransaction, getSubstationById, deleteSubstationByIdTransaction } from '@/function/cim/substation' // @/function not supported
+import SubstationEntity from '../../../views/Entity/Substation/index.js'
+import * as cimSubstationFunc from '../../cim/substation/index.js'
+
+// Wrapper functions for getSubstationById
+const getSubstationById = async (mrid) => {
+    return await cimSubstationFunc.getSubstationById(mrid)
+}
 // import { insertStreetDetailTransaction, getStreetDetailById, deleteStreetDetailByIdTransaction } from '@/function/cim/streetDetail' // @/function not supported
 // import { insertTownDetailTransaction, getTownDetailById, deleteTownDetailByIdTransaction } from '@/function/cim/townDetail' // @/function not supported
 // import { insertStreetAddressTransaction, getStreetAddressById, deleteStreetAddressByIdTransaction } from '@/function/cim/streetAddress' // @/function not supported
@@ -24,7 +30,6 @@ import path from 'path'
 // import { getPowerSystemResourceByLocationIdTransaction } from '@/function/cim/powerSystemResource/index' // @/function not supported
 // import ConfigurationEvent from '@/views/Cim/ConfigurationEvent' // @/views not supported
 // import uuid from '@/utils/uuid' // @/utils not supported
-// import SubstationEntity from '@/views/Entity/Substation' // @/views not supported
 
 export const insertSubstationEntity = async (entity) => {
     if(entity == null || typeof entity !== 'object') {
@@ -207,6 +212,90 @@ export const insertSubstationEntity = async (entity) => {
     }
 }
 
+export const getSubstationEntityByMrid = async (mrid) => {
+    try {
+        const substation = await getSubstationById(mrid)
+        if (!substation.success) {
+            return { success: false, message: 'Substation not found' }
+        }
+        
+        const entity = new SubstationEntity()
+        entity.substation = substation.data
+        
+        // Populate related data - similar to getSubstationEntityById but without user/organisation context
+        try {
+            // Get location from power_system_resource.location field
+            const locationMrid = substation.data.location
+            
+            if (locationMrid) {
+                const LocationModule = await import('../../cim/location/index.js')
+                const dataLocation = await LocationModule.getLocationById(locationMrid)
+                if (dataLocation.success) {
+                    entity.location = dataLocation.data
+                    
+                    // Get street address if available
+                    if (entity.location.main_address) {
+                        const StreetAddressModule = await import('../../cim/streetAddress/index.js')
+                        const dataStreetAddress = await StreetAddressModule.getStreetAddressById(entity.location.main_address)
+                        if (dataStreetAddress.success) {
+                            entity.streetAddress = dataStreetAddress.data
+                            
+                            // Get street detail
+                            if (entity.streetAddress.street_detail) {
+                                const StreetDetailModule = await import('../../cim/streetDetail/index.js')
+                                const dataStreetDetail = await StreetDetailModule.getStreetDetailById(entity.streetAddress.street_detail)
+                                if (dataStreetDetail.success) {
+                                    entity.streetDetail = dataStreetDetail.data
+                                }
+                            }
+                            
+                            // Get town detail
+                            if (entity.streetAddress.town_detail) {
+                                const TownDetailModule = await import('../../cim/townDetail/index.js')
+                                const dataTownDetail = await TownDetailModule.getTownDetailById(entity.streetAddress.town_detail)
+                                if (dataTownDetail.success) {
+                                    entity.townDetail = dataTownDetail.data
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Get position points
+                    const PositionPointModule = await import('../../cim/positionPoint/index.js')
+                    const dataPositionPoint = await PositionPointModule.getPositionPointByLocationId(entity.location.mrid)
+                    if (dataPositionPoint.success) {
+                        entity.positionPoint = dataPositionPoint.data
+                    }
+                }
+            }
+            
+            // Get PSR Type
+            if (substation.data.psr_type_id) {
+                const PsrTypeModule = await import('../../cim/psrType/index.js')
+                const dataPrsType = await PsrTypeModule.getPsrTypeById(substation.data.psr_type_id)
+                if (dataPrsType.success) {
+                    entity.psrType = dataPrsType.data
+                }
+            }
+            
+            // Get attachment
+            const AttachmentModule = await import('../attachment/index.js')
+            const dataAttachment = await AttachmentModule.getAttachmentByForeignIdAndType(substation.data.mrid, 'substation')
+            if (dataAttachment.success) {
+                entity.attachment = dataAttachment.data
+            }
+        } catch (err) {
+            console.error('Error loading related data:', err)
+            // Continue anyway with partial data
+        }
+        
+        return { success: true, data: entity, message: 'Substation entity retrieved successfully' }
+    } catch (error) {
+        console.error('Error retrieving substation entity:', error)
+        return { success: false, error, message: 'Error retrieving substation entity' }
+    }
+}
+
 export const getSubstationEntityById = async (id, user_id, organisation_id) => {
     const entity = new SubstationEntity();
     if(id == null || id === '') {
@@ -331,7 +420,7 @@ export const deleteSubstationEntityById = async (data) => {
                     await deleteAttachmentByIdTransaction(data.attachment.id, db);
                 }
                 if(data.substation && data.substation.mrid) {
-                    await deleteSubstationByIdTransaction(data.substation.mrid, db);
+                    await cimSubstationFunc.deleteSubstationByIdTransaction(data.substation.mrid, db);
                 }
                 if(data.psrType && data.psrType.mrid) {
                     await deletePsrTypeByIdTransaction(data.psrType.mrid, db);
@@ -372,12 +461,32 @@ export const deleteSubstationEntityById = async (data) => {
                 return { success: true, message: 'Substation entity deleted successfully' };
             } catch (err) {
                 await runSQL('ROLLBACK');
-                reject({ success: false, err, message: 'Substation entity deleted failed' });
+                return { success: false, error: err, message: 'Substation entity deleted failed' };
             }
         }
     } catch (error) {
         console.error('Error deleting substation entity:', error);
         return { success: false, error, message: 'Error deleting substation entity' };
+    }
+}
+
+export const deleteSubstationEntityByMrid = async (mrid) => {
+    try {
+        if (!mrid || mrid === '') {
+            return { success: false, error: new Error('Invalid MRID') };
+        }
+        
+        // Lấy entity đầy đủ bằng mrid
+        const entityResult = await getSubstationEntityByMrid(mrid);
+        if (!entityResult.success) {
+            return { success: false, error: new Error('Substation not found'), message: entityResult.message };
+        }
+        
+        // Xóa entity với data đầy đủ
+        return await deleteSubstationEntityById(entityResult.data);
+    } catch (error) {
+        console.error('Error deleting substation entity by mrid:', error);
+        return { success: false, error, message: 'Error deleting substation entity by mrid' };
     }
 }
 

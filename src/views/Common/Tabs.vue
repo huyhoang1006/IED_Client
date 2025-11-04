@@ -47,9 +47,10 @@ import LocationViewData from '@/views/LocationInsert/locationLevelView.vue'
 // import OwnerView from '@/views/OwnerViewData/index.vue'
 // import Transformer from '@/views/AssetView/Transformer'
 import OrganisationView from '@/views/Organisation/index.vue'
-// import * as subsMapper from '@/views/Mapping/Substation/index'
+import * as subsMapper from '@/views/Mapping/Substation/index'
+import * as bayMapper from '@/views/Mapping/Bay/index'
 import * as orgMapper from '@/views/Mapping/Organisation/index.js'
-// import * as voltageMapper from '@/views/Mapping/VoltageLevel/index'
+import * as voltageMapper from '@/views/Mapping/VoltageLevel/index'
 // import * as surgeMapper from '@/views/Mapping/SurgeArrester/index'
 // import * as bushingMapper from '@/views/Mapping/Bushing/index'
 // import * as vtMapper from '@/views/Mapping/VoltageTransformer/index'
@@ -58,8 +59,8 @@ import * as orgMapper from '@/views/Mapping/Organisation/index.js'
 // import * as PowerCableMapper from '@/views/Mapping/PowerCable'
 // import * as RotatingMachineMapper from '@/views/Mapping/RotatingMachine'
 
-// import VoltageLevel from '@/views/VoltageLevel/index.vue'
-// import Bay from '@/views/Bay/index.vue'
+import VoltageLevel from '@/views/VoltageLevel/index.vue'
+import Bay from '@/views/Bay/index.vue'
 // import SurgeArrester from '@/views/AssetView/SurgeArrester/index.vue'
 // import Bushing from '@/views/AssetView/Bushing/index.vue'
 // import SurgeArresterJob from '@/views/JobView/SurgeArrester/index.vue'
@@ -75,8 +76,8 @@ export default {
         // OwnerView,
         // Transformer,
         OrganisationView,
-        // VoltageLevel,
-        // Bay,
+        VoltageLevel,
+        Bay,
         // SurgeArrester,
         // Bushing,
         // VoltageTransformer,
@@ -128,8 +129,7 @@ export default {
                     const [dataLocation, dataPerson, dataEntity] = await Promise.all([
                         window.electronAPI.getLocationByOrganisationId(tab.parentId),
                         window.electronAPI.getPersonByOrganisationId(tab.parentId),
-                        // TODO: getSubstationEntityByMrid function not implemented yet
-                        { success: false, message: 'getSubstationEntityByMrid function not implemented' }
+                        window.electronAPI.getSubstationEntityByMrid(tab.mrid)
                     ]);
                     const data = {
                         locationList: [],
@@ -153,7 +153,8 @@ export default {
                         const dto = subsMapper.mapEntityToDto(dataEntity.data)
                         data.dto = dto
                     } else {
-                        this.$message.error("Failed to load substation data");
+                        console.error('dataEntity failed:', dataEntity)
+                        this.$message.error("Failed to load substation data: " + (dataEntity.message || 'Unknown error'));
                         return
                     }
                     if (this.$refs.componentLoadData && this.$refs.componentLoadData[index]) {
@@ -162,40 +163,84 @@ export default {
                         console.error("Component not found at index:", index);
                     }
                 } else if (tab.mode === 'organisation') {
-                    // For new organisation, create empty form data instead of loading from API
-                    const emptyOrgData = {
-                        mrid: tab.mrid,
-                        name: tab.name,
-                        parentId: tab.parentId,
-                        parentName: tab.parentName,
-                        isNew: true
-                    };
-                    
-                    // Đợi component được render trước khi load data
-                    this.$nextTick(() => {
-                        if (this.$refs.componentLoadData && this.$refs.componentLoadData[index]) {
-                            this.$refs.componentLoadData[index].loadData(emptyOrgData);
-                        } else {
-                            console.error("Component not found at index:", index);
-                            console.error("Available components:", this.$refs.componentLoadData);
+                    // Load existing organisation entity if mrid exists; fallback to empty for new
+                    if (tab.mrid) {
+                        try {
+                            const dataEntity = await window.electronAPI.getOrganisationEntityByMrid(tab.mrid)
+                            if (dataEntity && dataEntity.success) {
+                                const dto = orgMapper.mapEntityToDto(dataEntity.data)
+                                const payload = {
+                                    organisationId: dto.organisationId || tab.mrid,
+                                    name: dto.name || tab.name || '',
+                                    tax_code: dto.tax_code || '',
+                                    street: dto.street || '',
+                                    ward_or_commune: dto.ward_or_commune || '',
+                                    district_or_town: dto.district_or_town || '',
+                                    city: dto.city || '',
+                                    state_or_province: dto.state_or_province || '',
+                                    country: dto.country || '',
+                                    phoneNumber: dto.phoneNumber || '',
+                                    fax: dto.fax || '',
+                                    email: dto.email || '',
+                                    comment: dto.comment || '',
+                                    parentId: tab.parentId,
+                                    parentName: tab.parentName,
+                                    positionPoints: dto.positionPoints || { x: [], y: [], z: [] },
+                                    attachment: dto.attachment || { id: '', name: null, path: '', type: 'organisation', id_foreign: '' },
+                                    configurationEvent: dto.configurationEvent || [],
+                                    isNew: false
+                                }
+                                if (this.$refs.componentLoadData && this.$refs.componentLoadData[index]) {
+                                    this.$refs.componentLoadData[index].loadData(payload)
+                                }
+                            } else {
+                                console.error('Failed to fetch organisation entity:', dataEntity)
+                                this.$message.error('Failed to load organisation data')
+                            }
+                        } catch (err) {
+                            console.error('Error loading organisation entity:', err)
+                            this.$message.error('Failed to load organisation data')
                         }
-                    });
-                } else if (tab.mode === 'voltageLevel') {
-                    // TODO: getVoltageLevelEntityByMrid function not implemented yet
-                    const data = { success: false, message: 'getVoltageLevelEntityByMrid function not implemented' }
-                    if (data.success) {
-                        const voltageLevelDto = voltageMapper.volEntityToVolDto(data.data)
-                        this.$refs.componentLoadData[index].loadData(voltageLevelDto)
                     } else {
-                        this.$message.error("Failed to load voltage level data");
+                        const emptyOrgData = {
+                            mrid: tab.mrid,
+                            name: tab.name,
+                            parentId: tab.parentId,
+                            parentName: tab.parentName,
+                            isNew: true
+                        }
+                        this.$nextTick(() => {
+                            if (this.$refs.componentLoadData && this.$refs.componentLoadData[index]) {
+                                this.$refs.componentLoadData[index].loadData(emptyOrgData)
+                            }
+                        })
+                    }
+                } else if (tab.mode === 'voltageLevel') {
+                    // Load VoltageLevel entity by MRID and map to DTO
+                    const dataEntity = await window.electronAPI.getVoltageLevelByMrid(tab.mrid)
+                    if (dataEntity && dataEntity.success) {
+                        const dto = voltageMapper.mapEntityToDto(dataEntity.data)
+                        const payload = { ...tab, dto }
+                        if (this.$refs.componentLoadData && this.$refs.componentLoadData[index]) {
+                            this.$refs.componentLoadData[index].loadData(dto)
+                        }
+                    } else {
+                        console.error('Failed to fetch VoltageLevel entity:', dataEntity)
+                        this.$message.error("Failed to load voltage level data")
+                        return
                     }
                 } else if (tab.mode === 'bay') {
-                    // TODO: getBayEntityByMrid function not implemented yet
-                    const data = { success: false, message: 'getBayEntityByMrid function not implemented' }
-                    if (data.success) {
-                        this.$refs.componentLoadData[index].loadData(data.data)
+                    const dataEntity = await window.electronAPI.getBayEntityByMrid(tab.mrid)
+                    if (dataEntity && dataEntity.success) {
+                        // Map Entity to DTO (similar to voltageLevel)
+                        const dto = bayMapper.mapEntityToDto(dataEntity.data)
+                        if (this.$refs.componentLoadData && this.$refs.componentLoadData[index]) {
+                            this.$refs.componentLoadData[index].loadData(dto)
+                        }
                     } else {
+                        console.error('Failed to fetch Bay entity:', dataEntity)
                         this.$message.error("Failed to load bay data");
+                        return
                     }
                 } else if (tab.mode === 'asset') {
                     if (tab.asset === 'Surge arrester') {
@@ -389,7 +434,7 @@ export default {
         },
         checkTab(tab) {
             if (tab.mode == 'substation') {
-                return 'OrganisationView' // Tạm thời dùng OrganisationView để test
+                return 'LocationViewData'
             } else if (tab.mode == 'organisation') {
                 return 'OrganisationView'
             } else if (tab.mode == 'voltageLevel') {

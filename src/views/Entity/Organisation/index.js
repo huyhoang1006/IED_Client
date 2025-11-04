@@ -1,25 +1,186 @@
-import TelephoneNumber from '@/views/Cim/TelephoneNumber';
-import StreetAddress from '@/views/Cim/StreetAddress';
-import TownDetail from '@/views/Cim/TownDetail';
-import StreetDetail from '@/views/Cim/StreetDetail';    
-import Attachment from '@/views/Entity/Attachment/index.js';
-import EletronicAddress from '@/views/Cim/ElectronicAddress';
-import Organisation from '@/views/Cim/Organisation/index.js';
-import User from '@/views/Entity/User/index'
+// import EquipmentContainer from "../Cim/EquipmentContainer/index.js"
 
 class OrganisationEntity {
     constructor() {
-        this.organisation = new Organisation();
-        this.electronicAddress = new EletronicAddress();
-        this.telephoneNumber = new TelephoneNumber();
-        this.streetAddress = new StreetAddress();
-        this.townDetail = new TownDetail();
-        this.streetDetail = new StreetDetail();
-        this.attachment = new Attachment();
+        // Organisation specific fields
+        this.organisation = {
+            mrid: null,
+            name: null,
+            description: null,
+            location: null,
+            ref_id: null,
+            address: null,
+            city: null,
+            state: null,
+            country: null,
+            phone_no: null,
+            fax: null,
+            email: null,
+            mode: 'organisation',
+            department: null,
+            position: null,
+            psr_type_id: null,
+            aliasName: null,
+            assetInfo: null,
+            containers: [],
+            equipments: []
+        }
+        
+        // PSR Type
+        this.psrType = {
+            mrid: null,
+            name: null,
+            description: null,
+            type: null,
+            category: null,
+            subCategory: null
+        }
+        
+        // TownDetail
+        this.townDetail = {
+            mrid: null,
+            city: null,
+            state_or_province: null,
+            country: null,
+            district_or_town: null,
+            ward_or_commune: null
+        }
+        
+        // StreetDetail
+        this.streetDetail = {
+            mrid: null,
+            address_general: null
+        }
+        
+        // StreetAddress
+        this.streetAddress = {
+            mrid: null,
+            street_detail: null,
+            town_detail: null
+        }
+        
+        // Location
+        this.location = {
+            mrid: null,
+            name: null,
+            description: null,
+            latitude: null,
+            longitude: null,
+            elevation: null,
+            coordinateSystem: null,
+            orientation: null,
+            main_address: null
+        }
+        
+        // ElectronicAddress
+        this.electronicAddress = {
+            mrid: null,
+            name: null,
+            description: null,
+            email: null,
+            fax: null,
+            website: null,
+            phone: null
+        }
+        
+        // TelephoneNumber
+        this.telephoneNumber = {
+            mrid: null,
+            name: null,
+            description: null,
+            itu_phone: null,
+            phoneType: null,
+            countryCode: null,
+            areaCode: null
+        }
+        
+        // Person
+        this.person = {
+            mrid: null,
+            name: null,
+            description: null,
+            firstName: null,
+            lastName: null,
+            middleName: null,
+            title: null,
+            gender: null,
+            birthDate: null,
+            nationality: null,
+            electronic_address: null,
+            mobile_phone: null,
+            roles: null
+        }
+        
+        // PersonRole
+        this.personRole = {
+            mrid: null,
+            name: null,
+            description: null,
+            role: null,
+            department: null,
+            position: null,
+            person: null,
+            organisation: null,
+            startDate: null,
+            endDate: null
+        }
+        
+        // User
+        this.user = {
+            user_id: null,
+            username: null
+        }
+        
+        // UserIdentifiedObject
+        this.userIdentifiedObject = {
+            mrid: null,
+            identified_object_id: null,
+            user_id: null
+        }
+        
+        // PersonOrganisation
+        this.personOrganisation = {
+            mrid: null,
+            organisation_id: null,
+            person_id: null
+        }
+        
+        // Attachment
+        this.attachment = {
+            id: null,
+            name: null,
+            path: null,
+            type: null,
+            id_foreign: null
+        }
+        
+        // PositionPoint
+        this.positionPoint = []
+        
+        // OrganisationLocation
+        this.organisationLocation = {
+            mrid: null,
+            organisation_id: null,
+            location_id: null
+        }
+        
+        // OrganisationPerson
+        this.organisationPerson = {
+            mrid: null,
+            organisation_id: null,
+            person_id: null
+        }
+        
+        // OrganisationPsr
+        this.organisationPsr = {
+            mrid: null,
+            organisation_id: null,
+            psr_id: null
+        }
+        
+        // ConfigurationEvent
         this.configurationEvent = []
-        this.positionPoints = []
-        this.user = new User();
     }
 }
 
-export default OrganisationEntity;
+export default OrganisationEntity

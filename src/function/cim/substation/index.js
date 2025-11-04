@@ -13,12 +13,10 @@ export const insertSubstation = async (substation) => {
                         return reject({ success: false, message: 'Insert EquipmentContainer failed', err: result.err })
                     }
                     db.run(
-                        `INSERT INTO substation(mrid, generation, industry)
-                         VALUES (?, ?, ?)
-                         ON CONFLICT(mrid) DO UPDATE SET
-                            generation = excluded.generation,
-                            industry = excluded.industry`,
-                        [substation.mrid, substation.generation, substation.industry],
+                        `INSERT INTO substation(mrid)
+                         VALUES (?)
+                         ON CONFLICT(mrid) DO NOTHING`,
+                        [substation.mrid],
                         function (err) {
                             if (err) {
                                 db.run('ROLLBACK')
@@ -46,12 +44,10 @@ export const insertSubstationTransaction = async (substation, dbsql) => {
                     return reject({ success: false, message: 'Insert EquipmentContainer failed', err: result.err })
                 }
                 dbsql.run(
-                    `INSERT INTO substation(mrid, generation, industry)
-                     VALUES (?, ?, ?)
-                     ON CONFLICT(mrid) DO UPDATE SET
-                        generation = excluded.generation,
-                        industry = excluded.industry`,
-                    [substation.mrid, substation.generation, substation.industry],
+                    `INSERT INTO substation(mrid)
+                     VALUES (?)
+                     ON CONFLICT(mrid) DO NOTHING`,
+                    [substation.mrid],
                     function (err) {
                         if (err) {
                             return reject({ success: false, err, message: 'Insert Substation failed' })
@@ -134,12 +130,12 @@ export const updateSubstationById = async (mrid, substation) => {
                         db.run('ROLLBACK')
                         return reject({ success: false, message: 'Update EquipmentContainer failed', err: result.err })
                     }
+                    // Substation table only has mrid, no fields to update
+                    // Just ensure the record exists
                     db.run(
-                        `UPDATE substation SET
-                            generation = ?,
-                            industry = ?
-                         WHERE mrid = ?`,
-                        [substation.generation, substation.industry, mrid],
+                        `INSERT INTO substation(mrid) VALUES (?)
+                         ON CONFLICT(mrid) DO NOTHING`,
+                        [mrid],
                         function (err) {
                             if (err) {
                                 db.run('ROLLBACK')
@@ -166,12 +162,12 @@ export const updateSubstationByIdTransaction = async (mrid, substation, dbsql) =
                 if (!result.success) {
                     return reject({ success: false, message: 'Update EquipmentContainer failed', err: result.err })
                 }
+                // Substation table only has mrid, no fields to update
+                // Just ensure the record exists
                 dbsql.run(
-                    `UPDATE substation SET
-                        generation = ?,
-                        industry = ?
-                     WHERE mrid = ?`,
-                    [substation.generation, substation.industry, mrid],
+                    `INSERT INTO substation(mrid) VALUES (?)
+                     ON CONFLICT(mrid) DO NOTHING`,
+                    [mrid],
                     function (err) {
                         if (err) {
                             return reject({ success: false, err, message: 'Update Substation failed' })
@@ -189,20 +185,52 @@ export const updateSubstationByIdTransaction = async (mrid, substation, dbsql) =
 // Xóa Substation (gồm cả EquipmentContainer, dùng cascade)
 export const deleteSubstationById = async (mrid) => {
     return new Promise((resolve, reject) => {
-        equipmentContainerFunc.deleteEquipmentContainerByIdTransaction(mrid, db)
-            .then(result => {
-                if (!result.success) {
-                    return reject({ success: false, message: 'Delete EquipmentContainer failed', err: result.err })
+        db.serialize(() => {
+            db.run('BEGIN TRANSACTION')
+            // Xóa bảng substation trước (chỉ có mrid)
+            db.run('DELETE FROM substation WHERE mrid = ?', [mrid], function (err) {
+                if (err) {
+                    db.run('ROLLBACK')
+                    return reject({ success: false, err, message: 'Delete Substation failed' })
                 }
-                return resolve({ success: true, message: 'Delete Substation (and EquipmentContainer) completed' })
+                // Sau đó xóa EquipmentContainer (sẽ cascade xuống các bảng con)
+                equipmentContainerFunc.deleteEquipmentContainerByIdTransaction(mrid, db)
+                    .then(result => {
+                        if (!result.success) {
+                            db.run('ROLLBACK')
+                            return reject({ success: false, message: 'Delete EquipmentContainer failed', err: result.err })
+                        }
+                        db.run('COMMIT')
+                        return resolve({ success: true, message: 'Delete Substation (and EquipmentContainer) completed' })
+                    })
+                    .catch(err => {
+                        db.run('ROLLBACK')
+                        return reject({ success: false, err, message: 'Delete Substation transaction failed' })
+                    })
             })
-            .catch(err => {
-                return reject({ success: false, err, message: 'Delete Substation transaction failed' })
-            })
+        })
     })
 }
 
 // Xóa Substation trong transaction (cho lớp cha gọi)
 export const deleteSubstationByIdTransaction = async (mrid, dbsql) => {
-    return equipmentContainerFunc.deleteEquipmentContainerByIdTransaction(mrid, dbsql)
+    return new Promise((resolve, reject) => {
+        // Xóa bảng substation trước (chỉ có mrid)
+        dbsql.run('DELETE FROM substation WHERE mrid = ?', [mrid], function (err) {
+            if (err) {
+                return reject({ success: false, err, message: 'Delete Substation failed' })
+            }
+            // Sau đó xóa EquipmentContainer (sẽ cascade xuống các bảng con)
+            equipmentContainerFunc.deleteEquipmentContainerByIdTransaction(mrid, dbsql)
+                .then(result => {
+                    if (!result.success) {
+                        return reject({ success: false, message: 'Delete EquipmentContainer failed', err: result.err })
+                    }
+                    return resolve({ success: true, message: 'Delete Substation (and EquipmentContainer) completed' })
+                })
+                .catch(err => {
+                    return reject({ success: false, err, message: 'Delete Substation transaction failed' })
+                })
+        })
+    })
 }

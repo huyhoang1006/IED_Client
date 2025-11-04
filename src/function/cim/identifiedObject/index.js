@@ -35,16 +35,38 @@ export const insertIdentifiedObject = async (identifiedObject) => {
 
 export const insertIdentifiedObjectTransaction = async (identifiedObject, dbsql) => {
     return new Promise((resolve, reject) => {
-        // Extract substation data from the object
-        const substation = identifiedObject.substation || identifiedObject
+        // Extract data from the object
+        // Handle different entity structures:
+        // 1. Substation: might have identifiedObject.substation as an object
+        // 2. VoltageLevel: has identifiedObject.voltageLevel with mrid/name
+        // 3. Bay: has identifiedObject.bay with mrid/name (but Bay object is passed directly)
+        // 4. Direct object: has mrid/name at root level
+        let dataSource = identifiedObject
         
-        const mrid = substation.mrid
-        const name = substation.name
-        const alias_name = substation.aliasName || substation.alias_name
-        const description = substation.description
+        // Check for nested entity structures
+        if (identifiedObject.voltageLevel && typeof identifiedObject.voltageLevel === 'object' && identifiedObject.voltageLevel.mrid) {
+            dataSource = identifiedObject.voltageLevel
+        } else if (identifiedObject.bay && typeof identifiedObject.bay === 'object' && identifiedObject.bay.mrid) {
+            dataSource = identifiedObject.bay
+        } else if (identifiedObject.substation && typeof identifiedObject.substation === 'object' && identifiedObject.substation.mrid) {
+            dataSource = identifiedObject.substation
+        } else {
+            dataSource = identifiedObject
+        }
+        
+        const mrid = dataSource.mrid
+        const name = dataSource.name
+        const alias_name = dataSource.aliasName || dataSource.alias_name
+        const description = dataSource.description
         
         if (!mrid) {
+            console.error('ERROR: mrid is missing in identifiedObject')
             return reject({ success: false, err: 'mrid is missing', message: 'mrid is required' })
+        }
+        
+        if (!name || name === '') {
+            console.error('ERROR: name is missing or empty in identifiedObject, mrid:', mrid)
+            return reject({ success: false, err: 'name is missing', message: 'name is required' })
         }
         
         dbsql.run(
@@ -57,9 +79,9 @@ export const insertIdentifiedObjectTransaction = async (identifiedObject, dbsql)
             [mrid, name || null, alias_name || null, description || null],
             function (err) {
                 if (err) {
-                    return reject({ success: false, err, message: 'Insert identified object failed' })
+                    return reject({ success: false, err, message: 'Insert identified object failed: ' + err.message })
                 }
-                return resolve({ success: true, data: substation, message: 'Insert identified object completed' })
+                return resolve({ success: true, data: dataSource, message: 'Insert identified object completed' })
             }
         )
     })

@@ -5,12 +5,24 @@ export const getOwnerByName = (name) => {
     return new Promise((resolve, reject) => {
         try {
             const rows = queryAll("SELECT * FROM owner where name=?", [name])
-            resolve({
-                success: true,
-                data: rows
-            })
+            if (rows && rows.length > 0) {
+                resolve({
+                    success: true,
+                    data: rows
+                })
+            } else {
+                resolve({
+                    success: false,
+                    data: [],
+                    message: `Owner with name '${name}' not found`
+                })
+            }
         } catch (err) {
-            reject(err)
+            reject({
+                success: false,
+                err: err,
+                message: `Error getting owner by name: ${err.message || err}`
+            })
         }
     })
 }

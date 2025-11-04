@@ -264,7 +264,18 @@ export default {
             // TODO user_id
             const rs = await window.electronAPI.getLocations(this.user.user_id)
             const rt = await window.electronAPI.getOwnerByUserId(this.user.user_id)
-            const root = await window.electronAPI.getOwnerByName('root')
+            // Try both 'root' and 'Root' (case-insensitive)
+            let root = await window.electronAPI.getOwnerByName('root')
+            if (!root.success || !root.data || root.data.length === 0) {
+                root = await window.electronAPI.getOwnerByName('Root')
+            }
+            
+            if (!root.success || !root.data || root.data.length === 0) {
+                console.error('Root owner not found. Please ensure owner table exists and has a root record.')
+                this.$message.error('Root owner not found. Please initialize the database.')
+                return
+            }
+            
             var parentId = root.data[0].id
 
             if(rt.success && rs.success) {

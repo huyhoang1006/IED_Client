@@ -47,6 +47,56 @@ class SubstationDto {
         this.electronicAddressId = ''
         this.townDetailId = ''
         this.configurationEvent = []
+        
+        // EquipmentContainer/Substation additional fields
+        this.aliasName = ''
+        this.assetInfo = null
+        this.containers = []
+        this.equipments = []
+        
+        // Location additional fields
+        this.locationDescription = ''
+        this.latitude = null
+        this.longitude = null
+        this.elevation = null
+        this.coordinateSystem = null
+        this.orientation = null
+        
+        // Person additional fields
+        this.personDescription = ''
+        this.firstName = ''
+        this.lastName = ''
+        this.middleName = ''
+        this.title = ''
+        this.gender = ''
+        this.birthDate = null
+        this.nationality = ''
+        
+        // ElectronicAddress additional fields
+        this.electronicAddressName = ''
+        this.electronicAddressDescription = ''
+        this.website = ''
+        this.electronicPhone = ''
+        
+        // TelephoneNumber additional fields
+        this.telephoneName = ''
+        this.telephoneDescription = ''
+        this.phoneType = ''
+        this.countryCode = ''
+        this.areaCode = ''
+        
+        // PersonRole additional fields
+        this.roleName = ''
+        this.roleDescription = ''
+        this.role = ''
+        this.startDate = null
+        this.endDate = null
+        
+        // PsrType additional fields
+        this.psrTypeDescription = ''
+        this.psrTypeType = ''
+        this.category = ''
+        this.subCategory = ''
     }
 }
 

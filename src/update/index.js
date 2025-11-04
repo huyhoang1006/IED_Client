@@ -4,20 +4,20 @@ import * as updateLocation from './updateDatabase/updateLocationRef.js'
 import * as updateTestType from './updateDatabase/updateTestType.js'
 import * as rootOrganisationFunc from './organisationRoot/index.js'
 import {insertOwner, getOwnerByName} from '../function/organisation/index.js'
-import { NIL as EMPTY } from 'uuid'
+import {NIL as EMPTY} from 'uuid'
 import db from '../../electron/db.js'
 
 export const updateManufacturer = async () => {
     var row = await updateManu.getAllNameDatabase(db)
     var sign = false
-    for(let i in row) {
-        if(row[i].name == 'manufacturer_custom') {
+    for (let i in row) {
+        if (row[i].name == 'manufacturer_custom') {
             sign = true
             break
         }
     }
 
-    if(sign == false) {
+    if (sign == false) {
         await updateManu.createManufacturer(db)
     }
 }
@@ -25,40 +25,39 @@ export const updateManufacturer = async () => {
 export const updateOwnerTable = async () => {
     var row = await updateManu.getAllNameDatabase(db)
     var sign = false
-    for(let i in row) {
-        if(row[i].name == 'owner') {
+    for (let i in row) {
+        if (row[i].name == 'owner') {
             sign = true
             break
         }
     }
 
-    if(sign == false) {
+    if (sign == false) {
         var check = await updatOwner.createOwner(db)
-        if(check == true) {
+        if (check == true) {
             var dataOwner = {
                 id: '00000000-0000-0000-0000-000000000000',
-                name : 'Root',
-                user_id : EMPTY,
+                name: 'Root',
+                user_id: EMPTY,
                 mode: 'organisation'
             }
             var is = await insertOwner(dataOwner)
-            if(is.success) {
+            if (is.success) {
                 return 'owner success'
             }
-            
         }
     } else {
-        var rt = await getOwnerByName("Root")
-        if(rt.success) {
-            if(rt.data.length == 0) {
+        var rt = await getOwnerByName('Root')
+        if (rt.success) {
+            if (rt.data.length == 0) {
                 var dataOwner = {
                     id: '00000000-0000-0000-0000-000000000000',
-                    name : 'Root',
-                    user_id : EMPTY,
+                    name: 'Root',
+                    user_id: EMPTY,
                     mode: 'organisation'
                 }
                 var is = await insertOwner(dataOwner)
-                if(is.success) {
+                if (is.success) {
                     return 'owner success'
                 }
             }
@@ -68,51 +67,73 @@ export const updateOwnerTable = async () => {
 
 export const insertTestType = async () => {
     var data = await updateTestType.checkValueInTable(db, 'test_types', 'code', "'GasChromatography'")
-    if(data.success) {
-        if(data.data.length <= 0) {
-            updateTestType.insertValueToColumn(db, 'test_types', ['id', 'code', 'name'], ['"f27e1f3c-cc10-47a4-9a56-eca62df00672"', "'GasChromatography'", "'Gas Chromatography'"])
+    if (data.success) {
+        if (data.data.length <= 0) {
+            updateTestType.insertValueToColumn(
+                db,
+                'test_types',
+                ['id', 'code', 'name'],
+                ['"f27e1f3c-cc10-47a4-9a56-eca62df00672"', "'GasChromatography'", "'Gas Chromatography'"]
+            )
         }
     }
-} 
+}
 
 export const updateLocationTable = async () => {
     var rows = await updateLocation.getNameOfColumn(db, 'locations')
     var sign = false
     var rt = {}
-    if(rows.success) {
-        var key = rows.data.map(e => e.name)
-        if(key.includes("owner_id")) {
+    if (rows.success) {
+        var key = rows.data.map((e) => e.name)
+        if (key.includes('owner_id')) {
             sign = false
         } else {
             rt = await updateLocation.insertColumn(db, 'owner_id', 'locations')
         }
 
-        if(key.includes("type")) {
+        if (key.includes('type')) {
             sign = false
         } else {
             rt = await updateLocation.insertColumnNotForeign(db, 'type', 'locations')
         }
 
-        if(key.includes("department")) {
+        if (key.includes('department')) {
             sign = false
         } else {
             rt = await updateLocation.insertColumnNotForeign(db, 'department', 'locations')
         }
 
-        if(key.includes("position")) {
+        if (key.includes('position')) {
             sign = false
         } else {
             rt = await updateLocation.insertColumnNotForeign(db, 'position', 'locations')
         }
 
-        if(key.includes("ref_id_old")) {
+        if (key.includes('ref_id_old')) {
             sign = false
         } else {
             rt = await updateLocation.insertColumnNotForeign(db, 'ref_id_old', 'locations')
         }
-
     }
 }
+
+// export const updateParentOrganizationTable = async () => {
+//     var row = await updateManu.getAllNameDatabase(db)
+//     var sign = false
+//     for(let i in row) {
+//         if(row[i].name == 'parent_organization') {
+//             sign = true
+//             break
+//         }
+//     }
+
+//     if(sign == false) {
+//         var check = await updateParentOrganization.createParentOrganization(db)
+//         if(check == true) {
+//             return 'parent_organization success'
+//         }
+//     }
+// }
 
 export const createRootOrganisation = async () => {
     try {
@@ -122,7 +143,9 @@ export const createRootOrganisation = async () => {
     }
 }
 
+
 export const active = async () => {
+    // await updateParentOrganizationTable()
     await createRootOrganisation()
 }
 
