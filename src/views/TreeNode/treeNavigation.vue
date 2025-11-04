@@ -72,7 +72,8 @@
                             @clear-selection="clearSelection" @open-context-menu="openContextMenu">
                         </TreeNode>
                     </ul>
-                    <contextMenu @show-data="showData" @show-addOrganisation="showAddOrganisation" ref="contextMenu"></contextMenu>
+                    <contextMenu @show-data="showData" @show-addOrganisation="showAddOrganisation" ref="contextMenu">
+                    </contextMenu>
                 </div>
                 <div class="page-align">
                     <page-align ref="LocationSyncPageAlign" :page-user="this.pageLocationSync"
@@ -863,11 +864,37 @@ export default {
     },
     methods: {
 
+        handleSelectDevice(deviceName) {
+            console.log(`Node được chọn:`, this.selectedNodes[0] || 'Không có');
+            console.log(`Thiết bị được yêu cầu thêm: ${deviceName}`);
+            this.$message.info(`Yêu cầu thêm thiết bị: ${deviceName}`);
+
+            // Dựa vào deviceName, bạn có thể gọi các dialog tương ứng
+            // Ví dụ:
+            // switch (deviceName) {
+            //     case 'RET670':
+            //         // Mở dialog/tab để thêm RET670
+            //         this.showAddTransformer(this.selectedNodes[0]); // Ví dụ gọi lại hàm cũ
+            //         break;
+            //     case 'RET650':
+            //         // Mở dialog/tab để thêm RET650
+            //         break;
+            //     // ... các trường hợp khác
+            // }
+        },
+
+        // Phương thức mới để xử lý các hành động chung
+        handleContextMenuAction(action, node) {
+            console.log(`Hành động: ${action} trên node:`, node);
+            this.$message.info(`Hành động: ${action}`);
+            // Thêm logic xử lý cho Copy, Cut, Rename... tại đây
+        },
+
         handleOrganisationSaved(savedNode) {
             // Add the new organisation to the tree
             this.addOrganisationToTree(savedNode);
         },
-        
+
         addOrganisationToTree(savedNode) {
             // Find parent node and add new organisation as child
             if (savedNode.parentId) {
@@ -902,7 +929,7 @@ export default {
                 this.organisationClientList = [...this.organisationClientList, normalizedNode];
             }
         },
-        
+
         // Stub functions for missing APIs
         async getAssetByLocation(locationId) {
             console.warn('assetApi.getAssetByLocation is not implemented')
@@ -1078,15 +1105,15 @@ export default {
                             parentName: '',
                             parentArr: []
                         };
-                        
+
                         // Load children of root (organisations and substations)
                         const [organisationReturn, substationReturn] = await Promise.all([
                             window.electronAPI.getParentOrganizationByParentMrid(this.$constant.ROOT),
                             window.electronAPI.getSubstationsInOrganisationForUser(this.$constant.ROOT, this.$store.state.user.user_id)
                         ]);
-                        
+
                         const children = [];
-                        
+
                         // Add organisations as children
                         if (organisationReturn.success && organisationReturn.data && organisationReturn.data.length > 0) {
                             organisationReturn.data.forEach(row => {
@@ -1101,7 +1128,7 @@ export default {
                                 children.push(row);
                             });
                         }
-                        
+
                         // Add substations as children
                         if (substationReturn.success && substationReturn.data && substationReturn.data.length > 0) {
                             substationReturn.data.forEach(row => {
@@ -1116,7 +1143,7 @@ export default {
                                 children.push(row);
                             });
                         }
-                        
+
                         rootData.children = children;
                         this.organisationClientList = [rootData]
                     } else {
@@ -2800,10 +2827,14 @@ export default {
                                 this.$message.warning("Parent node not found in tree");
                             }
                         } else if (node.mode == 'bay') {
-                            // Truyền mrid trực tiếp thay vì entity.data
-                            const deleteSign = await window.electronAPI.deleteBayEntityByMrid(node.mrid);
+                            const entity = await window.electronAPI.getBayEntityByMrid(node.mrid)
+                            if (!entity.success) {
+                                this.$message.error("Entity not found");
+                                return;
+                            }
+                            const deleteSign = await window.electronAPI.deleteBayEntityByMrid(entity.data);
                             if (!deleteSign.success) {
-                                this.$message.error("Delete data failed: " + (deleteSign.message || 'Unknown error'));
+                                this.$message.error("Delete data failed");
                                 return;
                             }
 
@@ -2939,7 +2970,7 @@ export default {
                     window.electronAPI.getPersonByOrganisationId(organisationId),
                     window.electronAPI.getParentOrganizationByMrid(organisationId)
                 ]);
-                
+
                 // Force convert to Array
                 if (dataLocation.success && dataLocation.data) {
                     this.locationList = Array.isArray(dataLocation.data) ? dataLocation.data : []
@@ -3051,14 +3082,14 @@ export default {
 
         async showAddBay(node) {
             try {
-                
+
                 // Validate node has required properties
                 if (!node || !node.mrid) {
                     this.$message.error("Invalid parent node selected for Bay");
                     console.error("Node missing mrid:", node);
                     return;
                 }
-                
+
                 // Ensure node has mode property
                 if (!node.mode) {
                     // Try to determine mode from context
@@ -3068,14 +3099,14 @@ export default {
                         node.mode = 'substation'; // Default fallback
                     }
                 }
-                
+
                 const dataLocation = await window.electronAPI.getLocationByPowerSystemResourceMrid(node.mrid);
                 if (dataLocation.success) {
                     this.locationId = dataLocation.data.mrid
                 } else {
                     this.locationId = null
                 }
-                
+
                 this.parentOrganization = node
                 this.signBay = true
                 this.$nextTick(() => {
