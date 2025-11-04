@@ -1,9 +1,5 @@
 <template>
-    <div 
-        v-if="visible"
-        class="context-menu"
-        :style="{ top: `${position.y}px`, left: `${position.x}px` }"
-    >
+    <div v-if="visible" class="context-menu" :style="{ top: `${position.y}px`, left: `${position.x}px` }">
         <!-- Menu chuột phải -->
         <transition name="fade">
             <ul v-if="sign == 'onlysubs'">
@@ -12,51 +8,80 @@
                 </li>
             </ul>
             <ul v-else>
-                <li v-if="this.selectedNode && this.selectedNode.mode == 'organisation'" @click="addOrganisation">
-                    <i class="fa-solid fa-plus"></i> Add organisation
-                </li>
-                <li v-if="this.selectedNode && this.selectedNode.mode == 'organisation'" @click="addSubsInTree">
-                    <i class="fa-solid fa-plus"></i> Add substation
-                </li>
-                <li v-if="this.selectedNode && this.selectedNode.mode == 'substation'" @click="addVoltageLevel">
-                    <i class="fa-solid fa-plus"></i> Add voltage level
-                </li>
-                <li v-if="this.selectedNode && (this.selectedNode.mode == 'voltageLevel' || this.selectedNode.mode == 'substation')" @click="addBay">
-                    <i class="fa-solid fa-plus"></i> Add bay
-                </li>
-                <li class="has-submenu" v-if="this.selectedNode && (this.selectedNode.mode == 'bay' || this.selectedNode.mode == 'substation')">
-                    <i class="fa-solid fa-plus"></i> Add asset
+                <!-- === BẮT ĐẦU KHỐI THAY THẾ === -->
+
+                <!-- Menu "Add Devices" mới, hiển thị có điều kiện -->
+                <li class="has-submenu"
+                    v-if="selectedNode && ['substation', 'voltageLevel', 'bay'].includes(selectedNode.mode)">
+                    <i class="fa-solid fa-plus"></i> Add Devices
                     <ul class="submenu">
-                        <li @click="addTransformer"><i class="fa-solid fa-bolt"></i> Add transformer</li>
-                        <li @click="addBushing"><i class="fa-solid fa-shield"></i> Add Bushing</li>
-                        <li @click="addBreaker"><i class="fa-solid fa-plug"></i> Add Breaker</li>
-                        <li @click="addCt"><i class="fa-solid fa-ruler"></i> Add CT</li>
-                        <li @click="addVt"><i class="fa-solid fa-bolt-lightning"></i> Add VT</li>
-                        <li @click="addSurgeArrester"><i class="fa-solid fa-shield-halved"></i> Add Surge Arrester</li>
-                        <li @click="addPowerCable"><i class="fa-solid fa-route"></i> Add Power Cable</li>
-                        <li @click="addDisconnector"><i class="fa-solid fa-plug-circle-xmark"></i> Add Disconnector</li>
-                        <li @click="addRotatingMachine"><i class="fa-solid fa-group-arrows-rotate"></i> Add Rotating Machine</li>
+                        <li class="has-submenu">
+                            <i class="fa-solid fa-microchip"></i> IEC 61850 IEDs
+                            <ul class="submenu">
+                                <li class="has-submenu">
+                                    ABB
+                                    <ul class="submenu">
+                                        <li>Generator Protection</li>
+                                        <li class="has-submenu">
+                                            Transformer Protection
+                                            <ul class="submenu">
+                                                <li @click="selectDevice('RET670')">RET670</li>
+                                                <li @click="selectDevice('RET650')">RET650</li>
+                                                <li @click="selectDevice('RET630')">RET630</li>
+                                            </ul>
+                                        </li>
+                                        <li>Line Differential Protection</li>
+                                        <li>Line Distance Protection</li>
+                                        <li>Feeder Protection</li>
+                                        <li>Busbar Protection</li>
+                                        <li>Bay Control Unit</li>
+                                    </ul>
+                                </li>
+                                <li>Siemens</li>
+                                <li>SEL</li>
+                                <li>Schneider</li>
+                                <li>GE</li>
+                                <li>Hitachi Energy</li>
+                                <li>NR</li>
+                                <li>TOSHIBA</li>
+                            </ul>
+                        </li>
+                        <li>Network Switches</li>
+                        <li>Router/Firewall</li>
+                        <li>Engineering PC</li>
+                        <li>RTU/Gateway</li>
+                        <li>GPS</li>
                     </ul>
                 </li>
-                <li @click="addJob" v-if="this.selectedNode && this.selectedNode.mode == 'asset'">
+
+                <!-- Menu "Add" cho các node khác -->
+                <li v-if="selectedNode && selectedNode.mode == 'organisation'" @click="addOrganisation">
+                    <i class="fa-solid fa-plus"></i> Add organisation
+                </li>
+                <li v-if="selectedNode && selectedNode.mode == 'organisation'" @click="addSubsInTree">
+                    <i class="fa-solid fa-plus"></i> Add substation
+                </li>
+                <li v-if="selectedNode && selectedNode.mode == 'substation'" @click="addVoltageLevel">
+                    <i class="fa-solid fa-plus"></i> Add voltage level
+                </li>
+                <li v-if="selectedNode && (selectedNode.mode == 'voltageLevel' || selectedNode.mode == 'substation')"
+                    @click="addBay">
+                    <i class="fa-solid fa-plus"></i> Add bay
+                </li>
+                <li @click="addJob" v-if="selectedNode && selectedNode.mode == 'asset'">
                     <i class="fa-solid fa-plus"></i> Add job
                 </li>
-                <li @click="show">
-                    <i class="fa-solid fa-eye"></i> Show
-                </li>
-                <li @click="edit">
-                    <i class="fa-solid fa-pen-to-square"></i> Edit
-                </li>
-                <li>
-                    <i class="fa-solid fa-file-arrow-down"></i> Download
-                </li>
-                <li @click="deleteNode">
-                    <i class="fas fa-trash-alt"></i> Delete
-                </li>
-                <li @click="duplicate">
-                    <i class="fa-solid fa-copy"></i> Duplicate
-                </li>
+
+                <!-- Các mục menu chung -->
+                <li @click="handleAction('Copy')"><i class="fa-solid fa-copy"></i> Copy</li>
+                <li @click="handleAction('Cut')"><i class="fa-solid fa-cut"></i> Cut</li>
+                <li @click="handleAction('Rename')"><i class="fa-solid fa-pen-to-square"></i> Rename</li>
+                <li @click="handleAction('Import')"><i class="fa-solid fa-file-import"></i> Import</li>
+                <li @click="handleAction('Export')"><i class="fa-solid fa-file-export"></i> Export</li>
+                <li @click="handleAction('Sync')"><i class="fa-solid fa-sync"></i> Sync</li>
+                <li @click="deleteNode"><i class="fas fa-trash-alt"></i> Delete</li>
             </ul>
+
         </transition>
     </div>
 </template>
@@ -70,14 +95,14 @@ export default {
             visible: false,
             position: { x: 0, y: 0 },
             selectedNode: null, // Lưu trữ node đang mở menu
-            sign : '',
+            sign: '',
             organisationId: '00000000-0000-0000-0000-000000000000' // Mặc định là ID của tổ chức
         };
     },
     methods: {
         openContextMenu(event, node, { top, left }) {
             event.preventDefault();
-            if(top && left) {
+            if (top && left) {
                 this.position = { x: left, y: top };
             } else {
                 this.position = { x: event.clientX, y: event.clientY };
@@ -98,6 +123,19 @@ export default {
             // Đóng menu khi click ra ngoài
             document.addEventListener("click", this.closeContextMenu);
         },
+
+        // Phương thức mới để xử lý việc chọn thiết bị
+        selectDevice(deviceName) {
+            this.$emit('select-device', deviceName);
+            this.closeContextMenu();
+        },
+
+        // Phương thức mới để xử lý các hành động chung
+        handleAction(action) {
+            this.$emit('handle-action', action, this.selectedNode);
+            this.closeContextMenu();
+        },
+
 
         closeContextMenu() {
             this.visible = false;
@@ -243,10 +281,13 @@ export default {
 
 
 /* Hiệu ứng menu */
-.fade-enter-active, .fade-leave-active {
+.fade-enter-active,
+.fade-leave-active {
     transition: opacity 0.2s ease;
 }
-.fade-enter, .fade-leave-to {
+
+.fade-enter,
+.fade-leave-to {
     opacity: 0;
 }
 
@@ -256,6 +297,7 @@ export default {
         transform: scale(0.95);
         opacity: 0;
     }
+
     to {
         transform: scale(1);
         opacity: 1;
@@ -267,7 +309,7 @@ export default {
     position: relative;
 }
 
-.has-submenu > .submenu {
+.has-submenu>.submenu {
     display: none;
     position: absolute;
     top: 0;
@@ -281,7 +323,7 @@ export default {
     white-space: nowrap;
 }
 
-.has-submenu:hover > .submenu {
+.has-submenu:hover>.submenu {
     display: block;
 }
 </style>

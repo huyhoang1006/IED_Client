@@ -52,7 +52,8 @@
                         @show-addCircuit="showAddCircuitBreaker" @show-addVt="showAddVt" @show-addCt="showAddCt"
                         @show-addPowerCable="showAddPowerCable" @show-addDisconnector="showAddDisconnector"
                         @show-addRotatingMachine="showAddRotatingMachine" @show-addBay="showAddBay"
-                        @show-data="showDataClient" ref="contextMenuClient">
+                        @show-data="showDataClient" @select-device="handleSelectDevice"
+                        @handle-action="handleContextMenuAction" ref="contextMenuClient">
                     </contextMenu>
                 </div>
             </div>
@@ -72,7 +73,8 @@
                             @clear-selection="clearSelection" @open-context-menu="openContextMenu">
                         </TreeNode>
                     </ul>
-                    <contextMenu @show-data="showData" @show-addOrganisation="showAddOrganisation" ref="contextMenu"></contextMenu>
+                    <contextMenu @show-data="showData" @show-addOrganisation="showAddOrganisation" ref="contextMenu">
+                    </contextMenu>
                 </div>
                 <div class="page-align">
                     <page-align ref="LocationSyncPageAlign" :page-user="this.pageLocationSync"
@@ -862,6 +864,34 @@ export default {
         }
     },
     methods: {
+
+        handleSelectDevice(deviceName) {
+            console.log(`Node được chọn:`, this.selectedNodes[0] || 'Không có');
+            console.log(`Thiết bị được yêu cầu thêm: ${deviceName}`);
+            this.$message.info(`Yêu cầu thêm thiết bị: ${deviceName}`);
+
+            // Dựa vào deviceName, bạn có thể gọi các dialog tương ứng
+            // Ví dụ:
+            // switch (deviceName) {
+            //     case 'RET670':
+            //         // Mở dialog/tab để thêm RET670
+            //         this.showAddTransformer(this.selectedNodes[0]); // Ví dụ gọi lại hàm cũ
+            //         break;
+            //     case 'RET650':
+            //         // Mở dialog/tab để thêm RET650
+            //         break;
+            //     // ... các trường hợp khác
+            // }
+        },
+
+        // Phương thức mới để xử lý các hành động chung
+        handleContextMenuAction(action, node) {
+            console.log(`Hành động: ${action} trên node:`, node);
+            this.$message.info(`Hành động: ${action}`);
+            // Thêm logic xử lý cho Copy, Cut, Rename... tại đây
+        },
+
+
         // Stub functions for missing APIs
         async getAssetByLocation(locationId) {
             console.warn('assetApi.getAssetByLocation is not implemented')
@@ -871,7 +901,7 @@ export default {
             console.warn('API findByLocationId is not implemented')
             return { data: [] }
         },
-        
+
         handleDropdown() {
             // Handle dropdown functionality
             // This method is called when dropdown needs to be triggered
@@ -1706,29 +1736,29 @@ export default {
         // Helper function to check for circular references
         hasCircularReference(node, parentArr = []) {
             if (!node || !node.mrid) return false;
-            
+
             // Check if current node's mrid already exists in parentArr
             const exists = parentArr.some(parent => parent.mrid === node.mrid);
             if (exists) {
                 console.warn('Circular reference detected for node:', node.mrid);
                 return true;
             }
-            
+
             return false;
         },
 
         // Helper function to safely build parentArr
         buildParentArr(clickedRow, newRow) {
             if (!clickedRow || !newRow) return [];
-            
+
             // Check for circular reference
             if (this.hasCircularReference(clickedRow, clickedRow.parentArr || [])) {
                 console.warn('Circular reference in clickedRow, using empty parentArr');
                 return [];
             }
-            
+
             const parentArr = [...(clickedRow.parentArr || [])];
-            
+
             // Add current clickedRow to parentArr if not already present
             const alreadyExists = parentArr.some(parent => parent.mrid === clickedRow.mrid);
             if (!alreadyExists) {
@@ -1737,7 +1767,7 @@ export default {
                     parent: clickedRow.name
                 });
             }
-            
+
             return parentArr;
         },
 
@@ -2452,7 +2482,7 @@ export default {
                     rowData = rowData.concat(responseAsset)
                 }
             })
-
+    
             return rowData
         }, */
 
@@ -2633,7 +2663,7 @@ export default {
                     this.tabsClient = newTabs;
                     this.activeTabClient = newNode;
                     this.$refs.clientTabs.selectTab(this.activeTabClient, newTabs.length - 1);
-                    
+
                     // Đợi component được render trước khi load data
                     this.$nextTick(() => {
                         this.$refs.clientTabs.loadData(newNode, newTabs.length - 1);
@@ -2877,7 +2907,7 @@ export default {
                     window.electronAPI.getPersonByOrganisationId(organisationId),
                     window.electronAPI.getParentOrganizationByMrid(organisationId)
                 ]);
-                
+
                 // Force convert to Array
                 if (dataLocation.success && dataLocation.data) {
                     this.locationList = Array.isArray(dataLocation.data) ? dataLocation.data : []
