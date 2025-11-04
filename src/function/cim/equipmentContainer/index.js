@@ -1,5 +1,6 @@
 import db from '../../datacontext/index.js'
 import * as connectivityNodeContainerFunc from '../connectivityNodeContainer/index.js'
+import util from 'util'
 
 // Thêm mới EquipmentContainer (gồm cả insert ConnectivityNodeContainer)
 export const insertEquipmentContainer = async (equipmentContainer) => {
@@ -29,6 +30,8 @@ export const insertEquipmentContainer = async (equipmentContainer) => {
                 })
                 .catch(err => {
                     db.run('ROLLBACK')
+                    console.error('insertEquipmentContainerTransaction catch:', err)
+                    try { console.error('insertEquipmentContainerTransaction detailed:', util.inspect(err, { depth: 6 })) } catch (e) {}
                     return reject({ success: false, err, message: 'Insert EquipmentContainer transaction failed' })
                 })
         })
@@ -57,7 +60,15 @@ export const insertEquipmentContainerTransaction = async (equipmentContainer, db
                 )
             })
             .catch(err => {
-                return reject({ success: false, err, message: 'Insert EquipmentContainer transaction failed' })
+                return reject({ 
+                    success: false, 
+                    err: {
+                        message: err?.message || err?.err?.message || 'Unknown error',
+                        code: err?.code || err?.err?.code,
+                        errno: err?.errno || err?.err?.errno
+                    }, 
+                    message: 'Insert EquipmentContainer transaction failed: ' + (err?.message || err?.err?.message || 'Unknown error')
+                })
             })
     })
 }

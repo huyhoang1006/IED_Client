@@ -65,10 +65,17 @@ export default {
             }
             if(signOwner == true) {
                 if(this.dataLocation.properties.name != '' && this.dataLocation.voltage != '') {
+                    // Try both 'root' and 'Root'
                     var rt = await window.electronAPI.getOwnerByName("root")
-                    if(rt.success) {
+                    if (!rt.success || !rt.data || rt.data.length === 0) {
+                        rt = await window.electronAPI.getOwnerByName("Root")
+                    }
+                    if(rt.success && rt.data && rt.data.length > 0) {
                         ownerId = rt.data[0].id
                         locationOwnerId = rt.data[0].id
+                    } else {
+                        console.error('Root owner not found')
+                        this.$message.error('Root owner not found. Please initialize the database.')
                     }
                     this.copyOwner = this.copyOwner.filter(e => e.name != '' && e.name != undefined)
                     

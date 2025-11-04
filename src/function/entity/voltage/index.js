@@ -1,85 +1,101 @@
 import db from '../../datacontext/index.js'
-import { insertVoltageTransaction, getVoltageById, deleteVoltageByIdTransaction } from '@/function/cim/voltage';
-import { insertBaseVoltageTransaction, getBaseVoltageById, deleteBaseVoltageByIdTransaction } from '@/function/cim/baseVoltage';
-import { insertVoltageLevelTransaction, getVoltageLevelById, deleteVoltageLevelByIdTransaction } from '@/function/cim/voltageLevel';
+import { insertVoltageLevelTransaction, getVoltageLevelById, deleteVoltageLevelByIdTransaction } from '../../cim/voltageLevel/index.js';
 export const insertVoltageLevelEntity = async (entity) => {
     try {
-        if(entity.voltageLevel.mrid) {
-            await runAsync('BEGIN TRANSACTION');
-            if(entity.voltage && entity.voltage.length > 0) {
-                for(const voltage of entity.voltage) {
-                    await insertVoltageTransaction(voltage, db);
-                }
+        if(entity.voltageLevel && entity.voltageLevel.mrid) {
+            if(!entity.voltageLevel.name || entity.voltageLevel.name === '') {
+                return { success: false, message: 'Error inserting voltage entity, name is required'};
             }
-            await insertBaseVoltageTransaction(entity.baseVoltage, db);
-            await insertVoltageLevelTransaction(entity.voltageLevel, db);
-            await runAsync('COMMIT');
-            return { success: true, data: entity, message: 'Voltage level entity inserted successfully' };
+            await runAsync('BEGIN TRANSACTION');
+            try {
+                await insertVoltageLevelTransaction(entity.voltageLevel, db);
+                await runAsync('COMMIT');
+                return { success: true, data: entity, message: 'Voltage level entity inserted successfully' };
+            } catch (insertError) {
+                try {
+                    await runAsync('ROLLBACK');
+                } catch (rollbackErr) {
+                }
+
+                let sqlErrorMessage = ''
+                if (insertError?.err?.message) {
+                    sqlErrorMessage = insertError.err.message
+                } else if (insertError?.message) {
+                    sqlErrorMessage = insertError.message
+                } else if (typeof insertError === 'string') {
+                    sqlErrorMessage = insertError
+                } else if (insertError?.toString) {
+                    sqlErrorMessage = insertError.toString()
+                } else {
+                    sqlErrorMessage = 'Unknown error'
+                }
+                
+                return { 
+                    success: false, 
+                    error: {
+                        message: insertError?.message || sqlErrorMessage,
+                        errMessage: insertError?.err?.message || sqlErrorMessage,
+                        errCode: insertError?.err?.code
+                    }, 
+                    message: 'Error inserting voltage entity: ' + sqlErrorMessage
+                };
+            }
         } else {
-            return { success: false, message: 'Error retrieving voltage entity, id is required'};
+            return { success: false, message: 'Error inserting voltage entity, mrid is required'};
         }
     } catch (error) {
-        console.error('Error retrieving voltage entity:', error);
-        await runAsync('ROLLBACK');
-        return { success: false, error, message: 'Error retrieving voltage entity'};
+        let sqlErrorMessage = error?.message || error?.toString() || 'Unknown error'
+        
+        return { 
+            success: false, 
+            error: {
+                message: error?.message || sqlErrorMessage,
+                errMessage: sqlErrorMessage,
+                errCode: error?.err?.code
+            }, 
+            message: 'Error inserting voltage entity: ' + sqlErrorMessage
+        };
     }
 }
 
 export const getVoltageLevelEntity = async (id) => {
     const data = {
-        voltageLevel : null,
-        baseVoltage : null,
-        voltage : []
+        voltageLevel : null
     };
     try {
+        if (!id) {
+            return { success: false, message: 'Error retrieving voltage level entity: mrid is required' };
+        }
         const dataVoltageLevel = await getVoltageLevelById(id);
         if (dataVoltageLevel.success) {
             data.voltageLevel = dataVoltageLevel.data;
-            const baseVoltage = await getBaseVoltageById(dataVoltageLevel.data.base_voltage);
-            if(baseVoltage.success) {
-                data.baseVoltage = baseVoltage.data;
-                const voltage = await getVoltageById(baseVoltage.data.nominal_voltage);
-                if(voltage.success) {
-                    data.voltage.push(voltage.data);
-                }
-            }
-            const highVoltageLimitData = await getVoltageById(dataVoltageLevel.data.high_voltage_limit);
-            if(highVoltageLimitData.success) {
-                data.voltage.push(highVoltageLimitData.data);
-            }
-            const lowVoltageLimitData = await getVoltageById(dataVoltageLevel.data.low_voltage_limit);
-            if(lowVoltageLimitData.success) {
-                data.voltage.push(lowVoltageLimitData.data);
-            }
             return { success: true, data : data, message: 'Voltage level entity retrieved successfully' };
         } else {
-            return { success: false, message: 'Error retrieving voltage level entity' };
+            return { 
+                success: false, 
+                message: dataVoltageLevel.message || 'Error retrieving voltage level entity',
+                error: dataVoltageLevel.err || null
+            };
         }
     } catch (error) {
-        console.error('Error retrieving voltage level entity:', error);
-        return { success: false, error, message: 'Error retrieving voltage level entity' };
+        return { 
+            success: false, 
+            error: error,
+            message: error?.message || 'Error retrieving voltage level entity' 
+        };
     }
 }
 
 export const deleteVoltageLevelById = async (data) => {
     try {
         await runAsync('BEGIN TRANSACTION')
-        if (data.voltageLevel || data.voltageLevel.mrid) {
+        if (data.voltageLevel && data.voltageLevel.mrid) {
             await deleteVoltageLevelByIdTransaction(data.voltageLevel.mrid, db);
-        }
-        if (data.baseVoltage && data.baseVoltage.mrid) {
-            await deleteBaseVoltageByIdTransaction(data.baseVoltage.mrid, db);
-        }
-        if (data.voltage && data.voltage.length > 0) {
-            for (const voltage of data.voltage) {
-                await deleteVoltageByIdTransaction(voltage.mrid, db);
-            }
         }
         await runAsync('COMMIT');
         return { success: true, data: data, message: 'Voltage level deleted successfully' };
     } catch (error) {
         await runAsync('ROLLBACK');
-        console.error('Error deleting voltage level by id:', error);
         return { success: false, error, message: 'Error deleting voltage level by id' };
     }
 }

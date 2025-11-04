@@ -12,7 +12,7 @@
                                     <td class="condition-head">Top oil temperature</td>
                                     <td>
                                         <el-input size="mini" v-model="conditions.top_oil_temperature.value">
-                                                <template slot="append">°C</template>
+                                                <template #append>°C</template>
                                         </el-input>
                                     </td>
                                 </tr>
@@ -20,7 +20,7 @@
                                     <td class="condition-head">Bottom oil temperature</td>
                                     <td>
                                         <el-input size="mini" v-model="conditions.bottom_oil_temperature.value">
-                                                <template slot="append">°C</template>
+                                                <template #append>°C</template>
                                         </el-input>
                                     </td>
                                 </tr>
@@ -28,7 +28,7 @@
                                     <td class="condition-head">Winding temperature</td>
                                     <td>
                                         <el-input size="mini" v-model="conditions.winding_temperature.value">
-                                                <template slot="append">°C</template>
+                                                <template #append>°C</template>
                                         </el-input>
                                     </td>
                                 </tr>
@@ -36,7 +36,7 @@
                                     <td class="condition-head">Reference temperature</td>
                                     <td>
                                         <el-input size="mini" v-model="conditions.reference_temperature.value">
-                                                <template slot="append">°C</template>
+                                                <template #append>°C</template>
                                         </el-input>
                                     </td>
                                 </tr>
@@ -44,7 +44,7 @@
                                     <td class="condition-head">Ambient temperature</td>
                                     <td>
                                         <el-input size="mini" v-model="conditions.ambient_temperature.value">
-                                                <template slot="append">°C</template>
+                                                <template #append>°C</template>
                                         </el-input>
                                     </td>
                                 </tr>
@@ -52,7 +52,7 @@
                                     <td class="condition-head">Humidity</td>
                                     <td>
                                         <el-input size="mini" v-model="conditions.humidity.value">
-                                                <template slot="append">%</template>
+                                                <template #append>%</template>
                                         </el-input>
                                     </td>
                                 </tr>
@@ -71,7 +71,7 @@
                     <div>
                         <div style="font-size: 12px;" class="bolder">Comment </div>
                         <el-divider></el-divider>
-                        <el-input type="textarea" rows="5" v-model="testConditions.comment"></el-input>
+                        <el-input type="textarea" :rows="5" v-model="testConditions.comment"></el-input>
                         <Attachment :attachment_="attachment_" :title="title" height="120px" @data-attachment = "getDataAttachment"></Attachment>
                     </div>
                     

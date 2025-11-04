@@ -1,6 +1,6 @@
 'use strict'
 import {ipcMain} from 'electron'
-import {cimFunc} from "@/function"
+import {cimFunc} from "../../../function/index.js"
 
 export const getPersonByMrid = () => {
     ipcMain.handle('getPersonByMrid', async function (event, mrid) {

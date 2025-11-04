@@ -52,8 +52,7 @@
                         @show-addCircuit="showAddCircuitBreaker" @show-addVt="showAddVt" @show-addCt="showAddCt"
                         @show-addPowerCable="showAddPowerCable" @show-addDisconnector="showAddDisconnector"
                         @show-addRotatingMachine="showAddRotatingMachine" @show-addBay="showAddBay"
-                        @show-data="showDataClient" @select-device="handleSelectDevice"
-                        @handle-action="handleContextMenuAction" ref="contextMenuClient">
+                        @show-data="showDataClient" ref="contextMenuClient">
                     </contextMenu>
                 </div>
             </div>
@@ -94,7 +93,7 @@
                         <div class="title-content"></div>
                         <div class="content-content">
                             <Tabs :side="'server'" ref="serverTabs" v-model="activeTab" :tabs="tabs"
-                                @close-tab="removeTab" />
+                                @close-tab="removeTab" @organisation-saved="handleOrganisationSaved" />
                         </div>
                     </div>
                     <div @mousedown="startResizeContentServer" ref="resizerContentServer" class="resizer"></div>
@@ -510,7 +509,7 @@
             </template>
         </el-dialog>
 
-        <el-dialog title="Add Voltage Level" v-model:visible="signVoltageLevel" width="1000px"
+        <el-dialog title="Add Voltage Level" v-model="signVoltageLevel" width="1000px"
             @close="handleVoltageLevelCancel">
             <VoltageLevel :locationId="locationId" :parent="parentOrganization" ref="voltageLevel"></VoltageLevel>
             <template #footer>
@@ -519,7 +518,7 @@
             </template>
         </el-dialog>
 
-        <el-dialog title="Add Bay Level" v-model:visible="signBay" width="1000px" @close="handleBayCancel">
+        <el-dialog title="Add Bay Level" v-model="signBay" width="1000px" @close="handleBayCancel">
             <Bay :locationId="locationId" :parent="parentOrganization" ref="bay"></Bay>
             <template #footer>
                 <el-button size="small" type="danger" @click="handleBayCancel">Cancel</el-button>
@@ -891,6 +890,45 @@ export default {
             // Thêm logic xử lý cho Copy, Cut, Rename... tại đây
         },
 
+        handleOrganisationSaved(savedNode) {
+            // Add the new organisation to the tree
+            this.addOrganisationToTree(savedNode);
+        },
+
+        addOrganisationToTree(savedNode) {
+            // Find parent node and add new organisation as child
+            if (savedNode.parentId) {
+                const parentNode = this.findNodeById(savedNode.parentId, this.organisationClientList);
+                if (parentNode) {
+                    const existingChildren = Array.isArray(parentNode.children) ? parentNode.children : [];
+                    const normalizedNode = {
+                        id: savedNode.id || savedNode.mrid,
+                        mrid: savedNode.mrid,
+                        name: savedNode.name || '',
+                        mode: savedNode.mode || 'organisation',
+                        parentId: savedNode.parentId,
+                        parentName: savedNode.parentName,
+                        parentArr: savedNode.parentArr || []
+                    };
+                    // Replace array to guarantee reactivity
+                    parentNode.children = [...existingChildren, normalizedNode];
+                } else {
+                    this.organisationClientList.push(savedNode);
+                }
+            } else {
+                // Add to root level
+                const normalizedNode = {
+                    id: savedNode.id || savedNode.mrid,
+                    mrid: savedNode.mrid,
+                    name: savedNode.name || '',
+                    mode: savedNode.mode || 'organisation',
+                    parentId: savedNode.parentId,
+                    parentName: savedNode.parentName,
+                    parentArr: savedNode.parentArr || []
+                };
+                this.organisationClientList = [...this.organisationClientList, normalizedNode];
+            }
+        },
 
         // Stub functions for missing APIs
         async getAssetByLocation(locationId) {
@@ -901,7 +939,7 @@ export default {
             console.warn('API findByLocationId is not implemented')
             return { data: [] }
         },
-
+        
         handleDropdown() {
             // Handle dropdown functionality
             // This method is called when dropdown needs to be triggered
@@ -1059,13 +1097,62 @@ export default {
                 try {
                     let rs = await window.electronAPI.getParentOrganizationByMrid(this.$constant.ROOT)
                     if (rs.success) {
-                        this.organisationClientList = [rs.data] || []
+                        const rootData = {
+                            ...rs.data,
+                            id: rs.data.mrid || rs.data.id,
+                            mode: 'organisation',
+                            name: rs.data.name || '',
+                            parentName: '',
+                            parentArr: []
+                        };
+
+                        // Load children of root (organisations and substations)
+                        const [organisationReturn, substationReturn] = await Promise.all([
+                            window.electronAPI.getParentOrganizationByParentMrid(this.$constant.ROOT),
+                            window.electronAPI.getSubstationsInOrganisationForUser(this.$constant.ROOT, this.$store.state.user.user_id)
+                        ]);
+
+                        const children = [];
+
+                        // Add organisations as children
+                        if (organisationReturn.success && organisationReturn.data && organisationReturn.data.length > 0) {
+                            organisationReturn.data.forEach(row => {
+                                row.parentId = rootData.mrid;
+                                row.mode = 'organisation';
+                                row.id = row.mrid || row.id;
+                                row.parentName = rootData.name || '';
+                                row.parentArr = [{
+                                    mrid: rootData.mrid,
+                                    parent: rootData.name || ''
+                                }];
+                                children.push(row);
+                            });
+                        }
+
+                        // Add substations as children
+                        if (substationReturn.success && substationReturn.data && substationReturn.data.length > 0) {
+                            substationReturn.data.forEach(row => {
+                                row.parentId = rootData.mrid;
+                                row.mode = 'substation';
+                                row.id = row.mrid || row.id;
+                                row.parentName = rootData.name || '';
+                                row.parentArr = [{
+                                    mrid: rootData.mrid,
+                                    parent: rootData.name || ''
+                                }];
+                                children.push(row);
+                            });
+                        }
+
+                        rootData.children = children;
+                        this.organisationClientList = [rootData]
                     } else {
-                        this.$message.error("Cannot load root organisation")
+                        const errorMsg = rs.message || "Cannot load root organisation"
+                        this.$message.error(errorMsg)
                     }
                 } catch (error) {
-                    console.error('Error in API call:', error)
                     this.$message.error("Error fetching root data")
+                    console.error("Error fetching data:", error)
                 }
             })
         },
@@ -1736,29 +1823,29 @@ export default {
         // Helper function to check for circular references
         hasCircularReference(node, parentArr = []) {
             if (!node || !node.mrid) return false;
-
+            
             // Check if current node's mrid already exists in parentArr
             const exists = parentArr.some(parent => parent.mrid === node.mrid);
             if (exists) {
                 console.warn('Circular reference detected for node:', node.mrid);
                 return true;
             }
-
+            
             return false;
         },
 
         // Helper function to safely build parentArr
         buildParentArr(clickedRow, newRow) {
             if (!clickedRow || !newRow) return [];
-
+            
             // Check for circular reference
             if (this.hasCircularReference(clickedRow, clickedRow.parentArr || [])) {
                 console.warn('Circular reference in clickedRow, using empty parentArr');
                 return [];
             }
-
+            
             const parentArr = [...(clickedRow.parentArr || [])];
-
+            
             // Add current clickedRow to parentArr if not already present
             const alreadyExists = parentArr.some(parent => parent.mrid === clickedRow.mrid);
             if (!alreadyExists) {
@@ -1767,7 +1854,7 @@ export default {
                     parent: clickedRow.name
                 });
             }
-
+            
             return parentArr;
         },
 
@@ -1995,31 +2082,7 @@ export default {
                     if (success) {
                         this.$message.success("Organisation saved successfully")
                         this.signOrg = false
-                        let newRows = []
-                        if (this.organisationClientList && this.organisationClientList.length > 0) {
-                            // Check if data exists
-                            if (!data) {
-                                console.error('handleOrgConfirm - data is undefined:', data)
-                                this.$message.error("Organisation data is missing")
-                                return
-                            }
-                            const newRow = {
-                                mrid: data.mrid,
-                                name: data.name,
-                                parentId: this.parentOrganization.mrid,
-                                parentName: this.parentOrganization.name,
-                                parentArr: this.parentOrganization.parentArr || [],
-                                mode: 'organisation',
-                            }
-                            newRows.push(newRow);
-                            const node = this.findNodeById(this.parentOrganization.mrid, this.organisationClientList);
-                            if (node) {
-                                const children = Array.isArray(node.children) ? node.children : [];
-                                node.children = [...children, ...newRows];
-                            } else {
-                                this.$message.error("Parent node not found in tree");
-                            }
-                        }
+                        // Note: node is added via organisation-saved event emitted by child → Tabs → here
                     } else {
                         this.$message.error("Failed to save organisation")
                     }
@@ -2073,29 +2136,29 @@ export default {
                 const bay = this.$refs.bay
                 if (bay) {
                     const { success, data } = await bay.saveBay()
-                    if (success) {
-                        this.$message.success("Bay saved successfully")
-                        this.signBay = false
-                        let newRows = []
-                        if (this.organisationClientList && this.organisationClientList.length > 0) {
-                            const newRow = {
-                                mrid: data.mrid,
-                                name: data.name,
-                                parentId: this.parentOrganization.mrid,
-                                parentName: this.parentOrganization.name,
-                                parentArr: this.parentOrganization.parentArr || [],
-                                mode: 'bay',
+                        if (success) {
+                            this.$message.success("Bay saved successfully")
+                            this.signBay = false
+                            let newRows = []
+                            if (this.organisationClientList && this.organisationClientList.length > 0) {
+                                const newRow = {
+                                    mrid: data.mrid,
+                                    name: data.name,
+                                    parentId: data.parentId || this.parentOrganization.mrid,
+                                    parentName: this.parentOrganization.name,
+                                    parentArr: this.parentOrganization.parentArr || [],
+                                    mode: 'bay',
+                                }
+                                newRows.push(newRow);
+                                const node = this.findNodeById(data.parentId || this.parentOrganization.mrid, this.organisationClientList);
+                                if (node) {
+                                    const children = Array.isArray(node.children) ? node.children : [];
+                                    node.children = [...children, ...newRows];
+                                } else {
+                                    this.$message.error("Parent node not found in tree");
+                                }
                             }
-                            newRows.push(newRow);
-                            const node = this.findNodeById(this.parentOrganization.mrid, this.organisationClientList);
-                            if (node) {
-                                const children = Array.isArray(node.children) ? node.children : [];
-                                node.children = [...children, ...newRows];
-                            } else {
-                                this.$message.error("Parent node not found in tree");
-                            }
-                        }
-                    } else {
+                        } else {
                         this.$message.error("Failed to save bay")
                     }
                 }
@@ -2482,7 +2545,7 @@ export default {
                     rowData = rowData.concat(responseAsset)
                 }
             })
-    
+
             return rowData
         }, */
 
@@ -2663,7 +2726,7 @@ export default {
                     this.tabsClient = newTabs;
                     this.activeTabClient = newNode;
                     this.$refs.clientTabs.selectTab(this.activeTabClient, newTabs.length - 1);
-
+                    
                     // Đợi component được render trước khi load data
                     this.$nextTick(() => {
                         this.$refs.clientTabs.loadData(newNode, newTabs.length - 1);
@@ -3019,12 +3082,31 @@ export default {
 
         async showAddBay(node) {
             try {
+
+                // Validate node has required properties
+                if (!node || !node.mrid) {
+                    this.$message.error("Invalid parent node selected for Bay");
+                    console.error("Node missing mrid:", node);
+                    return;
+                }
+
+                // Ensure node has mode property
+                if (!node.mode) {
+                    // Try to determine mode from context
+                    if (node.name && node.name.includes('Root')) {
+                        node.mode = 'substation';
+                    } else {
+                        node.mode = 'substation'; // Default fallback
+                    }
+                }
+
                 const dataLocation = await window.electronAPI.getLocationByPowerSystemResourceMrid(node.mrid);
                 if (dataLocation.success) {
                     this.locationId = dataLocation.data.mrid
                 } else {
                     this.locationId = null
                 }
+
                 this.parentOrganization = node
                 this.signBay = true
                 this.$nextTick(() => {

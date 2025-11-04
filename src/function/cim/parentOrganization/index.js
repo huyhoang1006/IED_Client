@@ -16,7 +16,9 @@ export const insertParentOrganisation = (parentOrganization) => {
                     return reject({success: false, err: orgResult.err, message: 'Insert organisation failed: ' + orgResult.message})
                 }
 
-                db.run(`INSERT INTO parent_organization(mrid) VALUES (?) ON CONFLICT(mrid) DO NOTHING`, [parentOrganization.mrid], function (err) {
+                // Use organisation.mrid instead of direct mrid
+                const mrid = parentOrganization.organisation ? parentOrganization.organisation.mrid : parentOrganization.mrid;
+                db.run(`INSERT INTO parent_organization(mrid) VALUES (?) ON CONFLICT(mrid) DO NOTHING`, [mrid], function (err) {
                     if (err) {
                         console.error('Error inserting into parent_organization:', err)
                         db.run('ROLLBACK')

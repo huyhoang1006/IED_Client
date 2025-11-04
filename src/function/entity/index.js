@@ -18,10 +18,8 @@ const organisationPsrFunc = {} // Placeholder
 const geoMapFunc = {} // Placeholder
 // import * as parentOrganizationEntityFunc from './parentOrganisation/index.js' // Module not found
 const parentOrganizationEntityFunc = {} // Placeholder
-// import * as voltageLevelEntityFunc from './voltage/index.js' // Module not found
-const voltageLevelEntityFunc = {} // Placeholder
-// import * as bayEntityFunc from './bay/index.js' // Module not found
-const bayEntityFunc = {} // Placeholder
+import * as voltageLevelEntityFunc from './voltage/index.js'
+import * as bayEntityFunc from './bay/index.js'
 // import * as surgeArresterEntityFunc from './surgeArrester/index.js' // Module not found
 const surgeArresterEntityFunc = {} // Placeholder
 // import * as transformerEntityFunc from './transformer/index.js' // Module not found

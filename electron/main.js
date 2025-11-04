@@ -1,6 +1,5 @@
 'use strict'
 
-// Utility function to safely serialize data for IPC
 function safeSerialize(data) {
     if (data === null || data === undefined) return data
     if (typeof data === 'boolean' || typeof data === 'number' || typeof data === 'string') return data
@@ -18,15 +17,11 @@ function safeSerialize(data) {
 }
 
 import {app, protocol, BrowserWindow, ipcMain, dialog, screen} from 'electron'
-// import { remote } from 'electron' // Deprecated - removed
-// import { createProtocol } from 'vue-cli-plugin-electron-builder/lib' // Removed - not needed for Vite
-// import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer' // Removed - not needed
 import sqlite3 from 'sqlite3'
 import * as updateModule from '../src/update/index.js'
 import path, {resolve} from 'path'
 import {fileURLToPath} from 'url'
 
-// Fix __dirname for ES modules
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 import fs from 'fs'
@@ -61,26 +56,21 @@ db.run('PRAGMA foreign_keys=ON')
 
 const isDevelopment = process.env.NODE_ENV === 'development'
 
-// const {dialog} = require('@electron/remote')
-// Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([{scheme: 'app', privileges: {secure: true, standard: true}}])
 
 function adjustWindowSize() {
     const primaryDisplay = screen.getPrimaryDisplay()
-    const {width, height} = primaryDisplay.workAreaSize // Lấy kích thước mà không bao gồm taskbar
+    const {width, height} = primaryDisplay.workAreaSize 
 
-    win.setBounds({x: 0, y: 0, width, height}) // Cập nhật kích thước cửa sổ
+    win.setBounds({x: 0, y: 0, width, height})
 }
 
 async function createWindow() {
-    // Create the browser window.
     win = new BrowserWindow({
         show: false,
         frame: false,
         autoHideMenuBar: true,
         webPreferences: {
-            // Use pluginOptions.nodeIntegration, leave this alone
-            // See nklayman.github.io/vue-cli-plugin-electron-builder/guide/security.html#node-integration for more info
             nodeIntegration: true,
             contextIsolation: !process.env.ELECTRON_NODE_INTEGRATION,
             preload: path.join(__dirname, 'preload.js'),
@@ -88,38 +78,27 @@ async function createWindow() {
         }
     })
 
-    // full screen
     adjustWindowSize()
 
     win.show()
 
     if (isDevelopment) {
-        // Load the url of the dev server if in development mode
         await win.loadURL('http://localhost:5173')
         if (!process.env.IS_TEST) win.webContents.openDevTools()
     } else {
-        // Load the index.html when not in development
         win.loadFile(path.join(__dirname, '../dist/index.html'))
-        // Tạm thời bật DevTools để debug
         win.webContents.openDevTools()
     }
 }
 
-// Quit when all windows are closed.
-// On macOS it is common for applications and their menu bar
-// to stay active until the user quits explicitly with Cmd + Q
 if (process.platform !== 'darwin') {
-    // This is handled by the window-all-closed event below
 }
 
 app.on('activate', async () => {
-    // On macOS it's common to re-create a window in the app when the
-    // dock icon is clicked and there are no other windows open.
     if (BrowserWindow.getAllWindows().length === 0) await createWindow()
 })
 
 const getWindow = async () => BrowserWindow.getFocusedWindow()
-
 const getAllInforAsset = async () => {
     return new Promise((resolve, reject) => {
         db.all('SELECT * FROM assets', [], (err, row) => {
@@ -2897,93 +2876,7 @@ app.on('ready', async () => {
                 }
             }
         }),
-        ipcMain.handle('getSubstationEntityByMrid', async function (event, mrid) {
-            try {
-                const rs = await entityFunc.substationEntityFunc.getSubstationEntityByMrid(mrid)
-                if (rs.success === true) {
-                    return {
-                        success: true,
-                        message: "Success",
-                        data: rs.data
-                    }
-                } else {
-                    return {
-                        success: false,
-                        message: rs.message || "Get substation entity failed",
-                    }
-                }
-            } catch (error) {
-                console.log(error)
-                return {
-                    success: false,
-                    message: (error && error.message) ? error.message : "Internal error",
-                }
-            }
-        }),
-        ipcMain.handle('updateSubstationEntityByMrid', async function (event, mrid, entity) {
-            try {
-                const rs = await entityFunc.substationEntityFunc.updateSubstationEntityByMrid(mrid, entity)
-                if (rs.success === true) {
-                    return {
-                        success: true,
-                        message: "Success",
-                        data: rs.data
-                    }
-                } else {
-                    return {
-                        success: false,
-                        message: rs.message || "Update substation entity failed",
-                    }
-                }
-            } catch (error) {
-                console.log(error)
-                return {
-                    success: false,
-                    message: (error && error.message) ? error.message : "Internal error",
-                }
-            }
-        }),
-        ipcMain.handle('deleteSubstationEntityByMrid', async function (event, mrid) {
-            try {
-                const rs = await entityFunc.substationEntityFunc.deleteSubstationEntityByMrid(mrid)
-                if (rs.success === true) {
-                    return {
-                        success: true,
-                        message: "Success",
-                        data: rs.data
-                    }
-                } else {
-                    return {
-                        success: false,
-                        message: rs.message || "Delete substation entity failed",
-                    }
-                }
-            } catch (error) {
-                console.log(error)
-                return {
-                    success: false,
-                    message: (error && error.message) ? error.message : "Internal error",
-                }
-            }
-        }),
-        // Location APIs
-        ipcMain.handle('getLocationByOrganisationId', async function (event, organisationId) {
-            try {
-                // Check if table exists first
-                const tableExists = db.all(`SELECT name FROM sqlite_master WHERE type='table' AND name='location'`)
-                if (tableExists.length === 0) {
-                    return {success: true, data: []}
-                }
-
-                // Try to get all locations without any specific columns
-                const result = db.all(`SELECT * FROM location`)
-                return {success: true, data: safeSerialize(result)}
-            } catch (error) {
-                console.error('Error getting location by organisation id:', error)
-                // Return empty array instead of crashing
-                return {success: true, data: []}
-            }
-        }),
+        // Location APIs - moved to src/ipcmain/cim/location/index.js
         // Person APIs
         ipcMain.handle('getPersonByOrganisationId', async function (event, organisationId) {
             try {

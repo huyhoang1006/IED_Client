@@ -1,5 +1,25 @@
-import db from '../../datacontext/index'
+import db from '../../datacontext/index.js'
 import * as IdentifiedObjectFunc from '../identifiedObject/index.js'
+
+export const getAllLocations = async () => {
+    try {
+        return new Promise((resolve, reject) => {
+            const sql = `
+                SELECT l.*, io.name AS name, io.description AS description
+                FROM location l
+                JOIN identified_object io ON l.mrid = io.mrid
+            `;
+            db.all(sql, [], (err, rows) => {
+                if (err) {
+                    return reject({ success: false, err, message: 'Get all locations failed' })
+                }
+                return resolve({ success: true, data: rows || [], message: 'Get all locations completed' })
+            })
+        })
+    } catch (err) {
+        return { success: false, err, message: 'Get all locations failed' }
+    }
+}
 
 export const getLocationById = async (mrid) => {
     try {

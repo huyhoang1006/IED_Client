@@ -105,3 +105,10 @@ export const deleteSubstationEntityByMrid = () => {
         }
     })
 }
+
+export const active = () => {
+    insertSubstationEntity()
+    getSubstationEntityByMrid()
+    updateSubstationEntityByMrid()
+    deleteSubstationEntityByMrid()
+}

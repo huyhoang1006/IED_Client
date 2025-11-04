@@ -36,11 +36,9 @@ export default {
                 const { locationList, personList, dto, substation } = data
                 this.properties = dto
                 this.locationListData = locationList
-                console.log('Location List Data:', this.locationListData);
                 this.personListData = personList
                 this.locationTemp = this.properties.locationId || ""
                 this.personTemp = this.properties.personId || ""
-                this.substation = substation
                 if(this.properties.attachment && this.properties.attachment.path) {
                     this.attachmentData = JSON.parse(this.properties.attachment.path)
                 }
