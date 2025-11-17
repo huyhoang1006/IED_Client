@@ -28,12 +28,19 @@
                                                 <li @click="selectDevice('RET670')">RET670</li>
                                                 <li @click="selectDevice('RET650')">RET650</li>
                                                 <li @click="selectDevice('RET630')">RET630</li>
+                                                
                                             </ul>
                                         </li>
                                         <li>Line Differential Protection</li>
                                         <li>Line Distance Protection</li>
-                                        <li>Feeder Protection</li>
-                                        <li>Busbar Protection</li>
+                                        <li class="has-submenu">Feeder Protection
+                                            <ul class="submenu">
+                                                <li @click="selectDevice('REF615')">REF615</li>
+                                            </ul>
+                                        </li>
+                                        <li >Busbar Protection
+
+                                        </li>
                                         <li>Bay Control Unit</li>
                                     </ul>
                                 </li>
@@ -124,9 +131,10 @@ export default {
             document.addEventListener("click", this.closeContextMenu);
         },
 
-        // Phương thức mới để xử lý việc chọn thiết bị
+        // SỬA ĐỔI PHƯƠNG THỨC NÀY
         selectDevice(deviceName) {
-            this.$emit('select-device', deviceName);
+            // Gửi cả deviceName và node đã chọn
+            this.$emit('select-device', deviceName, this.selectedNode);
             this.closeContextMenu();
         },
 
