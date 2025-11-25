@@ -736,6 +736,7 @@ import JobSurgeArrester from '@/views/JobView/SurgeArrester/index.vue'
 import mixin from './mixin'
 import Attachment from '../Common/Attachment.vue';
 // import * as demoAPI from '@/api/demo'
+import icon from '@/views/Common/Icon.vue';
 
 
 export default {
@@ -929,7 +930,7 @@ export default {
             this.$message.error("Failed to fetch log data.");
         }
     },
-     methods: {
+    methods: {
 
         // HÀM XỬ LÝ KHI CHỌN THIẾT BỊ TỪ CONTEXT MENU
         handleSelectDevice(deviceName) {
@@ -2218,7 +2219,7 @@ export default {
                                         substationReturn.data.forEach(row => {
                                             // Check for duplicates before adding
                                             const exists = substationChildren.some(child => child.mrid === row.mrid || child.id === row.mrid) ||
-                                                          otherChildren.some(child => (child.mrid === row.mrid || child.id === row.mrid) && child.mode === 'substation');
+                                                otherChildren.some(child => (child.mrid === row.mrid || child.id === row.mrid) && child.mode === 'substation');
                                             if (!exists) {
                                                 row.parentId = this.parentOrganization.mrid;
                                                 row.mode = 'substation';
