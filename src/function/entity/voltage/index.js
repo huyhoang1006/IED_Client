@@ -15,6 +15,7 @@ export const insertVoltageLevelEntity = async (entity) => {
                 try {
                     await runAsync('ROLLBACK');
                 } catch (rollbackErr) {
+                    // Rollback failed
                 }
 
                 let sqlErrorMessage = ''

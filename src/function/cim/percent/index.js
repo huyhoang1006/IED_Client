@@ -1,0 +1,114 @@
+import db from '../../datacontext/index.js'
+
+// Lấy percent theo mrid
+export const getPercentById = async (mrid) => {
+    return new Promise((resolve, reject) => {
+        db.get("SELECT * FROM percent WHERE mrid=?", [mrid], (err, row) => {
+            if (err) return reject({ success: false, err: err, message: 'Get percent by id failed' })
+            if (!row) return resolve({ success: false, data: null, message: 'Percent not found' })
+            return resolve({ success: true, data: row, message: 'Get percent by id completed' })
+        })
+    })
+}
+
+// Thêm percent
+export const insertPercent = async (percent) => {
+    return new Promise((resolve, reject) => {
+        db.run(
+            `INSERT INTO percent(mrid, multiplier, unit, value)
+             VALUES (?, ?, ?, ?)
+             ON CONFLICT(mrid) DO UPDATE SET
+                multiplier = excluded.multiplier,
+                unit = excluded.unit,
+                value = excluded.value`,
+            [
+                percent.mrid,
+                percent.multiplier,
+                percent.unit,
+                percent.value
+            ],
+            function (err) {
+                if (err) return reject({ success: false, err, message: 'Insert percent failed' })
+                return resolve({ success: true, data: percent, message: 'Insert percent completed' })
+            }
+        )
+    })
+}
+
+// Thêm percent transaction
+export const insertPercentTransaction = async (percent, dbsql) => {
+    return new Promise((resolve, reject) => {
+        dbsql.run(
+            `INSERT INTO percent(mrid, multiplier, unit, value)
+             VALUES (?, ?, ?, ?)
+             ON CONFLICT(mrid) DO UPDATE SET
+                multiplier = excluded.multiplier,
+                unit = excluded.unit,
+                value = excluded.value`,
+            [
+                percent.mrid,
+                percent.multiplier,
+                percent.unit,
+                percent.value
+            ],
+            function (err) {
+                if (err) return reject({ success: false, err, message: 'Insert percent failed' })
+                return resolve({ success: true, data: percent, message: 'Insert percent completed' })
+            }
+        )
+    })
+}
+
+// Cập nhật percent theo mrid
+export const updatePercentById = async (mrid, percent) => {
+    return new Promise((resolve, reject) => {
+        db.run(
+            `UPDATE percent
+             SET multiplier = ?, unit = ?, value = ?
+             WHERE mrid = ?`,
+            [percent.multiplier, percent.unit, percent.value, mrid],
+            function (err) {
+                if (err) return reject({ success: false, err, message: 'Update percent failed' })
+                return resolve({ success: true, data: percent, message: 'Update percent completed' })
+            }
+        )
+    })
+}
+
+// Cập nhật percent theo mrid transaction
+export const updatePercentByIdTransaction = async (mrid, percent, dbsql) => {
+    return new Promise((resolve, reject) => {
+        dbsql.run(
+            `UPDATE percent
+             SET multiplier = ?, unit = ?, value = ?
+             WHERE mrid = ?`,
+            [percent.multiplier, percent.unit, percent.value, mrid],
+            function (err) {
+                if (err) return reject({ success: false, err, message: 'Update percent failed' })
+                return resolve({ success: true, data: percent, message: 'Update percent completed' })
+            }
+        )
+    })
+}
+
+// Xóa percent theo mrid
+export const deleteVoltageById = async (mrid) => {
+    return new Promise((resolve, reject) => {
+        db.run("DELETE FROM voltage WHERE mrid=?", [mrid], function (err) {
+            if (err) return reject({ success: false, err, message: 'Delete percent failed' })
+            if (this.changes === 0) return resolve({ success: false, data: null, message: 'Percent not found' })
+            return resolve({ success: true, data: null, message: 'Delete percent completed' })
+        })
+    })
+}
+
+// Xóa percent theo mrid transaction
+export const deletePercentByIdTransaction = async (mrid, dbsql) => {
+    return new Promise((resolve, reject) => {
+        dbsql.run("DELETE FROM percent WHERE mrid=?", [mrid], function (err) {
+            if (err) return reject({ success: false, err, message: 'Delete percent failed' })
+            if (this.changes === 0) return resolve({ success: false, data: null, message: 'Percent not found' })
+            return resolve({ success: true, data: null, message: 'Delete percent completed' })
+        })
+    })
+}

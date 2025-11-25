@@ -1,11 +1,10 @@
-'use strict'
 import {ipcMain} from 'electron'
 import {cimFunc} from '../../../function/index.js'
 
-export const getSurgeArresterByMrid = () => {
-    ipcMain.handle('getSurgeArresterByMrid', async function (event, mrid) {
+export const getDiscreteByMrid = () => {
+    ipcMain.handle('getDiscreteByMrid', async function (event, mrid) {
         try {
-            const rs = await cimFunc.surgeArresterFunc.getSurgeArresterById(mrid)
+            const rs = await cimFunc.discreteFunc.getDiscreteById(mrid)
             if (rs.success === true) {
                 return {
                     success: true,
@@ -29,10 +28,38 @@ export const getSurgeArresterByMrid = () => {
     })
 }
 
-export const getSurgeArresterByPsrId = () => {
-    ipcMain.handle('getSurgeArresterByPsrId', async function (event, psrId) {
+export const getAllDiscreteByProcedure = () => {
+    ipcMain.handle('getAllDiscreteByProcedure', async function (event, procedureId) {
         try {
-            const rs = await cimFunc.surgeArresterFunc.getSurgeArresterByPsrId(psrId)
+            const rs = await cimFunc.discreteFunc.getAllDiscreteByProcedure(procedureId)
+            if (rs.success === true) {
+                return {
+                    success: true,
+                    message: rs.message || "Success",
+                    data: rs.data
+                }
+            } else {
+                return {
+                    success: false,
+                    data: rs.data || [],
+                    message: rs.message || "fail",
+                }
+            }
+        } catch (error) {
+            console.log(error)
+            return {
+                error: error,
+                success: false,
+                message: (error && error.message) ? error.message : "Internal error",
+            }
+        }
+    })
+}
+
+export const insertDiscrete = () => {
+    ipcMain.handle('insertDiscrete', async function (event, data) {
+        const rs = await cimFunc.discreteFunc.insertDiscrete(data)
+        try {
             if (rs.success === true) {
                 return {
                     success: true,
@@ -56,15 +83,14 @@ export const getSurgeArresterByPsrId = () => {
     })
 }
 
-export const insertSurgeArrester = () => {
-    ipcMain.handle('insertSurgeArrester', async function (event, data) {
+export const deleteDiscreteByMrid = () => {
+    ipcMain.handle('deleteDiscreteByMrid', async function (event, mrid) {
         try {
-            const rs = await cimFunc.surgeArresterFunc.insertSurgeArrester(data)
-            if (rs.success === true) {
+            const rs = await cimFunc.discreteFunc.deleteDiscreteById(mrid)
+            if (rs.success == true) {
                 return {
                     success: true,
                     message: rs.message || "Success",
-                    data: rs.data
                 }
             } else {
                 return {
@@ -84,7 +110,8 @@ export const insertSurgeArrester = () => {
 }
 
 export const active = () => {
-    getSurgeArresterByMrid()
-    getSurgeArresterByPsrId()
-    insertSurgeArrester()
+    getDiscreteByMrid()
+    getAllDiscreteByProcedure()
+    insertDiscrete()
+    deleteDiscreteByMrid()
 }

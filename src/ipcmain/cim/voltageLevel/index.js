@@ -2,6 +2,7 @@
 import {ipcMain} from 'electron'
 import {cimFunc, entityFunc} from '../../../function/index.js'
 
+// Get VoltageLevel by mrid
 export const getVoltageByMrid = () => {
     ipcMain.handle('getVoltageLevelByMrid', async function (event, mrid) {
         try {
@@ -36,6 +37,7 @@ export const getVoltageByMrid = () => {
     })
 }
 
+// Insert Voltage
 export const insertVoltage = () => {
     ipcMain.handle('insertVoltage', async function (event, data) {
         const rs = await cimFunc.voltageFunc.insertVoltage(data)
@@ -62,44 +64,7 @@ export const insertVoltage = () => {
     })
 }
 
-export const insertVoltageLevelEntity = () => {
-    ipcMain.handle('insertVoltageLevelEntity', async function (event, data) {
-        try {
-            const rs = await entityFunc.voltageLevelEntityFunc.insertVoltageLevelEntity(data)
-            if (rs.success === true) {
-                return {
-                    success: true,
-                    message: rs.message || "Success",
-                    data: rs.data
-                }
-            } else {
-                // Extract full error message from response
-                let errorMessage = rs.message || "fail"
-                
-                // Try to get SQL error message from error object
-                if (rs.error) {
-                    const sqlErrorMsg = rs.error.errMessage || rs.error.message || ''
-                    if (sqlErrorMsg && !errorMessage.includes(sqlErrorMsg)) {
-                        errorMessage = errorMessage + ': ' + sqlErrorMsg
-                    }
-                }
-                
-                return {
-                    success: false,
-                    message: errorMessage
-                }
-            }
-        } catch (error) {
-            return {
-                error: error,
-                success: false,
-                message: (error && error.message) ? error.message : "Internal error",
-            }
-        }
-    })
-}
-
-
+// Update Voltage by mrid
 export const updateVoltageByMrid = () => {
     ipcMain.handle('updateVoltageLevelByMrid', async function (event, mrid, data) {
         try {
@@ -127,6 +92,7 @@ export const updateVoltageByMrid = () => {
     })
 }
 
+// Delete Voltage by mrid
 export const deleteVoltageByMrid = () => {
     ipcMain.handle('deleteVoltageLevelByMrid', async function (event, mrid) {
         try {
@@ -152,6 +118,7 @@ export const deleteVoltageByMrid = () => {
     })
 }
 
+// Get VoltageLevel by substationId
 export const getVoltageLevelBySubstationId = () => {
     ipcMain.handle('getVoltageLevelBySubstationId', async function (event, substationId) {
         try {
@@ -178,10 +145,9 @@ export const getVoltageLevelBySubstationId = () => {
     })
 }
 
+// Active VoltageLevel
 export const active = () => {
     getVoltageByMrid()
-    insertVoltage()
-    insertVoltageLevelEntity()
     updateVoltageByMrid()
     deleteVoltageByMrid()
     getVoltageLevelBySubstationId()

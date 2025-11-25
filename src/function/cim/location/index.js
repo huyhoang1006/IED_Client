@@ -1,26 +1,7 @@
 import db from '../../datacontext/index.js'
 import * as IdentifiedObjectFunc from '../identifiedObject/index.js'
 
-export const getAllLocations = async () => {
-    try {
-        return new Promise((resolve, reject) => {
-            const sql = `
-                SELECT l.*, io.name AS name, io.description AS description
-                FROM location l
-                JOIN identified_object io ON l.mrid = io.mrid
-            `;
-            db.all(sql, [], (err, rows) => {
-                if (err) {
-                    return reject({ success: false, err, message: 'Get all locations failed' })
-                }
-                return resolve({ success: true, data: rows || [], message: 'Get all locations completed' })
-            })
-        })
-    } catch (err) {
-        return { success: false, err, message: 'Get all locations failed' }
-    }
-}
-
+// Lấy location theo mrid
 export const getLocationById = async (mrid) => {
     try {
         // Lấy thông tin identified_object
@@ -44,6 +25,7 @@ export const getLocationById = async (mrid) => {
     }
 }
 
+// Lấy location theo organisationId
 export const getLocationByOrganisationId = async (organisationId) => {
     try {
         return new Promise((resolve, reject) => {
@@ -75,7 +57,7 @@ export const getLocationByOrganisationId = async (organisationId) => {
     }
 };
 
-
+// Thêm location
 export const insertLocation = async (location) => {
     return new Promise((resolve, reject) => {
         db.serialize(() => {
@@ -129,6 +111,7 @@ export const insertLocation = async (location) => {
     })
 }
 
+// Thêm location transaction
 export const insertLocationTransaction = async (location, dbsql) => {
     return new Promise(async (resolve, reject) => {
         try {
@@ -175,6 +158,7 @@ export const insertLocationTransaction = async (location, dbsql) => {
     })
 }
 
+// Cập nhật location theo mrid
 export const updateLocation = async (mrid, location) => {
     return new Promise((resolve, reject) => {
         db.serialize(() => {
@@ -225,6 +209,7 @@ export const updateLocation = async (mrid, location) => {
     })
 }
 
+// Cập nhật location theo mrid transaction
 export const updateLocationTransaction = async (mrid, location, dbsql) => {
     return new Promise(async (resolve, reject) => {
         try {
@@ -268,6 +253,7 @@ export const updateLocationTransaction = async (mrid, location, dbsql) => {
     })
 }
 
+// Xóa location theo mrid
 export const deleteLocationById = async (mrid) => {
     return new Promise((resolve, reject) => {
         IdentifiedObjectFunc.deleteIdentifiedObjectByIdTransaction(mrid, db)
@@ -284,11 +270,13 @@ export const deleteLocationById = async (mrid) => {
     })
 }
 
+// Xóa location theo mrid transaction
 export const deleteLocationByIdTransaction = async (mrid, dbsql) => {
     // Tái sử dụng hàm deleteIdentifiedObjectById đã có sẵn
     return IdentifiedObjectFunc.deleteIdentifiedObjectById(mrid, dbsql)
 }
 
+// Lấy location detail theo mrid
 export const getLocationDetailByMrid = async (mrid) => {
     return new Promise((resolve, reject) => {
         const query = `

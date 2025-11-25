@@ -48,22 +48,47 @@ export default {
             this.properties.base_voltage_unit = UnitSymbol.V
         },
 
+        // Helper function to convert multiplier value to enum
+        convertMultiplierToEnum(multiplier) {
+            if (multiplier === null || multiplier === undefined) return null
+            // Convert to number if it's a string
+            const numValue = typeof multiplier === 'string' ? Number(multiplier) : multiplier
+            // Check if it matches enum values
+            if (numValue === UnitMultiplier.K || numValue === 3) return UnitMultiplier.K
+            if (numValue === UnitMultiplier.M || numValue === -3) return UnitMultiplier.M
+            if (numValue === UnitMultiplier.MEGA || numValue === 6) return UnitMultiplier.MEGA
+            if (numValue === UnitMultiplier.G || numValue === 9) return UnitMultiplier.G
+            if (numValue === UnitMultiplier.T || numValue === 12) return UnitMultiplier.T
+            if (numValue === UnitMultiplier.MICRO || numValue === -6) return UnitMultiplier.MICRO
+            if (numValue === UnitMultiplier.N || numValue === -9) return UnitMultiplier.N
+            if (numValue === UnitMultiplier.P || numValue === -12) return UnitMultiplier.P
+            if (numValue === UnitMultiplier.NONE || numValue === 0) return UnitMultiplier.NONE
+            // Return as is if no match
+            return numValue
+        },
+
         loadData(data) {
             this.properties = data
-            // Ensure default values if null/undefined
-            if (this.properties.high_voltage_limit_multiplier === null || this.properties.high_voltage_limit_multiplier === undefined) {
+            // Convert multiplier values from database (3, -3) to enum values for dropdown match
+            if (this.properties.high_voltage_limit_multiplier !== null && this.properties.high_voltage_limit_multiplier !== undefined) {
+                this.properties.high_voltage_limit_multiplier = this.convertMultiplierToEnum(this.properties.high_voltage_limit_multiplier)
+            } else {
                 this.properties.high_voltage_limit_multiplier = UnitMultiplier.K
             }
             if (this.properties.high_voltage_limit_unit === null || this.properties.high_voltage_limit_unit === undefined) {
                 this.properties.high_voltage_limit_unit = UnitSymbol.V
             }
-            if (this.properties.low_voltage_limit_multiplier === null || this.properties.low_voltage_limit_multiplier === undefined) {
+            if (this.properties.low_voltage_limit_multiplier !== null && this.properties.low_voltage_limit_multiplier !== undefined) {
+                this.properties.low_voltage_limit_multiplier = this.convertMultiplierToEnum(this.properties.low_voltage_limit_multiplier)
+            } else {
                 this.properties.low_voltage_limit_multiplier = UnitMultiplier.K
             }
             if (this.properties.low_voltage_limit_unit === null || this.properties.low_voltage_limit_unit === undefined) {
                 this.properties.low_voltage_limit_unit = UnitSymbol.V
             }
-            if (this.properties.base_voltage_multiplier === null || this.properties.base_voltage_multiplier === undefined) {
+            if (this.properties.base_voltage_multiplier !== null && this.properties.base_voltage_multiplier !== undefined) {
+                this.properties.base_voltage_multiplier = this.convertMultiplierToEnum(this.properties.base_voltage_multiplier)
+            } else {
                 this.properties.base_voltage_multiplier = UnitMultiplier.K
             }
             if (this.properties.base_voltage_unit === null || this.properties.base_voltage_unit === undefined) {
@@ -117,7 +142,7 @@ export default {
 
         checkBaseVoltage(data) {
             if(data.baseVoltageId === null || data.baseVoltageId === '') {
-                if(data.base_voltage_value) {
+                if(data.base_voltage_value !== null && data.base_voltage_value !== undefined) {
                     data.baseVoltageId = uuid.newUuid();
                 }
             }
@@ -125,7 +150,7 @@ export default {
 
         checkNominalVoltage(data) {
             if(data.nominalVoltageId === null || data.nominalVoltageId === '') {
-                if(data.base_voltage_value) {
+                if(data.base_voltage_value !== null && data.base_voltage_value !== undefined) {
                     data.nominalVoltageId = uuid.newUuid();
                 }
             }
@@ -138,20 +163,18 @@ export default {
             // Ensure name is set (required by identifiedObject)
             if(!data.name || data.name === '') {
                 // Use base voltage value to generate name if available
-                if(data.base_voltage_value) {
+                if(data.base_voltage_value !== null && data.base_voltage_value !== undefined) {
                     const multiplier = data.base_voltage_multiplier === UnitMultiplier.M ? 'm' : 'k'
                     const unit = data.base_voltage_unit || UnitSymbol.V
                     data.name = `${data.base_voltage_value} ${multiplier}${unit}`
                 } else {
-                    data.name = data.voltageLevelId // Fallback to ID if no value
+                    data.name = data.voltageLevelId
                 }
             }
-            // Ensure substation linkage is set from parent node
             const parentMrid = this.parent && this.parent.mrid ? this.parent.mrid : null
             if(!data.substationId || data.substationId === '') {
                 data.substationId = parentMrid
             }
-            // Mirror to substation for downstream mappers/SQL that may read this key
             if(!data.substation || data.substation === '') {
                 data.substation = data.substationId || parentMrid
             }
@@ -168,7 +191,7 @@ export default {
 
         checkHighVoltageLimit(data) {
             if(data.highVoltageLimitId === null || data.highVoltageLimitId === '') {
-                if(data.high_voltage_limit_value) {
+                if(data.high_voltage_limit_value !== null && data.high_voltage_limit_value !== undefined) {
                     data.highVoltageLimitId = uuid.newUuid();
                 }
             }
@@ -176,7 +199,7 @@ export default {
 
         checkLowVoltageLimit(data) {
             if(data.lowVoltageLimitId === null || data.lowVoltageLimitId === '') {
-                if(data.low_voltage_limit_value) {
+                if(data.low_voltage_limit_value !== null && data.low_voltage_limit_value !== undefined) {
                     data.lowVoltageLimitId = uuid.newUuid();
                 }
             }

@@ -1,4 +1,3 @@
-// Equipment Container Base Class
 export default class EquipmentContainer {
     constructor() {
         this.mrid = null;

@@ -1,317 +1,190 @@
-/* eslint-disable */
-import OrganisationEntity from '@/views/Entity/Organisation/index'
-import OrganisationDto from '@/views/Dto/Organisation'
-import PositionPoint from '@/views/Cim/PositionPoint/index.js'
-import ConfigurationEvent from '@/views/Cim/ConfigurationEvent/index.js'
+import OrganisationEntity from '@/views/Entity/Organisation/index.js';
+import GeoMap from '@/views/Entity/GeoMap/index.js';
+import OrganisationDto from '@/views/Dto/Organisation/index.js';
 
-export function mapDtoToEntity(dto) {
-    const entity = new OrganisationEntity()
+export const OrgDtoToOrgEntity = (orgDto) => {
+    const orgEntity = new OrganisationEntity();
+    // Organisation
+    // Ensure mrid is not empty string - use null only if truly null/undefined
+    orgEntity.organisation.mrid = (orgDto.organisationId && orgDto.organisationId !== '') ? orgDto.organisationId : null;
+    // Preserve empty strings - only convert undefined/null to null, not empty strings
+    orgEntity.organisation.name = (orgDto.name !== undefined && orgDto.name !== null) ? orgDto.name : null;
+    orgEntity.organisation.tax_code = (orgDto.tax_code !== undefined && orgDto.tax_code !== null) ? orgDto.tax_code : null;
+    orgEntity.organisation.description = (orgDto.comment !== undefined && orgDto.comment !== null) ? orgDto.comment : null;
+    orgEntity.organisation.street_address = orgDto.streetAddressId || null;
+    orgEntity.organisation.electronic_address = orgDto.electronicAddressId || null;
+    orgEntity.organisation.phone = orgDto.telephoneNumberId || null;
+    orgEntity.organisation.parent_organisation = orgDto.parentId || null
 
-    // Map các trường đơn giản từ Organisation
-    entity.organisation.name = dto.name || null
-    entity.organisation.description = dto.comment || null
-    entity.organisation.mrid = dto.organisationId || dto.mrid || null
-    entity.organisation.location = dto.locationId || null
-    
-    // Organisation specific fields
-    entity.organisation.ref_id = dto.tax_code || null
-    entity.organisation.address = dto.street || null
-    entity.organisation.city = dto.city || null
-    entity.organisation.state = dto.state_or_province || null
-    entity.organisation.country = dto.country || null
-    entity.organisation.phone_no = dto.phoneNumber || null
-    entity.organisation.fax = dto.fax || null
-    entity.organisation.email = dto.email || null
-    entity.organisation.mode = dto.mode || 'organisation'
-    entity.organisation.department = dto.district_or_town || null
-    entity.organisation.position = dto.ward_or_commune || null
+    //address address
+    orgEntity.streetAddress.mrid = orgDto.streetAddressId || null;
+    orgEntity.streetAddress.town_detail = orgDto.townDetailId || null;
+    orgEntity.streetAddress.street_detail = orgDto.streetDetailId || null;
 
-    // PSR Type
-    entity.psrType.name = dto.type || null
-    entity.psrType.mrid = dto.psrTypeId || null
-    entity.organisation.psr_type_id = dto.psrTypeId || null
-    
-    // PsrType additional fields
-    entity.psrType.description = dto.psrTypeDescription || null
-    entity.psrType.type = dto.psrTypeType || null
-    entity.psrType.category = dto.category || null
-    entity.psrType.subCategory = dto.subCategory || null
+    //Street detail
+    orgEntity.streetDetail.mrid = (orgDto.streetDetailId && orgDto.streetDetailId !== '') ? orgDto.streetDetailId : null;
+    orgEntity.streetDetail.address_general = orgDto.street || null;
 
-    // TownDetail
-    entity.townDetail.mrid = dto.townDetailId || null
-    entity.townDetail.city = dto.city || null
-    entity.townDetail.state_or_province = dto.state_or_province || null
-    entity.townDetail.country = dto.country || null
-    entity.townDetail.district_or_town = dto.district_or_town || null
-    entity.townDetail.ward_or_commune = dto.ward_or_commune || null
+    //Town detail
+    orgEntity.townDetail.mrid = (orgDto.townDetailId && orgDto.townDetailId !== '') ? orgDto.townDetailId : null;
+    orgEntity.townDetail.ward_or_commune = orgDto.ward_or_commune || null;
+    orgEntity.townDetail.district_or_town = orgDto.district_or_town || null;
+    orgEntity.townDetail.state_or_province = orgDto.state_or_province || null;
+    orgEntity.townDetail.country = orgDto.country || null;
+    orgEntity.townDetail.city = orgDto.city || null;
 
-    // StreetDetail
-    entity.streetDetail.address_general = dto.street || null
-    entity.streetDetail.mrid = dto.streetDetailId || null
+    //Electronic address
+    orgEntity.electronicAddress.mrid = (orgDto.electronicAddressId && orgDto.electronicAddressId !== '') ? orgDto.electronicAddressId : null;
+    orgEntity.electronicAddress.email = orgDto.email || null;
+    orgEntity.electronicAddress.fax = orgDto.fax || null;
 
-    // StreetAddress
-    entity.streetAddress.street_detail = dto.streetDetailId || null
-    entity.streetAddress.town_detail = dto.townDetailId || null
-    entity.streetAddress.mrid = dto.streetAddressId || null
+    //Telephone number
+    orgEntity.telephoneNumber.mrid = orgDto.telephoneNumberId || null;
+    orgEntity.telephoneNumber.itu_phone = orgDto.phoneNumber || null;
 
-    // Location
-    entity.location.mrid = dto.locationId || null
-    entity.location.name = dto.locationName || null
-    entity.location.main_address = dto.streetAddressId || null
-    
-    // Location additional fields
-    entity.location.description = dto.locationDescription || null
-    entity.location.latitude = dto.latitude || null
-    entity.location.longitude = dto.longitude || null
-    entity.location.elevation = dto.elevation || null
-    entity.location.coordinateSystem = dto.coordinateSystem || null
-    entity.location.orientation = dto.orientation || null
+    //Person
+    orgEntity.person.mrid = orgDto.personId || null;
+    orgEntity.person.name = orgDto.personName || null;
+    orgEntity.person.electronic_address = orgDto.electronicAddressId || null;
+    orgEntity.person.mobile_phone = orgDto.telephoneNumberId || null;
 
-    // ElectronicAddress
-    entity.electronicAddress.mrid = dto.electronicAddressId || null
-    entity.electronicAddress.email = dto.email || null
-    entity.electronicAddress.fax = dto.fax || null
-    
-    // ElectronicAddress additional fields
-    entity.electronicAddress.name = dto.electronicAddressName || null
-    entity.electronicAddress.description = dto.electronicAddressDescription || null
-    entity.electronicAddress.website = dto.website || null
-    entity.electronicAddress.phone = dto.electronicPhone || null
+    //PersonRole
+    orgEntity.personRole.mrid = orgDto.personRoleId || null;
+    orgEntity.personRole.department = orgDto.department || null;
+    orgEntity.personRole.position = orgDto.position || null;
+    orgEntity.personRole.person = orgDto.personId || null;
+    orgEntity.personRole.organisation = orgDto.organisationId || null;
 
-    // TelephoneNumber
-    entity.telephoneNumber.mrid = dto.telephoneNumberId || null
-    entity.telephoneNumber.itu_phone = dto.phoneNumber || null
-    
-    // TelephoneNumber additional fields
-    entity.telephoneNumber.name = dto.telephoneName || null
-    entity.telephoneNumber.description = dto.telephoneDescription || null
-    entity.telephoneNumber.phoneType = dto.phoneType || null
-    entity.telephoneNumber.countryCode = dto.countryCode || null
-    entity.telephoneNumber.areaCode = dto.areaCode || null
-
-    // Person
-    entity.person.mrid = dto.personId || null
-    entity.person.name = dto.personName || null
-    entity.person.electronic_address = dto.electronicAddressId || null
-    entity.person.mobile_phone = dto.telephoneNumberId || null
-    entity.person.roles = dto.personRoleId || null
-    
-    // Person additional fields
-    entity.person.description = dto.personDescription || null
-    entity.person.firstName = dto.firstName || null
-    entity.person.lastName = dto.lastName || null
-    entity.person.middleName = dto.middleName || null
-    entity.person.title = dto.title || null
-    entity.person.gender = dto.gender || null
-    entity.person.birthDate = dto.birthDate || null
-    entity.person.nationality = dto.nationality || null
-
-    // PersonRole
-    entity.personRole.mrid = dto.personRoleId || null
-    entity.personRole.department = dto.department || null
-    entity.personRole.position = dto.position || null
-    entity.personRole.person = dto.personId || null
-    
-    // PersonRole additional fields
-    entity.personRole.name = dto.roleName || null
-    entity.personRole.description = dto.roleDescription || null
-    entity.personRole.role = dto.role || null
-    entity.personRole.organisation = dto.organisationId || null
-    entity.personRole.startDate = dto.startDate || null
-    entity.personRole.endDate = dto.endDate || null
-
-    // Map attachment
-    entity.attachment.id = dto.attachmentId || null
-    entity.attachment = dto.attachment || null
-
-    // Position points
-    if(dto.positionPoints && dto.positionPoints.x && dto.positionPoints.x.length !== 0) {
-        dto.positionPoints.x.forEach((element, index) => {
-            const positionPoint = new PositionPoint()
-            positionPoint.location = dto.locationId || null
-            positionPoint.mrid = element.id || null
-            positionPoint.x_position = element.coor || null
-            positionPoint.y_position = dto.positionPoints.y[index]?.coor || null
-            positionPoint.z_position = dto.positionPoints.z[index]?.coor || null
-            entity.positionPoint.push(positionPoint)
-        });
+    //Attachment
+    if (orgDto.attachment) {
+        orgEntity.attachment = orgDto.attachment;
+        // Ensure mrid is set if attachmentId exists
+        if (orgDto.attachmentId && orgDto.attachmentId !== '') {
+            orgEntity.attachment.mrid = orgDto.attachmentId;
+        }
+    } else {
+        orgEntity.attachment.mrid = orgDto.attachmentId || null;
     }
 
-    // User
-    entity.user.user_id = dto.userId || null
-    entity.user.username = dto.userName || null
-
-    // UserIdentifiedObject
-    entity.userIdentifiedObject.mrid = dto.userIdentifiedObjectId || null
-    entity.userIdentifiedObject.identified_object_id = dto.organisationId || null
-    entity.userIdentifiedObject.user_id = dto.userId || null
-
-    // PersonOrganisation
-    entity.personOrganisation.mrid = dto.personOrganisationId || null
-    entity.personOrganisation.organisation_id = dto.organisationId || null
-    entity.personOrganisation.person_id = dto.personId || null
-
-    // OrganisationLocation
-    entity.organisationLocation.mrid = dto.organisationLocationId || null
-    entity.organisationLocation.organisation_id = dto.organisationId || null
-    entity.organisationLocation.location_id = dto.locationId || null
-
-    // OrganisationPerson
-    entity.organisationPerson.mrid = dto.organisationPersonId || null
-    entity.organisationPerson.organisation_id = dto.organisationId || null
-    entity.organisationPerson.person_id = dto.personId || null
-
-    // OrganisationPsr
-    entity.organisationPsr.mrid = dto.organisationPsrId || null
-    entity.organisationPsr.organisation_id = dto.organisationId || null
-    entity.organisationPsr.psr_id = dto.organisationId || null
-    
-    // ConfigurationEvent
-    if (Array.isArray(dto.configurationEvent) && dto.configurationEvent.length > 0) {
-        entity.configurationEvent = dto.configurationEvent
+    //configurationEvent
+    if (Array.isArray(orgDto.configurationEvent) && orgDto.configurationEvent.length > 0) {
+        orgEntity.configurationEvent = orgDto.configurationEvent
     }
-    
-    return entity
-}
 
-export function mapEntityToDto(entity) {
-    const dto = new OrganisationDto()
+    if(Array.isArray(orgDto.positionPoints.x) && orgDto.positionPoints.x.length > 0) {
+        for (let i = 0; i < orgDto.positionPoints.x.length; i++) {
+            const geoMapPoint = new GeoMap();
+            geoMapPoint.mrid = orgDto.positionPoints.x[i].id || null;
+            geoMapPoint.x = orgDto.positionPoints.x[i].coor || null;
+            geoMapPoint.y = orgDto.positionPoints.y[i].coor || null;
+            geoMapPoint.z = orgDto.positionPoints.z[i].coor || null;
+            geoMapPoint.organisation_id = orgDto.organisationId || null;
+            orgEntity.positionPoints.push(geoMapPoint);
+        }
+    }
+
+    return orgEntity;
+};
+
+export const OrgEntityToOrgDto = (orgEntity) => {
+    const orgDto = new OrganisationDto();
 
     // Organisation
-    dto.name = entity.organisation.name || ''
-    dto.comment = entity.organisation.description || ''
-    dto.organisationId = entity.organisation.mrid || ''
+    orgDto.organisationId = orgEntity.organisation.mrid || ''
+    orgDto.name = orgEntity.organisation.name || ''
+    orgDto.tax_code = orgEntity.organisation.tax_code || ''
+    orgDto.comment = orgEntity.organisation.description || ''
+    orgDto.streetAddressId = orgEntity.organisation.street_address || ''
+    orgDto.electronicAddressId = orgEntity.organisation.electronic_address || ''
+    orgDto.telephoneNumberId = orgEntity.organisation.phone || ''
+    orgDto.parentId = orgEntity.organisation.parent_organisation || '';
     
-    // Organisation specific fields
-    dto.tax_code = entity.organisation.ref_id || ''
-    dto.street = entity.organisation.address || ''
-    dto.city = entity.organisation.city || ''
-    dto.state_or_province = entity.organisation.state || ''
-    dto.country = entity.organisation.country || ''
-    dto.phoneNumber = entity.organisation.phone_no || ''
-    dto.fax = entity.organisation.fax || ''
-    dto.email = entity.organisation.email || ''
-    dto.mode = entity.organisation.mode || 'organisation'
-    dto.district_or_town = entity.organisation.department || ''
-    dto.ward_or_commune = entity.organisation.position || ''
-
-    // StreetAddress
-    dto.streetAddressId = entity.streetAddress.mrid || ""
-
-    // TownDetail
-    dto.townDetailId = entity.townDetail.mrid || ""
-    dto.city = entity.townDetail.city || ""
-    dto.state_or_province = entity.townDetail.state_or_province || ""
-    dto.country = entity.townDetail.country || ""
-    dto.district_or_town = entity.townDetail.district_or_town || ""
-    dto.ward_or_commune = entity.townDetail.ward_or_commune || ""
-
-    // StreetDetail
-    dto.streetDetailId = entity.streetDetail.mrid || ""
-    dto.street = entity.streetDetail.address_general || ""
-
-    // Location
-    dto.locationId = entity.location.mrid || ""
-    dto.locationName = entity.location.name || ""
-    
-    // Location additional fields
-    dto.locationDescription = entity.location.description || ""
-    dto.latitude = entity.location.latitude || null
-    dto.longitude = entity.location.longitude || null
-    dto.elevation = entity.location.elevation || null
-    dto.coordinateSystem = entity.location.coordinateSystem || null
-    dto.orientation = entity.location.orientation || null
-
-    // ElectronicAddress
-    dto.electronicAddressId = entity.electronicAddress.mrid || ""
-    dto.email = entity.electronicAddress.email || ""
-    dto.fax = entity.electronicAddress.fax || ""
-    
-    // ElectronicAddress additional fields
-    dto.electronicAddressName = entity.electronicAddress.name || ""
-    dto.electronicAddressDescription = entity.electronicAddress.description || ""
-    dto.website = entity.electronicAddress.website || ""
-    dto.electronicPhone = entity.electronicAddress.phone || ""
-
-    // TelephoneNumber
-    dto.telephoneNumberId = entity.telephoneNumber.mrid || ""
-    dto.phoneNumber = entity.telephoneNumber.itu_phone || ""
-    
-    // TelephoneNumber additional fields
-    dto.telephoneName = entity.telephoneNumber.name || ""
-    dto.telephoneDescription = entity.telephoneNumber.description || ""
-    dto.phoneType = entity.telephoneNumber.phoneType || ""
-    dto.countryCode = entity.telephoneNumber.countryCode || ""
-    dto.areaCode = entity.telephoneNumber.areaCode || ""
-
-    // PSR Type
-    dto.psrTypeId = entity.psrType.mrid || ""
-    dto.type = entity.psrType.name || ""
-    
-    // PsrType additional fields
-    dto.psrTypeDescription = entity.psrType.description || ""
-    dto.psrTypeType = entity.psrType.type || ""
-    dto.category = entity.psrType.category || ""
-    dto.subCategory = entity.psrType.subCategory || ""
-
-    // Person
-    dto.personId = entity.person.mrid || ""
-    dto.personName = entity.person.name || ""
-    
-    // Person additional fields
-    dto.personDescription = entity.person.description || ""
-    dto.firstName = entity.person.firstName || ""
-    dto.lastName = entity.person.lastName || ""
-    dto.middleName = entity.person.middleName || ""
-    dto.title = entity.person.title || ""
-    dto.gender = entity.person.gender || ""
-    dto.birthDate = entity.person.birthDate || null
-    dto.nationality = entity.person.nationality || ""
-
-    // PersonRole
-    dto.personRoleId = entity.personRole.mrid || ""
-    dto.department = entity.personRole.department || ""
-    dto.position = entity.personRole.position || ""
-    
-    // PersonRole additional fields
-    dto.roleName = entity.personRole.name || ""
-    dto.roleDescription = entity.personRole.description || ""
-    dto.role = entity.personRole.role || ""
-    dto.startDate = entity.personRole.startDate || null
-    dto.endDate = entity.personRole.endDate || null
-
-    // Attachment
-    dto.attachmentId = entity.attachment.id || ""
-    dto.attachment = entity.attachment || ""
-
-    // PositionPoints
-    dto.positionPoints = { x: [], y: [], z: [] }
-    if (Array.isArray(entity.positionPoint)) {
-        entity.positionPoint.forEach(point => {
-            dto.positionPoints.x.push({ id: point.mrid, coor: point.x_position })
-            dto.positionPoints.y.push({ id: point.mrid, coor: point.y_position })
-            dto.positionPoints.z.push({ id: point.mrid, coor: point.z_position })
-        })
+    // Street Address
+    orgDto.streetAddressId = (orgEntity.streetAddress && orgEntity.streetAddress.mrid) ? orgEntity.streetAddress.mrid : '';
+        
+    // Street Detail
+    if (orgEntity.streetDetail && orgEntity.streetDetail.mrid) {
+        orgDto.streetDetailId = orgEntity.streetDetail.mrid || '';
+        orgDto.street = orgEntity.streetDetail.address_general || '';
+    } else {
+        orgDto.streetDetailId = '';
+        orgDto.street = '';
     }
 
-    // User
-    dto.userId = entity.user.user_id || ""
+    // Town Detail
+    if (orgEntity.townDetail && orgEntity.townDetail.mrid) {
+        orgDto.townDetailId = orgEntity.townDetail.mrid || '';
+        orgDto.ward_or_commune = orgEntity.townDetail.ward_or_commune || '';
+        orgDto.district_or_town = orgEntity.townDetail.district_or_town || '';
+        orgDto.state_or_province = orgEntity.townDetail.state_or_province || '';
+        orgDto.country = orgEntity.townDetail.country || '';
+        orgDto.city = orgEntity.townDetail.city || '';
+    } else {
+        orgDto.townDetailId = '';
+        orgDto.ward_or_commune = '';
+        orgDto.district_or_town = '';
+        orgDto.state_or_province = '';
+        orgDto.country = '';
+        orgDto.city = '';
+    }
 
-    // UserIdentifiedObject
-    dto.userIdentifiedObjectId = entity.userIdentifiedObject.mrid || ""
+    // Electronic Address
+    orgDto.electronicAddressId = orgEntity.electronicAddress.mrid || '';
+    orgDto.email = orgEntity.electronicAddress.email || '';
+    orgDto.fax = orgEntity.electronicAddress.fax || '';
 
-    // PersonOrganisation
-    dto.personOrganisationId = entity.personOrganisation.mrid || ""
+    // Telephone Number
+    orgDto.telephoneNumberId = orgEntity.telephoneNumber.mrid || '';
+    orgDto.phoneNumber = orgEntity.telephoneNumber.itu_phone || '';
 
-    // OrganisationLocation
-    dto.organisationLocationId = entity.organisationLocation.mrid || ""
-    dto.organisationId = entity.organisationLocation.organisation_id || ""
+    // Person
+    if (orgEntity.person) {
+        orgDto.personId = orgEntity.person.mrid || '';
+        orgDto.personName = orgEntity.person.name || '';
+    }
 
-    // OrganisationPerson
-    dto.organisationPersonId = entity.organisationPerson.mrid || ""
+    // PersonRole - Map department and position
+    if (orgEntity.personRole) {
+        orgDto.personRoleId = orgEntity.personRole.mrid || '';
+        // Convert null/undefined to empty string to avoid displaying "null" in UI
+        orgDto.department = (orgEntity.personRole.department !== null && orgEntity.personRole.department !== undefined) 
+            ? String(orgEntity.personRole.department) 
+            : '';
+        orgDto.position = (orgEntity.personRole.position !== null && orgEntity.personRole.position !== undefined) 
+            ? String(orgEntity.personRole.position) 
+            : '';
+    } else {
+        // If personRole doesn't exist, ensure department and position are empty strings
+        orgDto.personRoleId = '';
+        orgDto.department = '';
+        orgDto.position = '';
+    }
 
-    // OrganisationPsr
-    dto.organisationPsrId = entity.organisationPsr.mrid || ""
+    // Attachment
+    orgDto.attachmentId = orgEntity.attachment.mrid || '';
+    orgDto.attachment = orgEntity.attachment;
 
-    return dto
-}
+    // Configuration Events
+    if (orgEntity.configurationEvent && Array.isArray(orgEntity.configurationEvent)) {
+        orgDto.configurationEvent = orgEntity.configurationEvent;
+    }
+
+    // Position Points
+    orgDto.positionPoints = { x: [], y: [], z: [] };
+    if (orgEntity.positionPoints && Array.isArray(orgEntity.positionPoints)) {
+        for (let i = 0; i < orgEntity.positionPoints.length; i++) {
+            const pt = orgEntity.positionPoints[i];
+            if (pt) {
+                orgDto.positionPoints.x.push({ id: pt.mrid, coor: pt.x });
+                orgDto.positionPoints.y.push({ id: pt.mrid, coor: pt.y });
+                orgDto.positionPoints.z.push({ id: pt.mrid, coor: pt.z });
+            }
+        }
+    }
+
+    return orgDto;
+};
+
+// Alias for consistency with other mappers
+export const mapEntityToDto = OrgEntityToOrgDto;
+export const mapDtoToEntity = OrgDtoToOrgEntity;

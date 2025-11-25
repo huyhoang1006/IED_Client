@@ -1,7 +1,7 @@
 <template>
     <div>
     <el-dialog
-    :visible.sync="showTemp_"
+    v-model="showTemp_"
     title="Show template"
     width="75%"
     align-center

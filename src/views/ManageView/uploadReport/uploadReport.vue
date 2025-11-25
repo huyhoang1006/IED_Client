@@ -1,7 +1,7 @@
 <template>
     <div>
         <el-dialog
-            :visible.sync="uploadReportShow"
+            v-model="uploadReportShow"
             title="Upload report"
             width="40%"
             :before-close="handleClose"

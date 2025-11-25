@@ -1,6 +1,6 @@
 <template>
     <div>
-        <el-row :gutter="20">
+         <el-row :gutter="20">
             <el-col :span="12">
                 <div class="col-content">
                     <el-form :model="properties" :inline-message="true" :label-width="labelWidth" size="small" label-position="left">
@@ -12,61 +12,43 @@
                             <el-input v-model="properties.name"></el-input>
                         </el-form-item>
                         <el-form-item label="High voltage limit" class="custom-label">
-                            <el-row :gutter="8" class="voltage-input-row">
-                                <el-col :span="8">
-                                    <el-select v-model.number="properties.high_voltage_limit_value" allow-create filterable placeholder="Value" size="small">
-                                        <el-option v-for="(value, index) in voltageList" :key="index" :label="value" :value="value"></el-option>
-                                    </el-select>
-                                </el-col>
-                                <el-col :span="8">
-                                    <el-select v-model="properties.high_voltage_limit_multiplier" placeholder="k" size="small">
-                                        <el-option v-for="(unit, index) in voltageMultiplierArr" :key="index" :label="unit.label" :value="unit.value"></el-option>
-                                    </el-select>
-                                </el-col>
-                                <el-col :span="8">
-                                    <el-select v-model="properties.high_voltage_limit_unit" placeholder="V" size="small">
-                                        <el-option v-for="(unit, index) in voltageUnitArr" :key="index" :label="unit" :value="unit"></el-option>
-                                    </el-select>    
-                                </el-col>
-                            </el-row>
+                            <div class="voltage-input-group">
+                                <el-select v-model.number="properties.high_voltage_limit_value" allow-create filterable placeholder="Value" class="voltage-value-select">
+                                    <el-option v-for="(value, index) in voltageList" :key="index" :label="value" :value="value"></el-option>
+                                </el-select>
+                                <el-select v-model="properties.high_voltage_limit_multiplier" placeholder="Unit" class="voltage-unit-select">
+                                    <el-option v-for="(unit, index) in voltageMultiplierArr" :key="index" :label="unit.label" :value="unit.value"></el-option>
+                                </el-select>
+                                <el-select v-model="properties.high_voltage_limit_unit" placeholder="Symbol" class="voltage-unit-select">
+                                    <el-option v-for="(unit, index) in voltageUnitArr" :key="index" :label="unit" :value="unit"></el-option>
+                                </el-select>
+                            </div>
                         </el-form-item>
                         <el-form-item label="Low voltage limit" class="custom-label">
-                            <el-row :gutter="8" class="voltage-input-row">
-                                <el-col :span="8">
-                                    <el-select v-model.number="properties.low_voltage_limit_value" allow-create filterable placeholder="Value" size="small">
-                                        <el-option v-for="(value, index) in voltageList" :key="index" :label="value" :value="value"></el-option>
-                                    </el-select>
-                                </el-col>
-                                <el-col :span="8">
-                                    <el-select v-model="properties.low_voltage_limit_multiplier" placeholder="k" size="small">
-                                        <el-option v-for="(unit, index) in voltageMultiplierArr" :key="index" :label="unit.label" :value="unit.value"></el-option>
-                                    </el-select>
-                                </el-col>
-                                <el-col :span="8">
-                                    <el-select v-model="properties.low_voltage_limit_unit" placeholder="V" size="small">
-                                        <el-option v-for="(unit, index) in voltageUnitArr" :key="index" :label="unit" :value="unit"></el-option>
-                                    </el-select>
-                                </el-col>
-                            </el-row>
+                            <div class="voltage-input-group">
+                                <el-select v-model.number="properties.low_voltage_limit_value" allow-create filterable placeholder="Value" class="voltage-value-select">
+                                    <el-option v-for="(value, index) in voltageList" :key="index" :label="value" :value="value"></el-option>
+                                </el-select>
+                                <el-select v-model="properties.low_voltage_limit_multiplier" placeholder="Unit" class="voltage-unit-select">
+                                    <el-option v-for="(unit, index) in voltageMultiplierArr" :key="index" :label="unit.label" :value="unit.value"></el-option>
+                                </el-select>
+                                <el-select v-model="properties.low_voltage_limit_unit" placeholder="Symbol" class="voltage-unit-select">
+                                    <el-option v-for="(unit, index) in voltageUnitArr" :key="index" :label="unit" :value="unit"></el-option>
+                                </el-select>
+                            </div>
                         </el-form-item>
                         <el-form-item label="Base voltage" class="custom-label">
-                            <el-row :gutter="8" class="voltage-input-row">
-                                <el-col :span="8">
-                                    <el-select @change="handleBaseVoltageChange" v-model.number="properties.base_voltage_value" allow-create filterable placeholder="Value" size="small">
-                                        <el-option v-for="(value, index) in voltageList" :key="index" :label="value" :value="value"></el-option>
-                                    </el-select>
-                                </el-col>
-                                <el-col :span="8">
-                                    <el-select v-model="properties.base_voltage_multiplier" placeholder="k" size="small">
-                                        <el-option v-for="(unit, index) in voltageMultiplierArr" :key="index" :label="unit.label" :value="unit.value"></el-option>
-                                    </el-select>
-                                </el-col>
-                                <el-col :span="8">
-                                    <el-select v-model="properties.base_voltage_unit" placeholder="V" size="small">
-                                        <el-option v-for="(unit, index) in voltageUnitArr" :key="index" :label="unit" :value="unit"></el-option>
-                                    </el-select>
-                                </el-col>
-                            </el-row>
+                            <div class="voltage-input-group">
+                                <el-select @change="handleBaseVoltageChange" v-model.number="properties.base_voltage_value" allow-create filterable placeholder="Value" class="voltage-value-select">
+                                    <el-option v-for="(value, index) in voltageList" :key="index" :label="value" :value="value"></el-option>
+                                </el-select>
+                                <el-select v-model="properties.base_voltage_multiplier" placeholder="Unit" class="voltage-unit-select">
+                                    <el-option v-for="(unit, index) in voltageMultiplierArr" :key="index" :label="unit.label" :value="unit.value"></el-option>
+                                </el-select>
+                                <el-select v-model="properties.base_voltage_unit" placeholder="Unit" class="voltage-unit-select">
+                                    <el-option v-for="(unit, index) in voltageUnitArr" :key="index" :label="unit" :value="unit"></el-option>
+                                </el-select>
+                            </div>
                         </el-form-item>
                     </el-form>
                 </div>
@@ -103,7 +85,7 @@ export default {
 </script>
 
 <style scoped>
-:deep(.el-form-item__label) {
+::v-deep(.el-form-item__label) {
     font-size: 12px !important;
 }
 
@@ -112,23 +94,29 @@ export default {
     font-size: 12px;
 }
 
-.voltage-input-row {
+.voltage-input-group {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+    align-items: center;
+}
+
+.voltage-value-select {
+    flex: 1.4;
+    min-width: 0;
+}
+
+.voltage-unit-select {
+    flex: 0.5;
+    min-width: 0;
+}
+
+/* Đảm bảo tổng độ rộng bằng với input Name */
+::v-deep(.el-form-item__content) {
     width: 100%;
 }
 
-.voltage-input-row :deep(.el-col) {
-    padding-left: 4px !important;
-    padding-right: 4px !important;
-}
-
-.voltage-input-row :deep(.el-select) {
+::v-deep(.el-input) {
     width: 100%;
-}
-
-.voltage-input-row :deep(.el-select .el-input__inner) {
-    padding: 0 30px 0 8px;
-    height: 28px;
-    line-height: 28px;
-    font-size: 12px;
 }
 </style>

@@ -137,7 +137,7 @@ export const updateLocationTable = async () => {
 
 export const createRootOrganisation = async () => {
     try {
-        await rootOrganisationFunc.createOrganisationRoot()
+        await rootOrganisationFunc.createOrganisationRoot(db)
     } catch (err) {
         console.error('Error creating root organisation:', err)
     }

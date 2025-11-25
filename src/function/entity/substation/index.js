@@ -1,36 +1,31 @@
 import db from '../../datacontext/index.js'
-// import * as attachmentContext from '../../attachmentcontext/index' // Module not found
-const attachmentContext = {} // Placeholder
+import * as attachmentContext from '../../attachmentcontext/index.js'
 import path from 'path'
+import { insertSubstationTransaction, getSubstationById, deleteSubstationByIdTransaction } from '../../cim/substation/index.js'
+import { insertStreetDetailTransaction, getStreetDetailById, deleteStreetDetailByIdTransaction } from '../../cim/streetDetail/index.js'
+import { insertTownDetailTransaction, getTownDetailById, deleteTownDetailByIdTransaction } from '../../cim/townDetail/index.js'
+import { insertStreetAddressTransaction, getStreetAddressById, deleteStreetAddressByIdTransaction } from '../../cim/streetAddress/index.js'
+import { insertLocationTransaction, getLocationById, deleteLocationByIdTransaction } from '../../cim/location/index.js'
+import { insertElectronicAddressTransaction, getElectronicAddressById, deleteElectronicAddressByIdTransaction } from '../../cim/electronicAddress/index.js'
+import { insertTelephoneNumberTransaction, getTelephoneNumberById, deleteTelephoneNumberByIdTransaction } from '../../cim/telephoneNumber/index.js'
+import { insertPersonTransaction, getPersonById, deletePersonByIdTransaction } from '../../cim/person/index.js'
+import { insertPersonRoleTransaction, getPersonRoleByPersonId, deletePersonRoleByIdTransaction } from '../../cim/personRole/index.js'
+import { insertUserTransaction, getUserById } from '../user/index.js'
+import { insertUserIdentifiedObjectTransaction, getUserIdentifiedObjectByUserIdAndIdentifiedObjectId, deleteUserIdentifiedObjectByMrid } from '../userIdentifiedObject/index.js'
+import { insertPersonSubstationTransaction, getPersonSubstationBySubstationId, deletePersonSubstationByMrid  } from '../personSubstation/index.js'
+import { uploadAttachmentTransaction, backupAllFilesInDir, deleteBackupFiles, restoreFiles, syncFilesWithDeletion, getAttachmentByForeignIdAndType, deleteAttachmentByIdTransaction, deleteDirectory } from '../attachment/index.js'
+import { insertOrganisationLocationTransaction, getOrganisationLocationByOrganisationIdAndLocationId, deleteOrganisationLocationById } from '../organisationLocation/index.js'
+import { insertPositionPointArrayTransaction, getPositionPointByLocationId, deletePositionPointByLocationIdTransaction } from '../../cim/positionPoint/index.js'
+import { insertPsrTypeTransaction, getPsrTypeById, deletePsrTypeByIdTransaction } from '../../cim/psrType/index.js'
+import { insertOrganisationPersonTransaction, getOrganisationPersonByOrganisationIdAndPersonId, deleteOrganisationPersonById } from '../organisationPerson/index.js'
+import { insertOrganisationPsrTransaction, getOrganisationPsrByOrganisationIdAndPsrId, deleteOrganisationPsrById } from '../organisationPsr/index.js'
+import { insertConfigurationEventArrayTransaction, insertConfigurationEventTransaction, deleteConfigurationEventByIdTransaction } from '../../cim/configurationEvent/index.js'
+import { getPowerSystemResourceByLocationIdTransaction } from '../../cim/powerSystemResource/index.js'
+import ConfigurationEvent from '../../../views/Cim/ConfigurationEvent/index.js'
+import uuid from '../../../utils/uuid.js'
 import SubstationEntity from '../../../views/Entity/Substation/index.js'
-import * as cimSubstationFunc from '../../cim/substation/index.js'
 
-// Wrapper functions for getSubstationById
-const getSubstationById = async (mrid) => {
-    return await cimSubstationFunc.getSubstationById(mrid)
-}
-// import { insertStreetDetailTransaction, getStreetDetailById, deleteStreetDetailByIdTransaction } from '@/function/cim/streetDetail' // @/function not supported
-// import { insertTownDetailTransaction, getTownDetailById, deleteTownDetailByIdTransaction } from '@/function/cim/townDetail' // @/function not supported
-// import { insertStreetAddressTransaction, getStreetAddressById, deleteStreetAddressByIdTransaction } from '@/function/cim/streetAddress' // @/function not supported
-// import { insertLocationTransaction, getLocationById, deleteLocationByIdTransaction } from '@/function/cim/location' // @/function not supported
-// import { insertElectronicAddressTransaction, getElectronicAddressById, deleteElectronicAddressByIdTransaction } from '@/function/cim/electronicAddress' // @/function not supported
-// import { insertTelephoneNumberTransaction, getTelephoneNumberById, deleteTelephoneNumberByIdTransaction } from '@/function/cim/telephoneNumber' // @/function not supported
-// import { insertPersonTransaction, getPersonById, deletePersonByIdTransaction } from '@/function/cim/person' // @/function not supported
-// import { insertPersonRoleTransaction, getPersonRoleByPersonId, deletePersonRoleByIdTransaction } from '@/function/cim/personRole' // @/function not supported
-// import { insertUserTransaction, getUserById } from '@/function/entity/user' // @/function not supported
-// import { insertUserIdentifiedObjectTransaction, getUserIdentifiedObjectByUserIdAndIdentifiedObjectId } from '@/function/entity/userIdentifiedObject' // @/function not supported
-// import { insertPersonSubstationTransaction, getPersonSubstationBySubstationId  } from '@/function/entity/personSubstation' // @/function not supported
-// import { uploadAttachmentTransaction, backupAllFilesInDir, deleteBackupFiles, restoreFiles, syncFilesWithDeletion, getAttachmentByForeignIdAndType, deleteAttachmentByIdTransaction, deleteDirectory } from '@/function/entity/attachment' // @/function not supported
-// import { insertOrganisationLocationTransaction, getOrganisationLocationByOrganisationIdAndLocationId } from '@/function/entity/organisationLocation' // @/function not supported
-// import { insertPositionPointArrayTransaction, getPositionPointByLocationId } from '@/function/cim/positionPoint' // @/function not supported
-// import { insertPsrTypeTransaction, getPsrTypeById, deletePsrTypeByIdTransaction } from '@/function/cim/psrType' // @/function not supported
-// import { insertOrganisationPersonTransaction, getOrganisationPersonByOrganisationIdAndPersonId  } from '../organisationPerson' // Module not found
-// import { insertOrganisationPsrTransaction, getOrganisationPsrByOrganisationIdAndPsrId } from '../organisationPsr' // Module not found
-// import { insertConfigurationEventArrayTransaction, insertConfigurationEventTransaction } from '@/function/cim/configurationEvent/index' // @/function not supported
-// import { getPowerSystemResourceByLocationIdTransaction } from '@/function/cim/powerSystemResource/index' // @/function not supported
-// import ConfigurationEvent from '@/views/Cim/ConfigurationEvent' // @/views not supported
-// import uuid from '@/utils/uuid' // @/utils not supported
-
+// Insert SubstationEntity
 export const insertSubstationEntity = async (entity) => {
     if(entity == null || typeof entity !== 'object') {
         return { success: false, error: new Error('Invalid entity data') };
@@ -83,14 +78,88 @@ export const insertSubstationEntity = async (entity) => {
                             if (entity.substation.mrid) await insertSubstationTransaction(entity.substation, db);
                             if (entity.electronicAddress.mrid) await insertElectronicAddressTransaction(entity.electronicAddress, db);
                             if (entity.telephoneNumber.mrid) await insertTelephoneNumberTransaction(entity.telephoneNumber, db);
-                            if (entity.person.mrid) await insertPersonTransaction(entity.person, db);
-                            if (entity.personRole.mrid) await insertPersonRoleTransaction(entity.personRole, db);
+                            // Insert person nếu có mrid hoặc có name (tạo mrid nếu chưa có)
+                            if (entity.person && (entity.person.mrid || entity.person.name)) {
+                                if (!entity.person.mrid && entity.person.name) {
+                                    entity.person.mrid = uuid.newUuid();
+                                }
+                                if (entity.person.mrid) {
+                                    await insertPersonTransaction(entity.person, db);
+                                }
+                            }
+                            // Insert personRole nếu có mrid hoặc có department/position (tạo mrid nếu chưa có)
+                            if (entity.personRole) {
+                                const hasDepartment = entity.personRole.department && typeof entity.personRole.department === 'string' && entity.personRole.department.trim() !== '';
+                                const hasPosition = entity.personRole.position && typeof entity.personRole.position === 'string' && entity.personRole.position.trim() !== '';
+                                const hasMrid = entity.personRole.mrid && typeof entity.personRole.mrid === 'string' && entity.personRole.mrid.trim() !== '';
+                                
+                                if (hasDepartment || hasPosition || hasMrid) {
+                                    // Tạo mrid nếu chưa có nhưng có department hoặc position
+                                    if (!hasMrid && (hasDepartment || hasPosition)) {
+                                        entity.personRole.mrid = uuid.newUuid();
+                                    }
+                                    // Đảm bảo personRole.person được set nếu có person.mrid
+                                    if (entity.personRole.mrid && !entity.personRole.person && entity.person && entity.person.mrid) {
+                                        entity.personRole.person = entity.person.mrid;
+                                    }
+                                    if (entity.personRole.mrid) {
+                                        await insertPersonRoleTransaction(entity.personRole, db);
+                                    }
+                                }
+                            }
                             if (entity.user.user_id) await insertUserTransaction(entity.user, db);
                             if (entity.userIdentifiedObject.mrid) await insertUserIdentifiedObjectTransaction(entity.userIdentifiedObject, db);
-                            if (entity.personSubstation.mrid) await insertPersonSubstationTransaction(entity.personSubstation, db);
-                            if (entity.organisationLocation.mrid) await insertOrganisationLocationTransaction(entity.organisationLocation, db);
-                            if (entity.organisationPsr.mrid) await insertOrganisationPsrTransaction(entity.organisationPsr, db);
-                            if (entity.organisationPerson.mrid) await insertOrganisationPersonTransaction(entity.organisationPerson, db);
+                            // Insert personSubstation nếu có person.mrid và substation.mrid
+                            if (entity.personSubstation && entity.person && entity.person.mrid && entity.substation && entity.substation.mrid) {
+                                if (!entity.personSubstation.mrid) {
+                                    entity.personSubstation.mrid = uuid.newUuid();
+                                }
+                                if (!entity.personSubstation.substation_id) {
+                                    entity.personSubstation.substation_id = entity.substation.mrid;
+                                }
+                                if (!entity.personSubstation.person_id) {
+                                    entity.personSubstation.person_id = entity.person.mrid;
+                                }
+                                if (entity.personSubstation.mrid) {
+                                    await insertPersonSubstationTransaction(entity.personSubstation, db);
+                                }
+                            }
+                            // Insert organisationLocation nếu có organisation_id và location_id
+                            if (entity.organisationLocation && entity.organisationLocation.organisation_id && entity.location && entity.location.mrid) {
+                                if (!entity.organisationLocation.mrid) {
+                                    entity.organisationLocation.mrid = uuid.newUuid();
+                                }
+                                if (!entity.organisationLocation.location_id) {
+                                    entity.organisationLocation.location_id = entity.location.mrid;
+                                }
+                                if (entity.organisationLocation.mrid) {
+                                    await insertOrganisationLocationTransaction(entity.organisationLocation, db);
+                                }
+                            }
+                            // Insert organisationPsr nếu có organisation_id và substation.mrid
+                            if (entity.organisationPsr && entity.organisationPsr.organisation_id && entity.substation && entity.substation.mrid) {
+                                if (!entity.organisationPsr.mrid) {
+                                    entity.organisationPsr.mrid = uuid.newUuid();
+                                }
+                                if (!entity.organisationPsr.psr_id) {
+                                    entity.organisationPsr.psr_id = entity.substation.mrid;
+                                }
+                                if (entity.organisationPsr.mrid) {
+                                    await insertOrganisationPsrTransaction(entity.organisationPsr, db);
+                                }
+                            }
+                            // Insert organisationPerson nếu có organisation_id và person_id
+                            if (entity.organisationPerson && entity.organisationPerson.organisation_id && entity.person && entity.person.mrid) {
+                                if (!entity.organisationPerson.mrid) {
+                                    entity.organisationPerson.mrid = uuid.newUuid();
+                                }
+                                if (!entity.organisationPerson.person_id) {
+                                    entity.organisationPerson.person_id = entity.person.mrid;
+                                }
+                                if (entity.organisationPerson.mrid) {
+                                    await insertOrganisationPersonTransaction(entity.organisationPerson, db);
+                                }
+                            }
                             if (Array.isArray(entity.positionPoint) && entity.positionPoint.length > 0) await insertPositionPointArrayTransaction(entity.positionPoint, entity.location.mrid, db);
                             if (entity.attachment.id && Array.isArray(JSON.parse(entity.attachment.path))) {
                                 const pathData = JSON.parse(entity.attachment.path);
@@ -129,14 +198,88 @@ export const insertSubstationEntity = async (entity) => {
                             if (entity.substation.mrid) await insertSubstationTransaction(entity.substation, db);
                             if (entity.electronicAddress.mrid) await insertElectronicAddressTransaction(entity.electronicAddress, db);
                             if (entity.telephoneNumber.mrid) await insertTelephoneNumberTransaction(entity.telephoneNumber, db);
-                            if (entity.person.mrid) await insertPersonTransaction(entity.person, db);
-                            if (entity.personRole.mrid) await insertPersonRoleTransaction(entity.personRole, db);
+                            // Insert person nếu có mrid hoặc có name (tạo mrid nếu chưa có)
+                            if (entity.person && (entity.person.mrid || entity.person.name)) {
+                                if (!entity.person.mrid && entity.person.name) {
+                                    entity.person.mrid = uuid.newUuid();
+                                }
+                                if (entity.person.mrid) {
+                                    await insertPersonTransaction(entity.person, db);
+                                }
+                            }
+                            // Insert personRole nếu có mrid hoặc có department/position (tạo mrid nếu chưa có)
+                            if (entity.personRole) {
+                                const hasDepartment = entity.personRole.department && typeof entity.personRole.department === 'string' && entity.personRole.department.trim() !== '';
+                                const hasPosition = entity.personRole.position && typeof entity.personRole.position === 'string' && entity.personRole.position.trim() !== '';
+                                const hasMrid = entity.personRole.mrid && typeof entity.personRole.mrid === 'string' && entity.personRole.mrid.trim() !== '';
+                                
+                                if (hasDepartment || hasPosition || hasMrid) {
+                                    // Tạo mrid nếu chưa có nhưng có department hoặc position
+                                    if (!hasMrid && (hasDepartment || hasPosition)) {
+                                        entity.personRole.mrid = uuid.newUuid();
+                                    }
+                                    // Đảm bảo personRole.person được set nếu có person.mrid
+                                    if (entity.personRole.mrid && !entity.personRole.person && entity.person && entity.person.mrid) {
+                                        entity.personRole.person = entity.person.mrid;
+                                    }
+                                    if (entity.personRole.mrid) {
+                                        await insertPersonRoleTransaction(entity.personRole, db);
+                                    }
+                                }
+                            }
                             if (entity.user.user_id) await insertUserTransaction(entity.user, db);
                             if (entity.userIdentifiedObject.mrid) await insertUserIdentifiedObjectTransaction(entity.userIdentifiedObject, db);
-                            if (entity.personSubstation.mrid) await insertPersonSubstationTransaction(entity.personSubstation, db);
-                            if (entity.organisationLocation.mrid) await insertOrganisationLocationTransaction(entity.organisationLocation, db);
-                            if (entity.organisationPsr.mrid) await insertOrganisationPsrTransaction(entity.organisationPsr, db);
-                            if (entity.organisationPerson.mrid) await insertOrganisationPersonTransaction(entity.organisationPerson, db);
+                            // Insert personSubstation nếu có person.mrid và substation.mrid
+                            if (entity.personSubstation && entity.person && entity.person.mrid && entity.substation && entity.substation.mrid) {
+                                if (!entity.personSubstation.mrid) {
+                                    entity.personSubstation.mrid = uuid.newUuid();
+                                }
+                                if (!entity.personSubstation.substation_id) {
+                                    entity.personSubstation.substation_id = entity.substation.mrid;
+                                }
+                                if (!entity.personSubstation.person_id) {
+                                    entity.personSubstation.person_id = entity.person.mrid;
+                                }
+                                if (entity.personSubstation.mrid) {
+                                    await insertPersonSubstationTransaction(entity.personSubstation, db);
+                                }
+                            }
+                            // Insert organisationLocation nếu có organisation_id và location_id
+                            if (entity.organisationLocation && entity.organisationLocation.organisation_id && entity.location && entity.location.mrid) {
+                                if (!entity.organisationLocation.mrid) {
+                                    entity.organisationLocation.mrid = uuid.newUuid();
+                                }
+                                if (!entity.organisationLocation.location_id) {
+                                    entity.organisationLocation.location_id = entity.location.mrid;
+                                }
+                                if (entity.organisationLocation.mrid) {
+                                    await insertOrganisationLocationTransaction(entity.organisationLocation, db);
+                                }
+                            }
+                            // Insert organisationPsr nếu có organisation_id và substation.mrid
+                            if (entity.organisationPsr && entity.organisationPsr.organisation_id && entity.substation && entity.substation.mrid) {
+                                if (!entity.organisationPsr.mrid) {
+                                    entity.organisationPsr.mrid = uuid.newUuid();
+                                }
+                                if (!entity.organisationPsr.psr_id) {
+                                    entity.organisationPsr.psr_id = entity.substation.mrid;
+                                }
+                                if (entity.organisationPsr.mrid) {
+                                    await insertOrganisationPsrTransaction(entity.organisationPsr, db);
+                                }
+                            }
+                            // Insert organisationPerson nếu có organisation_id và person_id
+                            if (entity.organisationPerson && entity.organisationPerson.organisation_id && entity.person && entity.person.mrid) {
+                                if (!entity.organisationPerson.mrid) {
+                                    entity.organisationPerson.mrid = uuid.newUuid();
+                                }
+                                if (!entity.organisationPerson.person_id) {
+                                    entity.organisationPerson.person_id = entity.person.mrid;
+                                }
+                                if (entity.organisationPerson.mrid) {
+                                    await insertOrganisationPersonTransaction(entity.organisationPerson, db);
+                                }
+                            }
                             if (Array.isArray(entity.positionPoint) && entity.positionPoint.length > 0) await insertPositionPointArrayTransaction(entity.positionPoint, entity.location.mrid, db);
                             if (entity.attachment.id && Array.isArray(JSON.parse(entity.attachment.path))) {
                                 const pathData = JSON.parse(entity.attachment.path);
@@ -212,90 +355,7 @@ export const insertSubstationEntity = async (entity) => {
     }
 }
 
-export const getSubstationEntityByMrid = async (mrid) => {
-    try {
-        const substation = await getSubstationById(mrid)
-        if (!substation.success) {
-            return { success: false, message: 'Substation not found' }
-        }
-        
-        const entity = new SubstationEntity()
-        entity.substation = substation.data
-        
-        // Populate related data - similar to getSubstationEntityById but without user/organisation context
-        try {
-            // Get location from power_system_resource.location field
-            const locationMrid = substation.data.location
-            
-            if (locationMrid) {
-                const LocationModule = await import('../../cim/location/index.js')
-                const dataLocation = await LocationModule.getLocationById(locationMrid)
-                if (dataLocation.success) {
-                    entity.location = dataLocation.data
-                    
-                    // Get street address if available
-                    if (entity.location.main_address) {
-                        const StreetAddressModule = await import('../../cim/streetAddress/index.js')
-                        const dataStreetAddress = await StreetAddressModule.getStreetAddressById(entity.location.main_address)
-                        if (dataStreetAddress.success) {
-                            entity.streetAddress = dataStreetAddress.data
-                            
-                            // Get street detail
-                            if (entity.streetAddress.street_detail) {
-                                const StreetDetailModule = await import('../../cim/streetDetail/index.js')
-                                const dataStreetDetail = await StreetDetailModule.getStreetDetailById(entity.streetAddress.street_detail)
-                                if (dataStreetDetail.success) {
-                                    entity.streetDetail = dataStreetDetail.data
-                                }
-                            }
-                            
-                            // Get town detail
-                            if (entity.streetAddress.town_detail) {
-                                const TownDetailModule = await import('../../cim/townDetail/index.js')
-                                const dataTownDetail = await TownDetailModule.getTownDetailById(entity.streetAddress.town_detail)
-                                if (dataTownDetail.success) {
-                                    entity.townDetail = dataTownDetail.data
-                                }
-                            }
-                        }
-                    }
-                    
-                    // Get position points
-                    const PositionPointModule = await import('../../cim/positionPoint/index.js')
-                    const dataPositionPoint = await PositionPointModule.getPositionPointByLocationId(entity.location.mrid)
-                    if (dataPositionPoint.success) {
-                        entity.positionPoint = dataPositionPoint.data
-                    }
-                }
-            }
-            
-            // Get PSR Type
-            if (substation.data.psr_type_id) {
-                const PsrTypeModule = await import('../../cim/psrType/index.js')
-                const dataPrsType = await PsrTypeModule.getPsrTypeById(substation.data.psr_type_id)
-                if (dataPrsType.success) {
-                    entity.psrType = dataPrsType.data
-                }
-            }
-            
-            // Get attachment
-            const AttachmentModule = await import('../attachment/index.js')
-            const dataAttachment = await AttachmentModule.getAttachmentByForeignIdAndType(substation.data.mrid, 'substation')
-            if (dataAttachment.success) {
-                entity.attachment = dataAttachment.data
-            }
-        } catch (err) {
-            console.error('Error loading related data:', err)
-            // Continue anyway with partial data
-        }
-        
-        return { success: true, data: entity, message: 'Substation entity retrieved successfully' }
-    } catch (error) {
-        console.error('Error retrieving substation entity:', error)
-        return { success: false, error, message: 'Error retrieving substation entity' }
-    }
-}
-
+// Get SubstationEntity by id
 export const getSubstationEntityById = async (id, user_id, organisation_id) => {
     const entity = new SubstationEntity();
     if(id == null || id === '') {
@@ -313,51 +373,76 @@ export const getSubstationEntityById = async (id, user_id, organisation_id) => {
                 const dataLocation = await getLocationById(entity.substation.location);
                 if(dataLocation.success) {
                     entity.location = dataLocation.data;
+                    
+                    // Lấy StreetAddress nếu location có main_address
+                    if(entity.location && entity.location.main_address) {
+                        const dataStreetAddress = await getStreetAddressById(entity.location.main_address);
+                        if(dataStreetAddress.success) {
+                            entity.streetAddress = dataStreetAddress.data;
+                            
+                            // Lấy StreetDetail nếu streetAddress có street_detail
+                            if(entity.streetAddress && entity.streetAddress.street_detail) {
+                                const dataStreetDetail = await getStreetDetailById(entity.streetAddress.street_detail);
+                                if(dataStreetDetail.success) {
+                                    entity.streetDetail = dataStreetDetail.data;
+                                }
+                            }
+                            
+                            // Lấy TownDetail nếu streetAddress có town_detail
+                            if(entity.streetAddress && entity.streetAddress.town_detail) {
+                                const dataTownDetail = await getTownDetailById(entity.streetAddress.town_detail);
+                                if(dataTownDetail.success) {
+                                    entity.townDetail = dataTownDetail.data;
+                                }
+                            }
+                        }
+                    }
                 }
 
-                const dataStreetAddress = await getStreetAddressById(entity.location.main_address);
-                if(dataStreetAddress.success) {
-                    entity.streetAddress = dataStreetAddress.data;
-                }
-
-                const dataStreetDetail = await getStreetDetailById(entity.streetAddress.street_detail);
-                if(dataStreetDetail.success) {
-                    entity.streetDetail = dataStreetDetail.data;
-                }
-
-                const dataTownDetail = await getTownDetailById(entity.streetAddress.town_detail);
-                if(dataTownDetail.success) {
-                    entity.townDetail = dataTownDetail.data;
-                }
-
+                // Lấy PersonSubstation
                 const dataPersonSubstation = await getPersonSubstationBySubstationId(entity.substation.mrid);
                 if(dataPersonSubstation.success) {
                     entity.personSubstation = dataPersonSubstation.data;
+                    
+                    // Lấy Person nếu personSubstation có person_id
+                    if(entity.personSubstation && entity.personSubstation.person_id) {
+                        const dataPerson = await getPersonById(entity.personSubstation.person_id);
+                        if(dataPerson.success) {
+                            entity.person = dataPerson.data;
+                            
+                            // Lấy PersonRole nếu person có mrid
+                            if(entity.person && entity.person.mrid) {
+                                const dataPersonRole = await getPersonRoleByPersonId(entity.person.mrid);
+                                if(dataPersonRole.success) {
+                                    entity.personRole = dataPersonRole.data;
+                                }
+                            }
+                            
+                            // Lấy ElectronicAddress nếu person có electronic_address
+                            if(entity.person && entity.person.electronic_address) {
+                                const dataElectronicAddress = await getElectronicAddressById(entity.person.electronic_address);
+                                if(dataElectronicAddress.success) {
+                                    entity.electronicAddress = dataElectronicAddress.data;
+                                }
+                            }
+                            
+                            // Lấy TelephoneNumber nếu person có mobile_phone
+                            if(entity.person && entity.person.mobile_phone) {
+                                const dataTelephoneNumber = await getTelephoneNumberById(entity.person.mobile_phone);
+                                if(dataTelephoneNumber.success) {
+                                    entity.telephoneNumber = dataTelephoneNumber.data;
+                                }
+                            }
+                        }
+                    }
                 }
 
-                const dataPerson = await getPersonById(entity.personSubstation.person_id);
-                if(dataPerson.success) {
-                    entity.person = dataPerson.data;
-                }
-
-                const dataPersonRole = await getPersonRoleByPersonId(entity.person.mrid);
-                if(dataPersonRole.success) {
-                    entity.personRole = dataPersonRole.data;
-                }
-
-                const dataElectronicAddress = await getElectronicAddressById(entity.person.electronic_address);
-                if(dataElectronicAddress.success) {
-                    entity.electronicAddress = dataElectronicAddress.data;
-                }
-
-                const dataTelephoneNumber = await getTelephoneNumberById(entity.person.mobile_phone);
-                if(dataTelephoneNumber.success) {
-                    entity.telephoneNumber = dataTelephoneNumber.data;
-                }
-
-                const dataPositionPoint = await getPositionPointByLocationId(entity.location.mrid);
-                if(dataPositionPoint.success) {
-                    entity.positionPoint = dataPositionPoint.data;
+                // Lấy PositionPoint nếu location có mrid
+                if(entity.location && entity.location.mrid) {
+                    const dataPositionPoint = await getPositionPointByLocationId(entity.location.mrid);
+                    if(dataPositionPoint.success) {
+                        entity.positionPoint = dataPositionPoint.data;
+                    }
                 }
 
                 const dataAttachment = await getAttachmentByForeignIdAndType(entity.substation.mrid, 'substation');
@@ -375,14 +460,20 @@ export const getSubstationEntityById = async (id, user_id, organisation_id) => {
                     entity.user = dataUser.data;
                 }
 
-                const organisationLocation = await getOrganisationLocationByOrganisationIdAndLocationId(organisation_id, entity.location.mrid);
-                if(organisationLocation.success) {
-                    entity.organisationLocation = organisationLocation.data;
+                // Lấy OrganisationLocation nếu có organisation_id và location.mrid
+                if(organisation_id && entity.location && entity.location.mrid) {
+                    const organisationLocation = await getOrganisationLocationByOrganisationIdAndLocationId(organisation_id, entity.location.mrid);
+                    if(organisationLocation.success) {
+                        entity.organisationLocation = organisationLocation.data;
+                    }
                 }
 
-                const organisationPerson = await getOrganisationPersonByOrganisationIdAndPersonId(organisation_id, entity.person.mrid);
-                if(organisationPerson.success) {
-                    entity.organisationPerson = organisationPerson.data;
+                // Lấy OrganisationPerson nếu có organisation_id và person.mrid
+                if(organisation_id && entity.person && entity.person.mrid) {
+                    const organisationPerson = await getOrganisationPersonByOrganisationIdAndPersonId(organisation_id, entity.person.mrid);
+                    if(organisationPerson.success) {
+                        entity.organisationPerson = organisationPerson.data;
+                    }
                 }
 
                 const organisationPsr = await getOrganisationPsrByOrganisationIdAndPsrId(organisation_id, entity.substation.mrid);
@@ -403,60 +494,153 @@ export const getSubstationEntityById = async (id, user_id, organisation_id) => {
     }
 }
 
+// Delete SubstationEntity by id
 export const deleteSubstationEntityById = async (data) => {
     try {
-        if(data.substation == null || data.substation.mrid == null || data.substation.mrid === '') {
-            return { success: false, error: new Error('Invalid ID') };
+        // Xử lý trường hợp data là string (mrid) hoặc object
+        let mrid = null;
+        let entityData = data;
+        
+        if (typeof data === 'string') {
+            // Nếu data là string, đó là mrid
+            mrid = data;
+            // Tạo entity object với mrid
+            entityData = {
+                substation: {
+                    mrid: mrid
+                }
+            };
+        } else if (data && typeof data === 'object') {
+            // Nếu data là object, lấy mrid từ các vị trí có thể
+            mrid = data.mrid || (data.substation && data.substation.mrid) || (data.id);
+            
+            // Nếu có mrid nhưng chưa có cấu trúc substation, tạo lại
+            if (mrid && (!data.substation || !data.substation.mrid)) {
+                entityData = {
+                    ...data,
+                    substation: {
+                        ...(data.substation || {}),
+                        mrid: mrid
+                    }
+                };
+            } else {
+                entityData = data;
+            }
+        }
+        
+        // Kiểm tra mrid hợp lệ
+        if (!mrid || mrid === '') {
+            return { success: false, error: new Error('Invalid ID: mrid is required') };
+        }
+        
+        // Nếu chỉ có mrid, cố gắng load entity đầy đủ trước khi xóa
+        if (!entityData.substation || !entityData.substation.mrid) {
+            try {
+                const entityResult = await getSubstationEntityById(mrid, null, null);
+                if (entityResult.success && entityResult.data) {
+                    entityData = entityResult.data;
+                } else {
+                    // Nếu không load được, vẫn xóa với dữ liệu tối thiểu
+                    entityData = {
+                        substation: {
+                            mrid: mrid
+                        }
+                    };
+                }
+            } catch (loadErr) {
+                // Nếu load thất bại, vẫn xóa với dữ liệu tối thiểu
+                entityData = {
+                    substation: {
+                        mrid: mrid
+                    }
+                };
+            }
+        }
+        
+        if(entityData.substation == null || entityData.substation.mrid == null || entityData.substation.mrid === '') {
+            return { success: false, error: new Error('Invalid ID: substation mrid is required') };
         } else {  
             try {
                 await runSQL('BEGIN TRANSACTION');
-                if(data.attachment && data.attachment.id) {
-                    const pathData = JSON.parse(data.attachment.path || '[]')
+                if(entityData.attachment && entityData.attachment.id) {
+                    const pathData = JSON.parse(entityData.attachment.path || '[]')
                     if (Array.isArray(pathData) && pathData.length > 0) {
-                        syncFilesWithDeletion(pathData, null, data.mrid);
+                        syncFilesWithDeletion(pathData, null, entityData.substation.mrid);
                     }
                 }
-                if( data.attachment.id) {
-                    await deleteAttachmentByIdTransaction(data.attachment.id, db);
+                if(entityData.attachment && entityData.attachment.id) {
+                    await deleteAttachmentByIdTransaction(entityData.attachment.id, db);
                 }
-                if(data.substation && data.substation.mrid) {
-                    await cimSubstationFunc.deleteSubstationByIdTransaction(data.substation.mrid, db);
+                if(entityData.substation && entityData.substation.mrid) {
+                    await deleteSubstationByIdTransaction(entityData.substation.mrid, db);
                 }
-                if(data.psrType && data.psrType.mrid) {
-                    await deletePsrTypeByIdTransaction(data.psrType.mrid, db);
+                if(entityData.psrType && entityData.psrType.mrid) {
+                    await deletePsrTypeByIdTransaction(entityData.psrType.mrid, db);
                 }
-                if(data.location && data.location.mrid) {
-                    const powerSystemResource = await getPowerSystemResourceByLocationIdTransaction(data.location.mrid, db);
+                if(entityData.location && entityData.location.mrid) {
+                    const powerSystemResource = await getPowerSystemResourceByLocationIdTransaction(entityData.location.mrid, db);
                     if(powerSystemResource.success) {
                         if(powerSystemResource.data.length - 1 <= 0) {
-                            await deleteLocationByIdTransaction(data.location.mrid, db);
-                            if(data.streetAddress && data.streetAddress.mrid) {
-                                await deleteStreetAddressByIdTransaction(data.streetAddress.mrid, db);
+                            await deleteLocationByIdTransaction(entityData.location.mrid, db);
+                            if(entityData.streetAddress && entityData.streetAddress.mrid) {
+                                await deleteStreetAddressByIdTransaction(entityData.streetAddress.mrid, db);
                             }
-                            if(data.streetDetail && data.streetDetail.mrid) {
-                                await deleteStreetDetailByIdTransaction(data.streetDetail.mrid, db);
+                            if(entityData.streetDetail && entityData.streetDetail.mrid) {
+                                await deleteStreetDetailByIdTransaction(entityData.streetDetail.mrid, db);
                             }
-                            if(data.townDetail && data.townDetail.mrid) {
-                                await deleteTownDetailByIdTransaction(data.townDetail.mrid, db);
+                            if(entityData.townDetail && entityData.townDetail.mrid) {
+                                await deleteTownDetailByIdTransaction(entityData.townDetail.mrid, db);
                             }
                         }
                     }
                 }
-                if(data.personRole && data.personRole.mrid) {
-                    await deletePersonRoleByIdTransaction(data.personRole.mrid, db);
+                if(entityData.personRole && entityData.personRole.mrid) {
+                    await deletePersonRoleByIdTransaction(entityData.personRole.mrid, db);
                 }
-                if(data.person && data.person.mrid) {
-                    await deletePersonByIdTransaction(data.person.mrid, db);
+                if(entityData.person && entityData.person.mrid) {
+                    await deletePersonByIdTransaction(entityData.person.mrid, db);
                 }
-                if(data.electronicAddress && data.electronicAddress.mrid) {
-                    await deleteElectronicAddressByIdTransaction(data.electronicAddress.mrid, db);
+                if(entityData.electronicAddress && entityData.electronicAddress.mrid) {
+                    await deleteElectronicAddressByIdTransaction(entityData.electronicAddress.mrid, db);
                 }
-                if(data.telephoneNumber && data.telephoneNumber.mrid) {
-                    await deleteTelephoneNumberByIdTransaction(data.telephoneNumber.mrid, db);
+                if(entityData.telephoneNumber && entityData.telephoneNumber.mrid) {
+                    await deleteTelephoneNumberByIdTransaction(entityData.telephoneNumber.mrid, db);
+                }
+                // Xóa personSubstation
+                if(entityData.personSubstation && entityData.personSubstation.mrid) {
+                    await deletePersonSubstationByMrid(entityData.personSubstation.mrid);
+                }
+                // Xóa userIdentifiedObject
+                if(entityData.userIdentifiedObject && entityData.userIdentifiedObject.mrid) {
+                    await deleteUserIdentifiedObjectByMrid(entityData.userIdentifiedObject.mrid);
+                }
+                // Xóa organisationLocation
+                if(entityData.organisationLocation && entityData.organisationLocation.mrid) {
+                    await deleteOrganisationLocationById(entityData.organisationLocation.mrid);
+                }
+                // Xóa organisationPsr
+                if(entityData.organisationPsr && entityData.organisationPsr.mrid) {
+                    await deleteOrganisationPsrById(entityData.organisationPsr.mrid);
+                }
+                // Xóa organisationPerson
+                if(entityData.organisationPerson && entityData.organisationPerson.mrid) {
+                    await deleteOrganisationPersonById(entityData.organisationPerson.mrid);
+                }
+                // Xóa positionPoint nếu có location
+                if(entityData.location && entityData.location.mrid) {
+                    await deletePositionPointByLocationIdTransaction(entityData.location.mrid, db);
+                }
+                // Xóa configurationEvent nếu có
+                if(entityData.configurationEvent && Array.isArray(entityData.configurationEvent) && entityData.configurationEvent.length > 0) {
+                    for(const event of entityData.configurationEvent) {
+                        if(event.mrid) {
+                            await deleteConfigurationEventByIdTransaction(event.mrid, db);
+                        }
+                    }
                 }
                 await runSQL('COMMIT');
-                if(data.attachment && data.attachment.id) {
-                    deleteDirectory(null, data.substation.mrid);
+                if(entityData.attachment && entityData.attachment.id) {
+                    deleteDirectory(null, entityData.substation.mrid);
                 }
                 return { success: true, message: 'Substation entity deleted successfully' };
             } catch (err) {
@@ -470,26 +654,7 @@ export const deleteSubstationEntityById = async (data) => {
     }
 }
 
-export const deleteSubstationEntityByMrid = async (mrid) => {
-    try {
-        if (!mrid || mrid === '') {
-            return { success: false, error: new Error('Invalid MRID') };
-        }
-        
-        // Lấy entity đầy đủ bằng mrid
-        const entityResult = await getSubstationEntityByMrid(mrid);
-        if (!entityResult.success) {
-            return { success: false, error: new Error('Substation not found'), message: entityResult.message };
-        }
-        
-        // Xóa entity với data đầy đủ
-        return await deleteSubstationEntityById(entityResult.data);
-    } catch (error) {
-        console.error('Error deleting substation entity by mrid:', error);
-        return { success: false, error, message: 'Error deleting substation entity by mrid' };
-    }
-}
-
+// Run SQL
 const runSQL = (sql, params = []) => {
     return new Promise((resolve, reject) => {
         db.run(sql, params, function (err) {

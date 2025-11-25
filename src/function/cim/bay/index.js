@@ -71,7 +71,6 @@ export const insertBayTransaction = async (bay, dbsql) => {
                     params,
                     function (err) {
                         if (err) {
-                            console.error('insertBayTransaction SQL error:', err);
                             return reject({ success: false, err, message: 'Insert Bay failed' })
                         }
                         return resolve({ success: true, data: bay, message: 'Insert Bay completed' })
@@ -129,7 +128,6 @@ export const getBayByVoltageLevelOrSubstation = async (voltageLevel, substation)
 
         db.all(sql, params, (err, rows) => {
             if (err) {
-                console.error('Get Bay by VoltageLevel or Substation failed:', err);
                 return reject({
                     success: false,
                     data: null,

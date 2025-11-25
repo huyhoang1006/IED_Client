@@ -12,9 +12,6 @@
                     <span v-else-if="tab.mode == 'substation'" class="tab-label">{{ tab.name }}</span>
                     <span v-else-if="tab.mode == 'voltageLevel'" class="tab-label">{{ tab.name }}</span>
                     <span v-else-if="tab.mode == 'bay'" class="tab-label">{{ tab.name }}</span>
-                    <span v-else-if="tab.mode == 'asset'" class="tab-label">{{ tab.serial_number }}</span>
-                    <span v-else-if="tab.mode == 'job'" class="tab-label">{{ tab.name }}</span>
-                    <span v-else-if="tab.mode == 'test'" class="tab-label">{{ tab.name }}</span>
                     <span class="close-icon mgr-10 mgl-10"
                         :class="{ visible: hoveredTab === tab.mrid || activeTab?.mrid === tab.mrid }"
                         @click.stop="closeTab(index)">✖</span>
@@ -26,10 +23,8 @@
             <div class="mgr-20 mgt-20 mgb-20 mgl-20" v-for="(item, index) in tabs" :key="item.mrid">
                 <component mode="update" @reload="loadData" @organisation-saved="handleOrganisationSaved" v-show="activeTab?.mrid === item.mrid"
                     ref="componentLoadData" :sideData="sideSign" :is="checkTab(item)" :organisationId="item.parentId"
-                    :testTypeListData="testTypeListData" :assetData="assetData"
-                    :productAssetModelData="productAssetModelData" :parent="parentOrganization"
-                    :locationData="locationData" style="min-height: calc(100vh - 250px);"
-                    >
+                    :parent="parentOrganization" :locationData="locationData" :personList="getPersonListForTab(item)" 
+                    style="min-height: calc(100vh - 250px);">
                 </component>
                 <span class="tab-actions" v-show="activeTab?.mrid === item.mrid">
                     <el-button size="small" type="danger" @click="closeTab(index)">Close</el-button>
@@ -43,48 +38,23 @@
 <script>
 /* eslint-disable */
 
-import LocationViewData from '@/views/LocationInsert/locationLevelView.vue'
-// import OwnerView from '@/views/OwnerViewData/index.vue'
-// import Transformer from '@/views/AssetView/Transformer'
+import LocationViewData from '@/views/Substation/index.vue'
 import OrganisationView from '@/views/Organisation/index.vue'
 import * as subsMapper from '@/views/Mapping/Substation/index'
 import * as bayMapper from '@/views/Mapping/Bay/index'
 import * as orgMapper from '@/views/Mapping/Organisation/index.js'
 import * as voltageMapper from '@/views/Mapping/VoltageLevel/index'
-// import * as surgeMapper from '@/views/Mapping/SurgeArrester/index'
-// import * as bushingMapper from '@/views/Mapping/Bushing/index'
-// import * as vtMapper from '@/views/Mapping/VoltageTransformer/index'
-// import * as SurgeArresterJobMapper from '@/views/Mapping/SurgerArresterJob/index'
-// import * as disconnectorMapper from '@/views/Mapping/Disconnector/index'
-// import * as PowerCableMapper from '@/views/Mapping/PowerCable'
-// import * as RotatingMachineMapper from '@/views/Mapping/RotatingMachine'
 
 import VoltageLevel from '@/views/VoltageLevel/index.vue'
 import Bay from '@/views/Bay/index.vue'
-// import SurgeArrester from '@/views/AssetView/SurgeArrester/index.vue'
-// import Bushing from '@/views/AssetView/Bushing/index.vue'
-// import SurgeArresterJob from '@/views/JobView/SurgeArrester/index.vue'
-// import VoltageTransformer from '@/views/AssetView/VoltageTransformer/index.vue'
-// import Disconnector from '@/views/AssetView/Disconnector/index.vue'
-// import PowerCable from '@/views/AssetView/PowerCable/index.vue'
-// import RotatingMachine from '@/views/AssetView/RotatingMachine/index.vue'
 
 export default {
     name: "Tabs",
     components: {
         LocationViewData,
-        // OwnerView,
-        // Transformer,
         OrganisationView,
         VoltageLevel,
         Bay,
-        // SurgeArrester,
-        // Bushing,
-        // VoltageTransformer,
-        // SurgeArresterJob,
-        // Disconnector,
-        // PowerCable,
-        // RotatingMachine
     },
     model: {
         prop: 'value',
@@ -101,11 +71,9 @@ export default {
     data() {
         return {
             activeTab: this.value,
-            testTypeListData: [],
-            assetData: {},
-            productAssetModelData: {},
             parentOrganization: {},
             locationData: {},
+            personList: [],
             tabsData: [],
             indexTab: null,
             sideSign: this.side,
@@ -117,8 +85,20 @@ export default {
     methods: {
         async loadData(tab, index) {
             try {
+                // Special handling for Root: allow Root even without mrid
+                const isRoot = tab && (tab.name === 'Root' || tab.name?.includes('Root')) && (!tab.mrid || tab.mrid === (this.$constant?.ROOT || '00000000-0000-0000-0000-000000000000'));
+                
+                if (!tab || (!tab.mrid && !isRoot)) {
+                    this.$message.error("Invalid tab data");
+                    return;
+                }
+                
+                // Ensure Root has mrid set
+                if (isRoot && !tab.mrid) {
+                    tab.mrid = this.$constant?.ROOT || '00000000-0000-0000-0000-000000000000';
+                }
                 if (index == null) {
-                    index = this.tabs.findIndex(t => t.mrid === tab.mrid);
+                    index = this.tabs.findIndex(t => t && t.mrid === tab.mrid);
                     if (index === -1) {
                         this.$message.error("Tab not found");
                         return;
@@ -149,13 +129,20 @@ export default {
                         data.personList = []
                     }
 
-                    if (dataEntity.success) {
-                        const dto = subsMapper.mapEntityToDto(dataEntity.data)
-                        data.dto = dto
+                    if (dataEntity && dataEntity.success) {
+                        try {
+                            const dto = subsMapper.mapEntityToDto(dataEntity.data)
+                            data.dto = dto
+                        } catch (mapErr) {
+                            console.error('Error mapping substation entity to DTO:', mapErr)
+                            this.$message.error("Failed to map substation data")
+                            // Continue with null dto to show empty form
+                        }
                     } else {
                         console.error('dataEntity failed:', dataEntity)
-                        this.$message.error("Failed to load substation data: " + (dataEntity.message || 'Unknown error'));
-                        return
+                        // Don't return - show empty form instead
+                        this.$message.warning("Substation data not found, showing empty form")
+                        // data.dto will remain null, which should show empty form
                     }
                     if (this.$refs.componentLoadData && this.$refs.componentLoadData[index]) {
                         this.$refs.componentLoadData[index].loadData(data);
@@ -163,6 +150,11 @@ export default {
                         console.error("Component not found at index:", index);
                     }
                 } else if (tab.mode === 'organisation') {
+                    // Load person list for organisation
+                    const [dataPerson] = await Promise.all([
+                        window.electronAPI.getPersonByOrganisationId(tab.parentId || tab.mrid)
+                    ])
+                    
                     // Load existing organisation entity if mrid exists; fallback to empty for new
                     if (tab.mrid) {
                         try {
@@ -172,6 +164,7 @@ export default {
                                 const payload = {
                                     organisationId: dto.organisationId || tab.mrid,
                                     name: dto.name || tab.name || '',
+                                    alias_name: dto.alias_name || '',
                                     tax_code: dto.tax_code || '',
                                     street: dto.street || '',
                                     ward_or_commune: dto.ward_or_commune || '',
@@ -183,6 +176,11 @@ export default {
                                     fax: dto.fax || '',
                                     email: dto.email || '',
                                     comment: dto.comment || '',
+                                    personName: dto.personName || '',
+                                    personId: dto.personId || '',
+                                    // Ensure department and position are explicitly set, even if empty string
+                                    department: (dto.department !== undefined && dto.department !== null) ? String(dto.department) : '',
+                                    position: (dto.position !== undefined && dto.position !== null) ? String(dto.position) : '',
                                     parentId: tab.parentId,
                                     parentName: tab.parentName,
                                     positionPoints: dto.positionPoints || { x: [], y: [], z: [] },
@@ -192,14 +190,96 @@ export default {
                                 }
                                 if (this.$refs.componentLoadData && this.$refs.componentLoadData[index]) {
                                     this.$refs.componentLoadData[index].loadData(payload)
+                                    // Set personList prop
+                                    if (dataPerson.success && dataPerson.data) {
+                                        this.$refs.componentLoadData[index].personListData = dataPerson.data
+                                    }
                                 }
                             } else {
-                                console.error('Failed to fetch organisation entity:', dataEntity)
-                                this.$message.error('Failed to load organisation data')
+                                // Special handling for Root: if not found in DB, use default Root data
+                                const isRoot = tab.mrid === (this.$constant?.ROOT || '00000000-0000-0000-0000-000000000000')
+                                if (isRoot) {
+                                    const rootPayload = {
+                                        organisationId: tab.mrid,
+                                        name: tab.name || 'Root',
+                                        tax_code: '',
+                                        street: '',
+                                        ward_or_commune: '',
+                                        district_or_town: '',
+                                        city: '',
+                                        state_or_province: '',
+                                        country: '',
+                                        phoneNumber: '',
+                                        fax: '',
+                                        email: '',
+                                        comment: '',
+                                        parentId: tab.parentId || null,
+                                        parentName: tab.parentName || '',
+                                        positionPoints: { x: [], y: [], z: [] },
+                                        attachment: { id: '', name: null, path: '', type: 'organisation', id_foreign: '' },
+                                        configurationEvent: [],
+                                        isNew: false
+                                    }
+                                    // Set personList for this tab
+                                    if (dataPerson.success && dataPerson.data) {
+                                        this.personList = dataPerson.data
+                                    } else {
+                                        this.personList = []
+                                    }
+                                    
+                                    if (this.$refs.componentLoadData && this.$refs.componentLoadData[index]) {
+                                        this.$refs.componentLoadData[index].loadData(rootPayload)
+                                    }
+                                } else {
+                                    console.error('Failed to fetch organisation entity:', dataEntity)
+                                    this.$message.error('Failed to load organisation data')
+                                    // Set empty personList
+                                    this.personList = []
+                                }
                             }
                         } catch (err) {
-                            console.error('Error loading organisation entity:', err)
-                            this.$message.error('Failed to load organisation data')
+                            // Special handling for Root on error
+                            const isRoot = tab.mrid === (this.$constant?.ROOT || '00000000-0000-0000-0000-000000000000')
+                            if (isRoot) {
+                                const rootPayload = {
+                                    organisationId: tab.mrid,
+                                    name: tab.name || 'Root',
+                                    tax_code: '',
+                                    street: '',
+                                    ward_or_commune: '',
+                                    district_or_town: '',
+                                    city: '',
+                                    state_or_province: '',
+                                    country: '',
+                                    phoneNumber: '',
+                                    fax: '',
+                                    email: '',
+                                    comment: '',
+                                    personName: '',
+                                    personId: '',
+                                    department: '',
+                                    position: '',
+                                    parentId: tab.parentId || null,
+                                    parentName: tab.parentName || '',
+                                    positionPoints: { x: [], y: [], z: [] },
+                                    attachment: { id: '', name: null, path: '', type: 'organisation', id_foreign: '' },
+                                    configurationEvent: [],
+                                    isNew: false
+                                }
+                                // Set personList for this tab
+                                if (dataPerson.success && dataPerson.data) {
+                                    this.personList = dataPerson.data
+                                } else {
+                                    this.personList = []
+                                }
+                                
+                                if (this.$refs.componentLoadData && this.$refs.componentLoadData[index]) {
+                                    this.$refs.componentLoadData[index].loadData(rootPayload)
+                                }
+                            } else {
+                                console.error('Error loading organisation entity:', err)
+                                this.$message.error('Failed to load organisation data')
+                            }
                         }
                     } else {
                         const emptyOrgData = {
@@ -242,143 +322,13 @@ export default {
                         this.$message.error("Failed to load bay data");
                         return
                     }
-                } else if (tab.mode === 'asset') {
-                    if (tab.asset === 'Surge arrester') {
-                        this.parentOrganization = {
-                            mrid: tab.parentId
-                        }
-                        const data = await window.electronAPI.getSurgeArresterByMrid(tab.mrid, tab.parentId)
-                        if (data.success) {
-                            const surgeArresterDto = surgeMapper.mapEntityToDto(data.data)
-                            this.$refs.componentLoadData[index].loadData(surgeArresterDto)
-                        } else {
-                            this.$message.error("Failed to load surge arrester data");
-                        }
-                    } else if (tab.asset === 'Bushing') {
-                        this.parentOrganization = {
-                            mrid: tab.parentId
-                        }
-                        // TODO: getBushingByMrid function not implemented yet
-                        const data = { success: false, message: 'getBushingByMrid function not implemented' }
-                        if (data.success) {
-                            const BushingDto = bushingMapper.mapEntityToDto(data.data)
-                            this.$refs.componentLoadData[index].loadData(BushingDto)
-                        } else {
-                            this.$message.error("Failed to load surge arrester data");
-                        }
-                    } else if (tab.asset === 'Voltage transformer') {
-                        this.parentOrganization = {
-                            mrid: tab.parentId
-                        }
-                        const data = await window.electronAPI.getVoltageTransformerByMrid(tab.mrid, tab.parentId)
-                        console.log("data : ", data)
-                        if (data.success) {
-                            const vtDto = vtMapper.mapEntityToDto(data.data)
-                            console.log("entityToDto : ", vtDto)
-                            this.$refs.componentLoadData[index].loadData(vtDto)
-                        } else {
-                            this.$message.error("Failed to load surge arrester data");
-                        }
-                    } else if(tab.asset === 'Disconnector') {
-                        this.parentOrganization = {
-                            mrid : tab.parentId
-                        }
-                        const data = await window.electronAPI.getDisconnectorByMrid(tab.mrid, tab.parentId)
-                        if(data.success) {
-                            const disconnectorDto = disconnectorMapper.disconnectorEntityToDto(data.data)
-                            this.$refs.componentLoadData[index].loadData(disconnectorDto)
-                        } else {
-                            this.$message.error("Failed to load Disconnector data");
-                        }
-                    } else if(tab.asset === 'Power cable') {
-                        this.parentOrganization = {
-                            mrid : tab.parentId
-                        }
-                        const data = await window.electronAPI.getPowerCableByMrid(tab.mrid, tab.parentId)
-                        if(data.success) {
-                            const powerCableDto = PowerCableMapper.mapEntityToDto(data.data)
-                            this.$refs.componentLoadData[index].loadData(powerCableDto)
-                        } else {
-                            this.$message.error("Failed to load Disconnector data");
-                        }
-                    } else if(tab.asset === 'Rotating machine') {
-                        this.parentOrganization = {
-                            mrid : tab.parentId
-                        }
-                        // TODO: getRotatingMachineByMrid function not implemented yet
-                        const data = { success: false, message: 'getRotatingMachineByMrid function not implemented' }
-                        if(data.success) {
-                            const rotatingMachineDto = RotatingMachineMapper.mapEntityToDto(data.data)
-                            this.$refs.componentLoadData[index].loadData(rotatingMachineDto)
-                        } else {
-                            this.$message.error("Failed to load Rotating Machine data");
-                        }
-                    }
-                } else if (tab.mode === 'job') {
-                    const dataAsset = await window.electronAPI.getAssetByMrid(tab.parentId)
-                    if (dataAsset.success) {
-                        this.assetData = dataAsset.data
-                        this.parentOrganization = dataAsset.data
-                        const [dataLocation, dataProductAssetModel] = await Promise.all([
-                            window.electronAPI.getLocationDetailByMrid(dataAsset.data.location),
-                            window.electronAPI.getProductAssetModelByMrid(dataAsset.data.product_asset_model)
-                        ]);
-                        if (dataLocation.success) {
-                            this.locationData = dataLocation.data
-                        } else {
-                            this.locationData = {}
-                        }
-
-                        if (dataProductAssetModel.success) {
-                            this.productAssetModelData = dataProductAssetModel.data
-                        } else {
-                            this.productAssetModelData = {}
-                        }
-                    } else {
-                        this.assetData = {}
-                        this.locationData = {}
-                        this.productAssetModelData = {}
-                    }
-                    if (tab.job === 'Surge arrester') {
-                        const dataTestType = await window.electronAPI.getAllTestTypeSurgeArrester();
-                        if (dataTestType.success) {
-                            this.testTypeListData = dataTestType.data
-                        } else {
-                            this.testTypeListData = []
-                        }
-                        const dataSurgeArrester = await window.electronAPI.getSurgeArresterByMrid(tab.parentId)
-                        if (dataSurgeArrester.success) {
-                            this.assetData = dataSurgeArrester.data
-                        } else {
-                            this.assetData = {}
-                        }
-                        this.checkJobType = 'JobSurgeArrester'
-                        this.signJob = true;
-                        const data = await window.electronAPI.getSurgeArresterJobByMrid(tab.mrid)
-                        if (data.success) {
-                            const surgeArresterJobDto = SurgeArresterJobMapper.JobEntityToDto(data.data)
-                            for (const test of surgeArresterJobDto.testList) {
-                                for (const type of this.testTypeListData) {
-                                    if (test.testTypeCode === type.code) {
-                                        test.testTypeName = type.name
-                                        test.testTypeId = type.mrid
-                                        break
-                                    }
-                                }
-                            }
-                            this.$refs.componentLoadData[index].loadData(surgeArresterJobDto)
-                        } else {
-                            this.$message.error("Failed to load surge arrester job data");
-                        }
-                    }
                 } else {
-                    console.error("Unsupported tab mode - Tab data:", tab);
-                    console.error("Tab mode:", tab.mode);
-                    console.error("Tab asset:", tab.asset);
-                    this.$message.error(`Unsupported tab mode: ${tab.mode}${tab.asset ? ` - Asset: ${tab.asset}` : ''}`);
+                    console.warn("Unsupported tab mode:", tab.mode);
+                    this.$message.warning(`Tab mode '${tab.mode}' is not supported yet`);
                 }
             } catch (error) {
                 console.error("Error loading data:", error);
+                this.$message.error("Failed to load tab data");
             }
         },
         async selectTab(tab, index) {
@@ -402,7 +352,7 @@ export default {
         closeTab(index) {
             this.$emit('close-tab', index)
             if (this.indexTab === index) {
-                this.indexTab = null; // Reset indexTab nếu tab hiện tại bị đóng
+                this.indexTab = null;
             }
         },
         checkScroll() {
@@ -432,6 +382,9 @@ export default {
                 }
             });
         },
+        getPersonListForTab(tab) {
+            return this.personList || []
+        },
         checkTab(tab) {
             if (tab.mode == 'substation') {
                 return 'LocationViewData'
@@ -441,24 +394,10 @@ export default {
                 return 'VoltageLevel'
             } else if (tab.mode == 'bay') {
                 return 'Bay'
-            } else if (tab.mode == 'asset') {
-                if (tab.asset === 'Surge arrester') {
-                    return 'SurgeArrester'
-                } else if (tab.asset === 'Bushing') {
-                    return 'Bushing'
-                } else if (tab.asset === 'Voltage transformer') {
-                    return 'VoltageTransformer'
-                } else if(tab.asset === 'Disconnector') {
-                    return 'Disconnector'
-                } else if(tab.asset === 'Power cable') {
-                    return 'PowerCable'
-                } else if (tab.asset === 'Rotating machine') {
-                    return 'RotatingMachine'
-                }
-            } else if (tab.mode == 'job') {
-                if (tab.job === 'Surge arrester') {
-                    return 'SurgeArresterJob'
-                }
+            } else {
+                // Return null for unsupported modes to prevent component rendering errors
+                console.warn('Unsupported tab mode in checkTab:', tab.mode);
+                return null;
             }
         },
         saveCtrlS() {
@@ -476,8 +415,6 @@ export default {
         },
         
         handleOrganisationSaved(savedNode) {
-            console.log("Organisation saved, adding to tree:", savedNode);
-            // Emit event lên parent component (treeNavigation) để add node vào tree
             this.$emit('organisation-saved', savedNode);
         }
     }

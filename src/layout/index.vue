@@ -71,16 +71,24 @@ export default {
     },
     methods: {
         showLog() {
+            if (!this.$refs.mainWindows) return;
+            
             if(this.serverSign == true) {
-                this.$refs.mainWindows.showLogBar();
+                if (typeof this.$refs.mainWindows.showLogBar === 'function') {
+                    this.$refs.mainWindows.showLogBar();
+                }
             } else {
-                this.$refs.mainWindows.showLogBarClient();
+                if (typeof this.$refs.mainWindows.showLogBarClient === 'function') {
+                    this.$refs.mainWindows.showLogBarClient();
+                }
             }
         },
         retweet() {
             this.serverSign = !this.serverSign
             this.$nextTick(() => {
-                this.$refs.mainWindows.serverSwap(this.serverSign);
+                if (this.$refs.mainWindows && typeof this.$refs.mainWindows.serverSwap === 'function') {
+                    this.$refs.mainWindows.serverSwap(this.serverSign);
+                }
             })
         }
     }
