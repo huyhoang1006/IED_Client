@@ -3,6 +3,7 @@ import {ipcMain} from 'electron'
 import {ownerFunc} from "../../function/index.js"
 import { conditionFunc, attachmentFunc } from '../../function/index.js'
 
+// Get Owner by name
 export const getOwnerByName = () => {
     ipcMain.handle('getOwnerByName', async function (event, name) {
         try {
@@ -32,6 +33,7 @@ export const getOwnerByName = () => {
     })
 }
 
+// Get Owner by phone
 export const getOwnerByPhone = () => {
     ipcMain.handle('getOwnerByPhone', async function (event, phone) {
         const rs = await ownerFunc.getOwnerByPhone(phone)
@@ -51,6 +53,7 @@ export const getOwnerByPhone = () => {
     })
 }
 
+// Get Owner by id
 export const getOwnerById = () => {
     ipcMain.handle('getOwnerById', async function (event, id) {
         const rs = await ownerFunc.getOwnerById(id)
@@ -70,6 +73,7 @@ export const getOwnerById = () => {
     })
 }
 
+// Get Owner by user id
 export const getOwnerByUserId = () => {
     ipcMain.handle('getOwnerByUserId', async function (event, user_id) {
         const rs = await ownerFunc.getOwnerByUserId(user_id)
@@ -89,6 +93,7 @@ export const getOwnerByUserId = () => {
     })
 }
 
+// Get Owner by ref id
 export const getOwnerByRefId = () => {
     ipcMain.handle('getOwnerByRefId', async function (event, id) {
         const rs = await ownerFunc.getOwnerByRefId(id)
@@ -108,6 +113,7 @@ export const getOwnerByRefId = () => {
     })
 }
 
+// Insert Owner
 export const insertOwner = () => {
     ipcMain.handle('insertOwner', async function (event, data) {
         const rs = await ownerFunc.insertOwner(data)
@@ -127,6 +133,7 @@ export const insertOwner = () => {
     })
 }
 
+// Update Owner by id
 export const updateOwnerById = () => {
     ipcMain.handle('updateOwnerById', async function (event, id, data) {
         const rs = await ownerFunc.updateOwnerById(id, data)
@@ -145,7 +152,7 @@ export const updateOwnerById = () => {
     })
 }
 
-
+// Delete Owner by id
 export const deleteOwnerById = () => {
     ipcMain.handle('deleteOwnerById', async function (event, id) {
         const rs = await ownerFunc.deleteOwnerById(id)
@@ -164,6 +171,7 @@ export const deleteOwnerById = () => {
     })
 }
 
+// Delete Owner by ids
 export const deleteOwner = () => {
     ipcMain.handle('deleteOwner', async function (event, ids) {
         try {
@@ -199,6 +207,7 @@ export const deleteOwner = () => {
     })
 }
 
+// Active Owner
 export const active = () => {
     getOwnerByRefId()
     getOwnerById()

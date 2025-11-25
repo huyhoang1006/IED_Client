@@ -1,7 +1,7 @@
 <template>
 <div style="width: 50%; overflow: visible;">
     <el-dialog
-    :visible.sync="showVar_"
+    v-model="showVar_"
     title="Initialize variable"
     align-center
     :before-close="handleClose"

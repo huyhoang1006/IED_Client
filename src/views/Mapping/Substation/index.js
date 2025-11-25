@@ -1,9 +1,9 @@
 /* eslint-disable */
-import SubstationEntity from '@/views/Entity/Substation/index'
+
+import SubstationEntity from '@/views/Entity/Substation/index.js'
 // import SubstationDto from '@/views/Dto/Substation/index'
 import PositionPoint from '@/views/Cim/PositionPoint/index.js'
-import ConfigurationEvent from '@/views/Cim/ConfigurationEvent/index.js'
-import SubstationDto from '@/views/Dto/Substation'
+import SubstationDto from '@/views/Dto/Substation/index.js'
 
 export function mapDtoToEntity(dto) {
     const entity = new SubstationEntity()
@@ -173,113 +173,139 @@ export function mapDtoToEntity(dto) {
 export function mapEntityToDto(entity) {
     const dto = new SubstationDto()
 
-    // substation
-    dto.name = entity.substation.name || ''
-    dto.generation = entity.substation.generation || ''
-    dto.industry = entity.substation.industry || ''
-    dto.comment = entity.substation.description || ''
-    dto.subsId = entity.substation.mrid || ''
-    
-    // EquipmentContainer/Substation additional fields
-    dto.aliasName = entity.substation.aliasName || ''
-    dto.assetInfo = entity.substation.assetInfo || null
-    dto.containers = entity.substation.containers || []
-    dto.equipments = entity.substation.equipments || []
+    // substation - safe access
+    if (entity.substation) {
+        dto.name = entity.substation.name || ''
+        dto.generation = entity.substation.generation || ''
+        dto.industry = entity.substation.industry || ''
+        dto.comment = entity.substation.description || ''
+        dto.subsId = entity.substation.mrid || ''
+        
+        // EquipmentContainer/Substation additional fields
+        dto.aliasName = entity.substation.aliasName || ''
+        dto.assetInfo = entity.substation.assetInfo || null
+        dto.containers = entity.substation.containers || []
+        dto.equipments = entity.substation.equipments || []
+    }
 
-    // StreetAddress
-    dto.streetAddressId = entity.streetAddress.mrid || ""
+    // StreetAddress - safe access
+    if (entity.streetAddress) {
+        dto.streetAddressId = entity.streetAddress.mrid || ""
+    }
 
-    // TownDetail
-    dto.townDetailId = entity.townDetail.mrid || ""
-    dto.city = entity.townDetail.city || ""
-    dto.state_or_province = entity.townDetail.state_or_province || ""
-    dto.country = entity.townDetail.country || ""
-    dto.district_or_town = entity.townDetail.district_or_town || ""
-    dto.ward_or_commune = entity.townDetail.ward_or_commune || ""
+    // TownDetail - safe access
+    if (entity.townDetail) {
+        dto.townDetailId = entity.townDetail.mrid || ""
+        dto.city = entity.townDetail.city || ""
+        dto.state_or_province = entity.townDetail.state_or_province || ""
+        dto.country = entity.townDetail.country || ""
+        dto.district_or_town = entity.townDetail.district_or_town || ""
+        dto.ward_or_commune = entity.townDetail.ward_or_commune || ""
+    }
 
-    // StreetDetail
-    dto.streetDetailId = entity.streetDetail.mrid || ""
-    dto.street = entity.streetDetail.address_general || ""
-    // mrid đã map ở trên
+    // StreetDetail - safe access
+    if (entity.streetDetail) {
+        dto.streetDetailId = entity.streetDetail.mrid || ""
+        dto.street = entity.streetDetail.address_general || ""
+    }
 
-    // Location
-    dto.locationId = entity.location.mrid || ""
-    dto.locationName = entity.location.name || ""
-    // main_address đã map ở trên
-    
-    // Location additional fields
-    dto.locationDescription = entity.location.description || ""
-    dto.latitude = entity.location.latitude || null
-    dto.longitude = entity.location.longitude || null
-    dto.elevation = entity.location.elevation || null
-    dto.coordinateSystem = entity.location.coordinateSystem || null
-    dto.orientation = entity.location.orientation || null
+    // Location - safe access
+    if (entity.location) {
+        dto.locationId = entity.location.mrid || ""
+        dto.locationName = entity.location.name || ""
+        
+        // Location additional fields
+        dto.locationDescription = entity.location.description || ""
+        dto.latitude = entity.location.latitude || null
+        dto.longitude = entity.location.longitude || null
+        dto.elevation = entity.location.elevation || null
+        dto.coordinateSystem = entity.location.coordinateSystem || null
+        dto.orientation = entity.location.orientation || null
+    }
 
-    // electronicAddress
-    dto.electronicAddressId = entity.electronicAddress.mrid || ""
-    dto.email = entity.electronicAddress.email || ""
-    dto.fax = entity.electronicAddress.fax || ""
-    
-    // ElectronicAddress additional fields
-    dto.electronicAddressName = entity.electronicAddress.name || ""
-    dto.electronicAddressDescription = entity.electronicAddress.description || ""
-    dto.website = entity.electronicAddress.website || ""
-    dto.electronicPhone = entity.electronicAddress.phone || ""
+    // electronicAddress - safe access
+    if (entity.electronicAddress) {
+        dto.electronicAddressId = entity.electronicAddress.mrid || ""
+        dto.email = entity.electronicAddress.email || ""
+        dto.fax = entity.electronicAddress.fax || ""
+        
+        // ElectronicAddress additional fields
+        dto.electronicAddressName = entity.electronicAddress.name || ""
+        dto.electronicAddressDescription = entity.electronicAddress.description || ""
+        dto.website = entity.electronicAddress.website || ""
+        dto.electronicPhone = entity.electronicAddress.phone || ""
+    }
 
-    // telephoneNumber
-    dto.telephoneNumberId = entity.telephoneNumber.mrid || ""
-    dto.phoneNumber = entity.telephoneNumber.itu_phone || ""
-    
-    // TelephoneNumber additional fields
-    dto.telephoneName = entity.telephoneNumber.name || ""
-    dto.telephoneDescription = entity.telephoneNumber.description || ""
-    dto.phoneType = entity.telephoneNumber.phoneType || ""
-    dto.countryCode = entity.telephoneNumber.countryCode || ""
-    dto.areaCode = entity.telephoneNumber.areaCode || ""
+    // telephoneNumber - safe access
+    if (entity.telephoneNumber) {
+        dto.telephoneNumberId = entity.telephoneNumber.mrid || ""
+        dto.phoneNumber = entity.telephoneNumber.itu_phone || ""
+        
+        // TelephoneNumber additional fields
+        dto.telephoneName = entity.telephoneNumber.name || ""
+        dto.telephoneDescription = entity.telephoneNumber.description || ""
+        dto.phoneType = entity.telephoneNumber.phoneType || ""
+        dto.countryCode = entity.telephoneNumber.countryCode || ""
+        dto.areaCode = entity.telephoneNumber.areaCode || ""
+    }
 
-    //psrType
-    dto.psrTypeId = entity.psrType.mrid || ""
-    dto.type = entity.psrType.name || ""
-    
-    // PsrType additional fields
-    dto.psrTypeDescription = entity.psrType.description || ""
-    dto.psrTypeType = entity.psrType.type || ""
-    dto.category = entity.psrType.category || ""
-    dto.subCategory = entity.psrType.subCategory || ""
+    //psrType - safe access
+    if (entity.psrType) {
+        dto.psrTypeId = entity.psrType.mrid || ""
+        // Map name from psrType, but ensure it's not a UUID (mrid)
+        const psrTypeName = entity.psrType.name || ""
+        // If name is empty or looks like a UUID, try to get name from identified_object
+        if (!psrTypeName || psrTypeName === "" || psrTypeName.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+            // If name is UUID or empty, use empty string (will be handled by UI)
+            dto.type = ""
+        } else {
+            dto.type = psrTypeName
+        }
+        
+        // PsrType additional fields
+        dto.psrTypeDescription = entity.psrType.description || ""
+        dto.psrTypeType = entity.psrType.type || ""
+        dto.category = entity.psrType.category || ""
+        dto.subCategory = entity.psrType.subCategory || ""
+    }
 
-    // person
-    dto.personId = entity.person.mrid || ""
-    dto.personName = entity.person.name || ""
-    
-    // Person additional fields
-    dto.personDescription = entity.person.description || ""
-    dto.firstName = entity.person.firstName || ""
-    dto.lastName = entity.person.lastName || ""
-    dto.middleName = entity.person.middleName || ""
-    dto.title = entity.person.title || ""
-    dto.gender = entity.person.gender || ""
-    dto.birthDate = entity.person.birthDate || null
-    dto.nationality = entity.person.nationality || ""
+    // person - safe access
+    if (entity.person) {
+        dto.personId = entity.person.mrid || ""
+        dto.personName = entity.person.name || ""
+        
+        // Person additional fields
+        dto.personDescription = entity.person.description || ""
+        dto.firstName = entity.person.firstName || ""
+        dto.lastName = entity.person.lastName || ""
+        dto.middleName = entity.person.middleName || ""
+        dto.title = entity.person.title || ""
+        dto.gender = entity.person.gender || ""
+        dto.birthDate = entity.person.birthDate || null
+        dto.nationality = entity.person.nationality || ""
+    }
 
-    // personRole
-    dto.personRoleId = entity.personRole.mrid || ""
-    dto.department = entity.personRole.department || ""
-    dto.position = entity.personRole.position || ""
-    
-    // PersonRole additional fields
-    dto.roleName = entity.personRole.name || ""
-    dto.roleDescription = entity.personRole.description || ""
-    dto.role = entity.personRole.role || ""
-    dto.startDate = entity.personRole.startDate || null
-    dto.endDate = entity.personRole.endDate || null
+    // personRole - safe access
+    if (entity.personRole) {
+        dto.personRoleId = entity.personRole.mrid || ""
+        dto.department = entity.personRole.department || ""
+        dto.position = entity.personRole.position || ""
+        
+        // PersonRole additional fields
+        dto.roleName = entity.personRole.name || ""
+        dto.roleDescription = entity.personRole.description || ""
+        dto.role = entity.personRole.role || ""
+        dto.startDate = entity.personRole.startDate || null
+        dto.endDate = entity.personRole.endDate || null
+    }
 
-    // attachment
-    dto.attachmentId = entity.attachment.id || ""
-    dto.attachment = entity.attachment || ""
+    // attachment - safe access
+    if (entity.attachment) {
+        dto.attachmentId = entity.attachment.id || ""
+        dto.attachment = entity.attachment || ""
+    }
 
     // positionPoints (nếu có)
-    // Tùy vào cấu trúc thực tế, bạn có thể map lại thành mảng x, y, z như ban đầu
-    // Ở đây chỉ trả về mảng các object positionPoint
     dto.positionPoints = { x: [], y: [], z: [] }
     if (Array.isArray(entity.positionPoint)) {
         entity.positionPoint.forEach(point => {
@@ -289,24 +315,36 @@ export function mapEntityToDto(entity) {
         })
     }
 
-    // user
-    dto.userId = entity.user.user_id || ""
+    // user - safe access
+    if (entity.user) {
+        dto.userId = entity.user.user_id || ""
+    }
 
-    // userIdentifiedObject
-    dto.userIdentifiedObjectId = entity.userIdentifiedObject.mrid || ""
+    // userIdentifiedObject - safe access
+    if (entity.userIdentifiedObject) {
+        dto.userIdentifiedObjectId = entity.userIdentifiedObject.mrid || ""
+    }
 
-    // personSubstation
-    dto.personSubstationId = entity.personSubstation.mrid || ""
+    // personSubstation - safe access
+    if (entity.personSubstation) {
+        dto.personSubstationId = entity.personSubstation.mrid || ""
+    }
 
-    // organisationLocation
-    dto.organisationLocationId = entity.organisationLocation.mrid || ""
-    dto.organisationId = entity.organisationLocation.organisation_id || ""
+    // organisationLocation - safe access
+    if (entity.organisationLocation) {
+        dto.organisationLocationId = entity.organisationLocation.mrid || ""
+        dto.organisationId = entity.organisationLocation.organisation_id || ""
+    }
 
-    // organisationPerson
-    dto.organisationPersonId = entity.organisationPerson.mrid || ""
+    // organisationPerson - safe access
+    if (entity.organisationPerson) {
+        dto.organisationPersonId = entity.organisationPerson.mrid || ""
+    }
 
-    // organisationPsr
-    dto.organisationPsrId = entity.organisationPsr.mrid || ""
+    // organisationPsr - safe access
+    if (entity.organisationPsr) {
+        dto.organisationPsrId = entity.organisationPsr.mrid || ""
+    }
 
     return dto
 }

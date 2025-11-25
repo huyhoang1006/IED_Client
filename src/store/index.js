@@ -1,5 +1,56 @@
 import { createStore } from 'vuex'
 
+// Plugin để persist state vào localStorage
+const localStoragePlugin = (store) => {
+    // Khôi phục state từ localStorage khi khởi động
+    const savedState = localStorage.getItem('vuex-state')
+    if (savedState) {
+        try {
+            const parsedState = JSON.parse(savedState)
+            // Restore các state đã lưu
+            if (parsedState.selectedLocation !== undefined) {
+                store.commit('SET_SELECTED_LOCATION', parsedState.selectedLocation || [])
+            }
+            if (parsedState.selectedAsset !== undefined) {
+                store.commit('SET_SELECTED_ASSET', parsedState.selectedAsset || [])
+            }
+            if (parsedState.selectedJob !== undefined) {
+                store.commit('SET_SELECTED_JOB', parsedState.selectedJob || [])
+            }
+            if (parsedState.selectedLocationSync !== undefined) {
+                store.commit('SET_SELECTED_LOCATION_SYNC', parsedState.selectedLocationSync || [])
+            }
+            if (parsedState.selectedAssetSync !== undefined) {
+                store.commit('SET_SELECTED_ASSET_SYNC', parsedState.selectedAssetSync || [])
+            }
+            if (parsedState.selectedJobSync !== undefined) {
+                store.commit('SET_SELECTED_JOB_SYNC', parsedState.selectedJobSync || [])
+            }
+        } catch (e) {
+            console.error('Error restoring state from localStorage:', e)
+            localStorage.removeItem('vuex-state')
+        }
+    }
+
+    // Lưu state vào localStorage mỗi khi có mutation
+    store.subscribe((mutation, state) => {
+        // Chỉ lưu các state cần persist, không lưu sensitive data
+        const stateToSave = {
+            selectedLocation: state.selectedLocation,
+            selectedAsset: state.selectedAsset,
+            selectedJob: state.selectedJob,
+            selectedLocationSync: state.selectedLocationSync,
+            selectedAssetSync: state.selectedAssetSync,
+            selectedJobSync: state.selectedJobSync
+        }
+        try {
+            localStorage.setItem('vuex-state', JSON.stringify(stateToSave))
+        } catch (e) {
+            console.error('Error saving state to localStorage:', e)
+        }
+    })
+}
+
 export default createStore({
     state: {
         isAuthenticated: false,
@@ -48,12 +99,6 @@ export default createStore({
         getServerAddr(state) {
             return state.serverAddr
         },
-        isLoggedIn(state) {
-            return state.isAuthenticated && !!state.user
-        },
-        currentUser(state) {
-            return state.user
-        }
     },
     mutations: {
         SET_USER(state, user) {
@@ -131,30 +176,22 @@ export default createStore({
         setServerAddr({ commit }, serverAddr) {
             commit('SET_SERVER_ADDR', serverAddr)
         },
-        login({ commit }, userData) {
-            commit('SET_USER', userData)
-            commit('SET_IS_AUTHENTICATED', true)
-            
-            // Xử lý token - có thể null hoặc undefined
-            if (userData && userData.token) {
-                commit('SET_TOKEN', userData.token)
-            } else {
-                commit('SET_TOKEN', null)
-            }
-            
-            // Xử lý role
-            if (userData && userData.role) {
-                commit('SET_ROLE', userData.role)
-            } else {
-                commit('SET_ROLE', 'user') // Default role
-            }
-        },
         logout({ commit }) {
             commit('SET_USER', null)
             commit('SET_IS_AUTHENTICATED', false)
             commit('SET_TOKEN', null)
             commit('SET_ROLE', null)
+            // Clear selected items khi logout
+            commit('SET_SELECTED_LOCATION', [])
+            commit('SET_SELECTED_ASSET', [])
+            commit('SET_SELECTED_JOB', [])
+            commit('SET_SELECTED_LOCATION_SYNC', [])
+            commit('SET_SELECTED_ASSET_SYNC', [])
+            commit('SET_SELECTED_JOB_SYNC', [])
+            // Clear persisted state
+            localStorage.removeItem('vuex-state')
         }
     },
-    modules: {}
+    modules: {},
+    plugins: [localStoragePlugin]
 })

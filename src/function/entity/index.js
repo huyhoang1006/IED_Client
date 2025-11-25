@@ -7,17 +7,14 @@ const organisationLocationFunc = {} // Placeholder
 const personSubstationFunc = {} // Placeholder
 // import * as userFunc from './user/index.js' // Module has dependency issues
 const userFunc = {} // Placeholder
-// import * as userIdentifiedObjectFunc from './userIdentifiedObject/index.js' // Module not found
-const userIdentifiedObjectFunc = {} // Placeholder
+import * as userIdentifiedObjectFunc from './userIdentifiedObject/index.js'
 import * as substationEntityFunc from './substation/index.js'
 // import * as organisationPersonFunc from './organisationPerson/index.js' // Module not found
 const organisationPersonFunc = {} // Placeholder
 // import * as organisationPsrFunc from './organisationPsr/index.js' // Module not found
 const organisationPsrFunc = {} // Placeholder
-// import * as geoMapFunc from './geoMap/index.js' // Module not found
-const geoMapFunc = {} // Placeholder
-// import * as parentOrganizationEntityFunc from './parentOrganisation/index.js' // Module not found
-const parentOrganizationEntityFunc = {} // Placeholder
+import * as geoMapFunc from './geoMap/index.js'
+import * as parentOrganizationEntityFunc from './parentOrganisation/index.js'
 import * as voltageLevelEntityFunc from './voltage/index.js'
 import * as bayEntityFunc from './bay/index.js'
 // import * as surgeArresterEntityFunc from './surgeArrester/index.js' // Module not found

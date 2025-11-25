@@ -61,8 +61,10 @@
                 </div>
             </div>
         </div>
-        <el-dialog :visible.sync="openRelocateSetting" width="800px">
-            <span slot="title" style="color: #012596;"><i class="fa-solid fa-gear"></i> Select a location</span>
+        <el-dialog v-model="openRelocateSetting" width="800px">
+            <template #title>
+                <span style="color: #012596;"><i class="fa-solid fa-gear"></i> Select a location</span>
+            </template>
             <div >
                 <div style="display: flex; width: 100%; height:100%; border-bottom: 5px solid silver;">
                     <div style="border-right: 1px solid white; width: 50%;">
@@ -145,13 +147,15 @@
                     </div>
                 </div>
             </div>
-            <span slot="footer" class="dialog-footer">
+            <template #footer>
                 <el-button size="small" type="primary"  @click="confirmRelocate()">Save</el-button>
                 <el-button size="small" @click="cancelRelocate()">Cancel</el-button>
-            </span>
+            </template>
         </el-dialog>
-        <el-dialog :visible.sync="historyShow" width="800px">
-            <span slot="title" style="color: #012596;"><i class="fa-solid fa-clock-rotate-left"></i> Relocated history</span>
+        <el-dialog v-model="historyShow" width="800px">
+            <template #title>
+                <span style="color: #012596;"><i class="fa-solid fa-clock-rotate-left"></i> Relocated history</span>
+            </template>
             <div>
                 <table class="table-strip-input-data" style="width: 100%">
                     <thead>
@@ -188,9 +192,9 @@
                     </tbody>
                 </table>
             </div>
-            <span slot="footer" class="dialog-footer">
+            <template #footer>
                 <el-button size="small" @click="closeHistory()" type="primary">Close</el-button>
-            </span>
+            </template>
         </el-dialog>
         <ul id="right-click-menu" tabindex="-1" v-if="this.openImport" :style="{top: this.top, left: this.left}">
             <li @click="onOpenImport11">Import 1 pha 1 cap</li>
