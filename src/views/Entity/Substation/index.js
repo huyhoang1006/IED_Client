@@ -8,13 +8,14 @@ import TelephoneNumber from "../../Cim/TelephoneNumber/index.js"
 import Person from "../../Cim/Person/index.js"
 import PersonRole from "../../Cim/PersonRole/index.js"
 import User from "../../Entity/User/index.js"
-import PersonSubstation from "../../Entity/PersonSubstation/index.js" 
+import PersonSubstation from "../../Entity/PersonSubstation/index.js"
 import Attachment from "../../Entity/Attachment/index.js"
 import UserIdentifiedObject from "../../Entity/UserIdentifiedObject/index.js"
-import OrganisationLocation from "../../Entity/OrganisationLocation/index.js"
+import OrganisationLocation from "../OrganisationLocation/index.js"
 import PsrType from "../../Cim/PsrType/index.js"
 import OrganisationPerson from "../../Entity/OrganisationPerson/index.js"
-import OrganisationPsr from "../../Entity/OrganisationPsr/index.js"   
+import OrganisationPsr from "../../Entity/OrganisationPsr/index.js"
+ 
 
 class SubstationEntity {
     constructor() {

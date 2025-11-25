@@ -79,6 +79,25 @@ export const getPersonSubstationsBySubstationId = (substationId) => {
     })
 }
 
+// Lấy Person-Substation đầu tiên theo substation_id (alias cho getPersonSubstationsBySubstationId)
+export const getPersonSubstationBySubstationId = (substationId) => {
+    return new Promise((resolve, reject) => {
+        db.get("SELECT * FROM person_substation WHERE substation_id = ? LIMIT 1", [substationId], (err, row) => {
+            if (err) {
+                return reject({ success: false, err, message: 'Get person substation failed' })
+            }
+            if (!row) {
+                return resolve({ success: false, data: null, message: 'Person substation not found' })
+            }
+            return resolve({
+                success: true,
+                data: row,
+                message: 'Get person substation completed'
+            })
+        })
+    })
+}
+
 // Lấy danh sách Person-Substation theo person_id
 export const getPersonSubstationsByPersonId = (personId) => {
     return new Promise((resolve, reject) => {

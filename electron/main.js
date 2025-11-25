@@ -961,57 +961,15 @@ app.on('window-all-closed', () => {
     process.exit(0) // Force exit process
 })
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
 app.on('ready', async () => {
     if (isDevelopment && !process.env.IS_TEST) {
-        // Install Vue Devtools - removed for Vite compatibility
-        // try {
-        //     await installExtension(VUEJS_DEVTOOLS)
-        // } catch (e) {
-        //     console.error('Vue Devtools failed to install:', e.toString())
-        // }
+
     }
     await updateModule.updateManufacturer()
     await updateModule.updateOwnerTable()
     await updateModule.updateLocationTable()
     await updateModule.insertTestType()
     await updateModule.active()
-
-    // insertSubstation handler moved to ipcmain/cim/substation/index.js
-
-    // Configuration Events handler
-    ipcMain.handle('getAllConfigurationEvents', async function (event) {
-        try {
-            // Return mock data for now - you can implement actual logic later
-            return {
-                success: true,
-                data: [
-                    {
-                        id: 1,
-                        event: 'Database initialized',
-                        timestamp: new Date().toISOString(),
-                        level: 'info'
-                    },
-                    {
-                        id: 2,
-                        event: 'Application started',
-                        timestamp: new Date().toISOString(),
-                        level: 'info'
-                    }
-                ]
-            }
-        } catch (error) {
-            return {
-                success: false,
-                message: error.message,
-                data: []
-            }
-        }
-    })
-
-    // Parent Organization handler - moved to src/ipcmain/cim/parentOrganization/index.js
 
     ipcMain.handle('login', async function (event, user) {
         try {
@@ -2877,24 +2835,7 @@ app.on('ready', async () => {
             }
         }),
         // Location APIs - moved to src/ipcmain/cim/location/index.js
-        // Person APIs
-        ipcMain.handle('getPersonByOrganisationId', async function (event, organisationId) {
-            try {
-                // Check if table exists first
-                const tableExists = db.all(`SELECT name FROM sqlite_master WHERE type='table' AND name='person'`)
-                if (tableExists.length === 0) {
-                    return {success: true, data: []}
-                }
-
-                // Try to get all persons without any specific columns
-                const result = db.all(`SELECT * FROM person`)
-                return {success: true, data: safeSerialize(result)}
-            } catch (error) {
-                console.error('Error getting person by organisation id:', error)
-                // Return empty array instead of crashing
-                return {success: true, data: []}
-            }
-        }),
+        // Person APIs - moved to src/ipcmain/cim/person/index.js
         ipcMain.on('closeApp', () => {
             console.log('App closing...')
             try {

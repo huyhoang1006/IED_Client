@@ -20,5 +20,5 @@ import * as ipcEntity from './entity/index.js'
 
 // export {ipcCircuit, ipcJobCircuit, ipcTransformer, ipcCurrentTrans, ipcVoltageTrans, ipcDisconnector, ipcSurgeArrester} // Modules not found
 // export {ipcPowerCable, ipcUploadCustom, ipcJobCurrent, ipcJobVoltage, ipcJobDisconnector, ipcJobSurge, ipcJobPower, ipcJobTransformer} // Modules not found
-// export {ipcUpdateManu, ipcOwner, ipcCim, ipcEntity} // ipcUpdateManu not found
+// export {ipcUpdateManu, ipcOwner, ipcCim, ipcEntity}
 export {ipcOwner, ipcCim, ipcEntity}

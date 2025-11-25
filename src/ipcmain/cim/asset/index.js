@@ -2,6 +2,7 @@
 import {ipcMain} from 'electron'
 import {cimFunc} from '../../../function/index.js'
 
+// Get Asset by mrid
 export const getAssetByMrid = () => {
     ipcMain.handle('getAssetByMrid', async function (event, id) {
         try {
@@ -29,6 +30,7 @@ export const getAssetByMrid = () => {
     })
 }
 
+// Get Asset by psrId and kind
 export const getAssetByPsrIdAndKind = () => {
     ipcMain.handle('getAssetByPsrIdAndKind', async function (event, psrId, kind) {
         try {
@@ -56,6 +58,7 @@ export const getAssetByPsrIdAndKind = () => {
     })
 }
 
+// Active Asset
 export const active = () => {
     getAssetByMrid()
     getAssetByPsrIdAndKind()

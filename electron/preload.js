@@ -1,192 +1,137 @@
 const { contextBridge, ipcRenderer } = require('electron')
 
-// Expose protected methods that allow the renderer process to use
-// the ipcRenderer without exposing the entire object
+// Import all preload modules
+// Note: Since we're using CommonJS, we need to use require for ES modules
+// This file will be built/compiled to merge all preload modules
+
+// For now, we'll directly define the APIs here
+// In production, this should be built from src/preload modules
+
 contextBridge.exposeInMainWorld('electronAPI', {
-  // Database APIs
-  db: {
-    all: (sql, params) => ipcRenderer.invoke('db:all', sql, params),
-    get: (sql, params) => ipcRenderer.invoke('db:get', sql, params),
-    run: (sql, params) => ipcRenderer.invoke('db:run', sql, params)
-  },
+    // User APIs
+    login: (user) => ipcRenderer.invoke('login', user),
+    signup: (user) => ipcRenderer.invoke('signup', user),
+    changePass: (user) => ipcRenderer.invoke('changePass', user),
+    getAllUser: () => ipcRenderer.invoke('getAllUser'),
+    editUserInfo: (user) => ipcRenderer.invoke('editUserInfo', user),
+    addUser: (user) => ipcRenderer.invoke('addUser', user),
+    deleteUser: (id) => ipcRenderer.invoke('deleteUser', id),
 
-  // Manufacturer APIs
-  getManufacturerByType: (type) => ipcRenderer.invoke('getManufacturerByType', type),
-  getManufacturerByTypeAndName: (type, name) => ipcRenderer.invoke('getManufacturerByTypeAndName', type, name),
-  getManufacturerByName: (name) => ipcRenderer.invoke('getManufacturerByName', name),
-  insertManufacturer: (name, type) => ipcRenderer.invoke('insertManufacturer', name, type),
-  updateManufacturerByName: (name, data) => ipcRenderer.invoke('updateManufacturerByName', name, data),
-  updateManufacturerById: (id, data) => ipcRenderer.invoke('updateManufacturerById', id, data),
-  deleteManufacturerByName: (name) => ipcRenderer.invoke('deleteManufacturerByName', name),
-  deleteManufacturerById: (id) => ipcRenderer.invoke('deleteManufacturerById', id),
+    // Configuration Event APIs
+    getConfigurationEventByMrid: (mrid) => ipcRenderer.invoke('getConfigurationEventByMrid', mrid),
+    getAllConfigurationEvents: () => ipcRenderer.invoke('getAllConfigurationEvents'),
+    insertConfigurationEvent: (data) => ipcRenderer.invoke('insertConfigurationEvent', data),
+    updateConfigurationEventByMrid: (mrid, data) => ipcRenderer.invoke('updateConfigurationEventByMrid', mrid, data),
+    deleteConfigurationEventByMrid: (mrid) => ipcRenderer.invoke('deleteConfigurationEventByMrid', mrid),
 
-  // Owner APIs
-  getOwnerByName: (name) => ipcRenderer.invoke('getOwnerByName', name),
-  getOwnerByPhone: (phone) => ipcRenderer.invoke('getOwnerByPhone', phone),
-  getOwnerById: (id) => ipcRenderer.invoke('getOwnerById', id),
-  getOwnerByUserId: (user_id) => ipcRenderer.invoke('getOwnerByUserId', user_id),
-  getOwnerByRefId: (ref_id) => ipcRenderer.invoke('getOwnerByRefId', ref_id),
-  insertOwner: (data) => ipcRenderer.invoke('insertOwner', data),
-  updateOwnerById: (id, data) => ipcRenderer.invoke('updateOwnerById', id, data),
-  deleteOwnerById: (id) => ipcRenderer.invoke('deleteOwnerById', id),
-  deleteOwner: (ids) => ipcRenderer.invoke('deleteOwner', ids),
+    // Parent Organization APIs
+    insertParentOrganization: (data) => ipcRenderer.invoke('insertParentOrganization', data),
+    getParentOrganizationByMrid: (mrid) => ipcRenderer.invoke('getParentOrganizationByMrid', mrid),
+    getParentOrganizationByParentMrid: (mrid) => ipcRenderer.invoke('getParentOrganizationByParentMrid', mrid),
+    updateParentOrganizationByMrid: (mrid, data) => ipcRenderer.invoke('updateParentOrganizationByMrid', mrid, data),
+    deleteParentOrganizationByMrid: (mrid) => ipcRenderer.invoke('deleteParentOrganizationByMrid', mrid),
 
-  // Asset APIs
-  getAssetByMrid: (mrid) => ipcRenderer.invoke('getAssetByMrid', mrid),
-  getAllAssets: () => ipcRenderer.invoke('getAllAssets'),
-  insertAsset: (data) => ipcRenderer.invoke('insertAsset', data),
-  updateAsset: (mrid, data) => ipcRenderer.invoke('updateAsset', mrid, data),
-  deleteAsset: (mrid) => ipcRenderer.invoke('deleteAsset', mrid),
+    // Parent Organization Entity APIs
+    insertParentOrganizationEntity: (data) => ipcRenderer.invoke('insertParentOrganizationEntity', data),
+    updateParentOrganizationEntity: (data) => ipcRenderer.invoke('updateParentOrganizationEntity', data),
+    getOrganisationEntityByMrid: (id) => ipcRenderer.invoke('getOrganisationEntityByMrid', id),
+    deleteParentOrganizationEntity: (data) => ipcRenderer.invoke('deleteParentOrganizationEntity', data),
+    deleteParentOrganizationEntityByMrid: (data) => ipcRenderer.invoke('deleteParentOrganizationEntity', data),
 
-  // User APIs
-  getUserByUsername: (username) => ipcRenderer.invoke('getUserByUsername', username),
-  getUserById: (id) => ipcRenderer.invoke('getUserById', id),
-  getAllUsers: () => ipcRenderer.invoke('getAllUsers'),
-  insertUser: (data) => ipcRenderer.invoke('insertUser', data),
-  updateUser: (id, data) => ipcRenderer.invoke('updateUser', id, data),
-  deleteUser: (id) => ipcRenderer.invoke('deleteUser', id),
+    // Substation APIs
+    getSubstationByMrid: (mrid) => ipcRenderer.invoke('getSubstationByMrid', mrid),
+    getSubstationsInOrganisationForUser: (mrid, user_id) => ipcRenderer.invoke('getSubstationsInOrganisationForUser', mrid, user_id),
+    insertSubstation: (data) => ipcRenderer.invoke('insertSubstation', data),
+    updateSubstationByMrid: (mrid, data) => ipcRenderer.invoke('updateSubstationByMrid', mrid, data),
+    deleteSubstationByMrid: (mrid) => ipcRenderer.invoke('deleteSubstationByMrid', mrid),
 
-  // Person APIs
-  getPersonByOrganisationId: (organisationId) => ipcRenderer.invoke('getPersonByOrganisationId', organisationId),
+    // Substation Entity APIs
+    insertSubstationEntity: (entity) => ipcRenderer.invoke('insertSubstationEntity', entity),
+    getSubstationEntityByMrid: (mrid) => ipcRenderer.invoke('getSubstationEntityByMrid', mrid),
+    updateSubstationEntityByMrid: (mrid, entity) => ipcRenderer.invoke('updateSubstationEntityByMrid', mrid, entity),
+    deleteSubstationEntityByMrid: (mrid) => ipcRenderer.invoke('deleteSubstationEntityByMrid', mrid),
 
-  // Location APIs
-  getLocationByMrid: (mrid) => ipcRenderer.invoke('getLocationByMrid', mrid),
-  getLocationByOrganisationId: (organisationId) => ipcRenderer.invoke('getLocationByOrganisationId', organisationId),
-  getAllLocations: () => ipcRenderer.invoke('getAllLocations'),
-  insertLocation: (data) => ipcRenderer.invoke('insertLocation', data),
-  updateLocation: (mrid, data) => ipcRenderer.invoke('updateLocation', mrid, data),
-  deleteLocation: (mrid) => ipcRenderer.invoke('deleteLocation', mrid),
+    // Person APIs
+    getPersonByOrganisationId: (organisationId) => ipcRenderer.invoke('getPersonByOrganisationId', organisationId),
+    getPersonByMrid: (mrid) => ipcRenderer.invoke('getPersonByMrid', mrid),
+    insertPerson: (data) => ipcRenderer.invoke('insertPerson', data),
+    updatePersonByMrid: (mrid, data) => ipcRenderer.invoke('updatePersonByMrid', mrid, data),
+    deletePersonByMrid: (mrid) => ipcRenderer.invoke('deletePersonByMrid', mrid),
 
-  // Organisation APIs
-  getOrganisationByMrid: (mrid) => ipcRenderer.invoke('getOrganisationByMrid', mrid),
-  getOrganisationEntityByMrid: (mrid) => ipcRenderer.invoke('getOrganisationEntityByMrid', mrid),
-  getParentOrganizationByMrid: (mrid) => ipcRenderer.invoke('getParentOrganizationByMrid', mrid),
-  getParentOrganizationByParentMrid: (parentMrid) => ipcRenderer.invoke('getParentOrganizationByParentMrid', parentMrid),
-  getSubstationsInOrganisationForUser: (organisationMrid, userId) => ipcRenderer.invoke('getSubstationsInOrganisationForUser', organisationMrid, userId),
-  getAllOrganisations: () => ipcRenderer.invoke('getAllOrganisations'),
-  insertOrganisation: (data) => ipcRenderer.invoke('insertOrganisation', data),
-  insertParentOrganizationEntity: (data) => ipcRenderer.invoke('insertParentOrganizationEntity', data),
-  updateOrganisation: (mrid, data) => ipcRenderer.invoke('updateOrganisation', mrid, data),
-  deleteOrganisation: (mrid) => ipcRenderer.invoke('deleteOrganisation', mrid),
+    // Person Role APIs
+    getPersonRoleByPersonId: (personId) => ipcRenderer.invoke('getPersonRoleByPersonId', personId),
 
-  // Job APIs
-  getJobByMrid: (mrid) => ipcRenderer.invoke('getJobByMrid', mrid),
-  getAllJobs: () => ipcRenderer.invoke('getAllJobs'),
-  insertJob: (data) => ipcRenderer.invoke('insertJob', data),
-  updateJob: (mrid, data) => ipcRenderer.invoke('updateJob', mrid, data),
-  deleteJob: (mrid) => ipcRenderer.invoke('deleteJob', mrid),
+    // Location APIs
+    getLocationByOrganisationId: (organisationId) => ipcRenderer.invoke('getLocationByOrganisationId', organisationId),
+    getLocationByPowerSystemResourceMrid: (mrid) => ipcRenderer.invoke('getLocationByPowerSystemResourceMrid', mrid),
+    getLocationDetailByMrid: (mrid) => ipcRenderer.invoke('getLocationDetailByMrid', mrid),
 
-  // Test APIs
-  getTestByMrid: (mrid) => ipcRenderer.invoke('getTestByMrid', mrid),
-  getAllTests: () => ipcRenderer.invoke('getAllTests'),
-  insertTest: (data) => ipcRenderer.invoke('insertTest', data),
-  updateTest: (mrid, data) => ipcRenderer.invoke('updateTest', mrid, data),
-  deleteTest: (mrid) => ipcRenderer.invoke('deleteTest', mrid),
+    // Street Address APIs
+    getStreetAddressByMrid: (mrid) => ipcRenderer.invoke('getStreetAddressByMrid', mrid),
 
-  // Circuit Breaker APIs
-  getCircuitBreakerByMrid: (mrid) => ipcRenderer.invoke('getCircuitBreakerByMrid', mrid),
-  getAllCircuitBreakers: () => ipcRenderer.invoke('getAllCircuitBreakers'),
-  insertCircuitBreaker: (data) => ipcRenderer.invoke('insertCircuitBreaker', data),
-  updateCircuitBreaker: (mrid, data) => ipcRenderer.invoke('updateCircuitBreaker', mrid, data),
-  deleteCircuitBreaker: (mrid) => ipcRenderer.invoke('deleteCircuitBreaker', mrid),
+    // Street Detail APIs
+    getStreetDetailByLocationId: (locationId) => ipcRenderer.invoke('getStreetDetailByLocationId', locationId),
+    getStreetDetailById: (id) => ipcRenderer.invoke('getStreetDetailById', id),
 
-  // Current Transformer APIs
-  getCurrentTransformerByMrid: (mrid) => ipcRenderer.invoke('getCurrentTransformerByMrid', mrid),
-  getAllCurrentTransformers: () => ipcRenderer.invoke('getAllCurrentTransformers'),
-  insertCurrentTransformer: (data) => ipcRenderer.invoke('insertCurrentTransformer', data),
-  updateCurrentTransformer: (mrid, data) => ipcRenderer.invoke('updateCurrentTransformer', mrid, data),
-  deleteCurrentTransformer: (mrid) => ipcRenderer.invoke('deleteCurrentTransformer', mrid),
+    // Town Detail APIs
+    getTownDetailByLocationId: (locationId) => ipcRenderer.invoke('getTownDetailByLocationId', locationId),
 
-  // Voltage Transformer APIs
-  getVoltageTransformerByMrid: (mrid) => ipcRenderer.invoke('getVoltageTransformerByMrid', mrid),
-  getAllVoltageTransformers: () => ipcRenderer.invoke('getAllVoltageTransformers'),
-  insertVoltageTransformer: (data) => ipcRenderer.invoke('insertVoltageTransformer', data),
-  updateVoltageTransformer: (mrid, data) => ipcRenderer.invoke('updateVoltageTransformer', mrid, data),
-  deleteVoltageTransformer: (mrid) => ipcRenderer.invoke('deleteVoltageTransformer', mrid),
+    // Electronic Address APIs
+    getElectronicAddressByMrid: (mrid) => ipcRenderer.invoke('getElectronicAddressByMrid', mrid),
 
-  // Disconnector APIs
-  getDisconnectorByMrid: (mrid) => ipcRenderer.invoke('getDisconnectorByMrid', mrid),
-  getAllDisconnectors: () => ipcRenderer.invoke('getAllDisconnectors'),
-  insertDisconnector: (data) => ipcRenderer.invoke('insertDisconnector', data),
-  updateDisconnector: (mrid, data) => ipcRenderer.invoke('updateDisconnector', mrid, data),
-  deleteDisconnector: (mrid) => ipcRenderer.invoke('deleteDisconnector', mrid),
+    // Telephone Number APIs
+    getTelephoneNumberByMrid: (mrid) => ipcRenderer.invoke('getTelephoneNumberByMrid', mrid),
 
-  // Surge Arrester APIs
-  getSurgeArresterByMrid: (mrid) => ipcRenderer.invoke('getSurgeArresterByMrid', mrid),
-  getAllSurgeArresters: () => ipcRenderer.invoke('getAllSurgeArresters'),
-  insertSurgeArrester: (data) => ipcRenderer.invoke('insertSurgeArrester', data),
-  updateSurgeArrester: (mrid, data) => ipcRenderer.invoke('updateSurgeArrester', mrid, data),
-  deleteSurgeArrester: (mrid) => ipcRenderer.invoke('deleteSurgeArrester', mrid),
+    // Position Point APIs
+    getPositionPointByLocationId: (locationId) => ipcRenderer.invoke('getPositionPointByLocationId', locationId),
 
-  // Power Cable APIs
-  getPowerCableByMrid: (mrid) => ipcRenderer.invoke('getPowerCableByMrid', mrid),
-  getAllPowerCables: () => ipcRenderer.invoke('getAllPowerCables'),
-  insertPowerCable: (data) => ipcRenderer.invoke('insertPowerCable', data),
-  updatePowerCable: (mrid, data) => ipcRenderer.invoke('updatePowerCable', mrid, data),
-  deletePowerCable: (mrid) => ipcRenderer.invoke('deletePowerCable', mrid),
+    // Voltage Level APIs
+    getVoltageLevelBySubstationId: (substationId) => ipcRenderer.invoke('getVoltageLevelBySubstationId', substationId),
+    getVoltageLevelByMrid: (mrid) => ipcRenderer.invoke('getVoltageLevelByMrid', mrid),
+    getVoltageLevelEntityByMrid: (mrid) => ipcRenderer.invoke('getVoltageLevelEntityByMrid', mrid),
+    insertVoltageLevelEntity: (data) => ipcRenderer.invoke('insertVoltageLevelEntity', data),
+    deleteVoltageLevelEntityByMrid: (data) => ipcRenderer.invoke('deleteVoltageLevelEntityByMrid', data),
 
-  // Transformer APIs
-  getTransformerByMrid: (mrid) => ipcRenderer.invoke('getTransformerByMrid', mrid),
-  getAllTransformers: () => ipcRenderer.invoke('getAllTransformers'),
-  insertTransformer: (data) => ipcRenderer.invoke('insertTransformer', data),
-  updateTransformer: (mrid, data) => ipcRenderer.invoke('updateTransformer', mrid, data),
-  deleteTransformer: (mrid) => ipcRenderer.invoke('deleteTransformer', mrid),
+    // Bay APIs
+    getBayByVoltageBySubstationId: (voltageLevelId, substationId) => ipcRenderer.invoke('getBayByVoltageBySubstationId', voltageLevelId, substationId),
+    insertBayEntity: (data) => ipcRenderer.invoke('insertBayEntity', data),
+    getBayEntityByMrid: (mrid) => ipcRenderer.invoke('getBayEntityByMrid', mrid),
+    deleteBayEntityByMrid: (data) => ipcRenderer.invoke('deleteBayEntityByMrid', data),
 
-  // Configuration Event APIs
-  getAllConfigurationEvents: () => ipcRenderer.invoke('getAllConfigurationEvents'),
+    // Asset APIs
+    getAssetByPsrIdAndKind: (psrId, kind) => ipcRenderer.invoke('getAssetByPsrIdAndKind', psrId, kind),
+    getAssetByMrid: (mrid) => ipcRenderer.invoke('getAssetByMrid', mrid),
+    getBushingByPsrId: (psrId) => ipcRenderer.invoke('getBushingByPsrId', psrId),
 
-  // System APIs
-  platform: process.platform,
-  versions: process.versions,
+    // Surge Arrester APIs
+    getSurgeArresterByMrid: (mrid) => ipcRenderer.invoke('getSurgeArresterByMrid', mrid),
+    getSurgeArresterEntityByMrid: (mrid) => ipcRenderer.invoke('getSurgeArresterEntityByMrid', mrid),
+    deleteSurgeArresterEntity: (data) => ipcRenderer.invoke('deleteSurgeArresterEntity', data),
 
-  // Window control APIs
-  closeApp: () => ipcRenderer.send('closeApp'),
-  minimizeApp: () => ipcRenderer.send('minimizeApp'),
-  maximizeApp: () => ipcRenderer.send('maximizeApp'),
-  dropDownApp: () => ipcRenderer.send('dropDownApp'),
-  
-  // Alternative window control APIs using invoke 
-  closeWindow: () => ipcRenderer.invoke('window:close'),
-  minimizeWindow: () => ipcRenderer.invoke('window:minimize'),
-  maximizeWindow: () => ipcRenderer.invoke('window:maximize'),
-  dropDownWindow: () => ipcRenderer.invoke('window:dropDown'),
-  
-  // Configuration Events API
-  getAllConfigurationEvents: () => ipcRenderer.invoke('getAllConfigurationEvents'),
-  
-  // Parent Organization API
-  getParentOrganizationByMrid: (mrid) => ipcRenderer.invoke('getParentOrganizationByMrid', mrid),
-  
-  // Substation Entity APIs
-  insertSubstationEntity: (entity) => ipcRenderer.invoke('insertSubstation', entity),
-  getSubstationEntityByMrid: (mrid) => ipcRenderer.invoke('getSubstationEntityByMrid', mrid),
-  updateSubstationEntityByMrid: (mrid, entity) => ipcRenderer.invoke('updateSubstationEntityByMrid', mrid, entity),
-  deleteSubstationEntityByMrid: (mrid) => ipcRenderer.invoke('deleteSubstationEntityByMrid', mrid),
-  
-  // PowerSystemResource APIs
-  getLocationByPowerSystemResourceMrid: (mrid) => ipcRenderer.invoke('getLocationByPowerSystemResourceMrid', mrid),
-  
-  // VoltageLevel APIs
-  getVoltageLevelBySubstationId: (substationId) => ipcRenderer.invoke('getVoltageLevelBySubstationId', substationId),
-  getVoltageLevelByMrid: (mrid) => ipcRenderer.invoke('getVoltageLevelByMrid', mrid),
-  getVoltageLevelEntityByMrid: (mrid) => ipcRenderer.invoke('getVoltageLevelByMrid', mrid), // Alias for entity-level access
-  insertVoltageLevel: (data) => ipcRenderer.invoke('insertVoltageLevel', data),
-  insertVoltageLevelEntity: (data) => ipcRenderer.invoke('insertVoltageLevelEntity', data),
-  updateVoltageLevelByMrid: (mrid, data) => ipcRenderer.invoke('updateVoltageLevelByMrid', mrid, data),
-  deleteVoltageLevelByMrid: (mrid) => ipcRenderer.invoke('deleteVoltageLevelByMrid', mrid),
-  deleteVoltageLevelEntityByMrid: (entity) => ipcRenderer.invoke('deleteVoltageLevelByMrid', entity?.data?.mrid || entity?.mrid || entity?.voltageLevel?.mrid || entity),
-  
-  // Bay APIs
-  getBayByVoltageBySubstationId: (voltageLevel, substationId) => ipcRenderer.invoke('getBayByVoltageBySubstationId', voltageLevel, substationId),
-  insertBayEntity: (data) => ipcRenderer.invoke('insertBayEntity', data),
-  getBayEntityByMrid: (mrid) => ipcRenderer.invoke('getBayEntityByMrid', mrid),
-  deleteBayEntityByMrid: (data) => ipcRenderer.invoke('deleteBayEntityByMrid', data),
-  
-  // Asset APIs
-  getSurgeArresterByPsrId: (psrId) => ipcRenderer.invoke('getSurgeArresterByPsrId', psrId),
-  getBushingByPsrId: (psrId) => ipcRenderer.invoke('getBushingByPsrId', psrId),
-  getAssetByPsrIdAndKind: (psrId, kind) => ipcRenderer.invoke('getAssetByPsrIdAndKind', psrId, kind),
-  
-  // Authentication (login) via ipc
-  login: (user) => ipcRenderer.invoke('login', user)
+    // Power Cable APIs
+    getPowerCableEntityByMrid: (mrid, parentId) => ipcRenderer.invoke('getPowerCableEntityByMrid', mrid, parentId),
+    deletePowerCableEntity: (data) => ipcRenderer.invoke('deletePowerCableEntity', data),
+
+    // Disconnector APIs
+    getDisconnectorEntityByMrid: (mrid, parentId) => ipcRenderer.invoke('getDisconnectorEntityByMrid', mrid, parentId),
+    deleteDisconnectorEntity: (data) => ipcRenderer.invoke('deleteDisconnectorEntity', data),
+
+    // Voltage Transformer APIs
+    getVoltageTransformerEntityByMrid: (mrid, parentId) => ipcRenderer.invoke('getVoltageTransformerEntityByMrid', mrid, parentId),
+    deleteVoltageTransformerEntity: (data) => ipcRenderer.invoke('deleteVoltageTransformerEntity', data),
+
+    // Product Asset Model APIs
+    getProductAssetModelByMrid: (mrid) => ipcRenderer.invoke('getProductAssetModelByMrid', mrid),
+
+    // Old Work APIs
+    getOldWorkByAssetId: (assetId) => ipcRenderer.invoke('getOldWorkByAssetId', assetId),
+
+    // Test Type APIs
+    getAllTestTypeSurgeArrester: () => ipcRenderer.invoke('getAllTestTypeSurgeArrester'),
+
+    // Window control APIs
+    closeApp: () => ipcRenderer.send('closeApp'),
+    minimizeApp: () => ipcRenderer.send('minimizeApp'),
+    maximizeApp: () => ipcRenderer.send('maximizeApp'),
 })
+

@@ -21,6 +21,60 @@
                 <i style="margin-left: 10px;" class="fa-solid fa-angle-right"></i>
             </div>
         </div>
+        <div class="toolbar-setting">
+            <div>
+                <el-dropdown trigger="click">
+                    <span class="icon-wrapper">
+                        <i title="Add" style="font-size: 12px;" class="fa-solid fa-square-plus"></i>
+                    </span>
+
+                    <el-dropdown-menu slot="dropdown">
+                        <el-dropdown-item>
+                            <icon size="12px" folderType="building" badgeColor="146EBE"></icon> add Organisation
+                        </el-dropdown-item>
+                        <el-dropdown-item>
+                            <icon size="12px" folderType="voltageLevel" badgeColor="146EBE"></icon> add Voltage Level
+                        </el-dropdown-item>
+                        <el-dropdown-item>
+                            <icon size="12px" folderType="location" badgeColor="146EBE"></icon> add Substation
+                        </el-dropdown-item>
+                        <el-dropdown-item>
+                            <icon size="12px" folderType="bay" badgeColor="146EBE"></icon> add Bay
+                        </el-dropdown-item>
+                        <el-dropdown-item>
+                            <icon size="12px" folderType="asset" badgeColor="146EBE"></icon> add Asset
+                        </el-dropdown-item>
+                        <el-dropdown-item>
+                            <icon size="12px" folderType="job" badgeColor="146EBE"></icon> add Job
+                        </el-dropdown-item>
+                    </el-dropdown-menu>
+                </el-dropdown>
+            </div>
+            <div>
+                <i title="Open" style="font-size: 12px;" class="fa-regular fa-folder-open"></i>
+            </div>
+            <div>
+                <i title="Duplicate" style="font-size: 12px;" class="fa-solid fa-clone"></i>
+            </div>
+            <div>
+                <i title="Import" style="font-size: 12px;" class="fa-solid fa-file-import"></i>
+            </div>
+            <div>
+                <i title="Export" style="font-size: 12px;" class="fa-solid fa-file-export"></i>
+            </div>
+            <div v-if="clientSlide">
+                <i title="Upload" style="font-size: 12px;" class="fa-solid fa-upload"></i>
+            </div>
+            <div v-if="!clientSlide">
+                <i title="Download" style="font-size: 12px;" class="fa-solid fa-download"></i>
+            </div>
+            <div>
+                <i title="Delete" style="font-size: 12px;" class="fa-solid fa-trash"></i>
+            </div>
+            <div>
+                <i title="Fmeca" style="font-size: 12px;" class="fa-solid fa-table"></i>
+            </div>
+        </div>
         <!-- Thanh điều hướng có thể kéo rộng/kéo hẹp -->
         <div class="resizable-sidebar">
             <div ref="sidebarClient" v-show="clientSlide" class="sidebar">
@@ -630,6 +684,7 @@ import * as locationApi from '@/api/location.js'
 import spinner from '@/views/Common/Spinner.vue'
 import Tabs from '@/views/Common/Tabs.vue'
 import contextMenu from "@/views/Common/ContextMenu.vue";
+import icon from '@/views/Common/Icon.vue';
 // import * as circuitApi from '@/api/circuit/circuit'
 // import * as currentApi from '@/api/current/current'
 // import * as disconnectorApi from '@/api/disconnector/disconnector'
@@ -654,7 +709,7 @@ import contextMenu from "@/views/Common/ContextMenu.vue";
 // import * as testSurgeApi from '@/api/surge/testSurge'
 // import * as testPowerApi from '@/api/power/testPower'
 
-import Substation from '../LocationInsert/locationLevelView.vue'
+import Substation from '@/views/Substation/index.vue'
 import Organisation from '@/views/Organisation/index.vue'
 import VoltageLevel from '@/views/VoltageLevel/index.vue'
 import Bay from '@/views/Bay/index.vue'
@@ -684,6 +739,7 @@ export default {
         spinner,
         contextMenu,
         Tabs,
+        icon,
         Substation,
         Organisation,
         VoltageLevel,
@@ -713,6 +769,7 @@ export default {
             checkJobType: '',
             testTypeListData: [],
             organisationClientList: [],
+            isLoadingTree: false,
             signSubs: false,
             signOrg: false,
             signVoltageLevel: false,
@@ -862,25 +919,12 @@ export default {
             this.$message.error("Failed to fetch log data.");
         }
     },
-    methods: {
+     methods: {
 
         handleSelectDevice(deviceName) {
             console.log(`Node được chọn:`, this.selectedNodes[0] || 'Không có');
             console.log(`Thiết bị được yêu cầu thêm: ${deviceName}`);
             this.$message.info(`Yêu cầu thêm thiết bị: ${deviceName}`);
-
-            // Dựa vào deviceName, bạn có thể gọi các dialog tương ứng
-            // Ví dụ:
-            // switch (deviceName) {
-            //     case 'RET670':
-            //         // Mở dialog/tab để thêm RET670
-            //         this.showAddTransformer(this.selectedNodes[0]); // Ví dụ gọi lại hàm cũ
-            //         break;
-            //     case 'RET650':
-            //         // Mở dialog/tab để thêm RET650
-            //         break;
-            //     // ... các trường hợp khác
-            // }
         },
 
         // Phương thức mới để xử lý các hành động chung
@@ -898,32 +942,76 @@ export default {
         addOrganisationToTree(savedNode) {
             // Find parent node and add new organisation as child
             if (savedNode.parentId) {
-                const parentNode = this.findNodeById(savedNode.parentId, this.organisationClientList);
+                // Try to find parent node by mrid or id
+                let parentNode = this.findNodeById(savedNode.parentId, this.organisationClientList);
+                // If not found and parentId is ROOT, try to use first node as root
+                const ROOT_ID = this.$constant?.ROOT || '00000000-0000-0000-0000-000000000000';
+                if (!parentNode && savedNode.parentId === ROOT_ID && this.organisationClientList.length > 0) {
+                    const firstNode = this.organisationClientList[0];
+                    if (firstNode && (firstNode.mrid === ROOT_ID || firstNode.id === ROOT_ID || firstNode.mode === 'organisation')) {
+                        parentNode = firstNode;
+                    }
+                }
                 if (parentNode) {
                     const existingChildren = Array.isArray(parentNode.children) ? parentNode.children : [];
-                    const normalizedNode = {
-                        id: savedNode.id || savedNode.mrid,
-                        mrid: savedNode.mrid,
-                        name: savedNode.name || '',
-                        mode: savedNode.mode || 'organisation',
-                        parentId: savedNode.parentId,
-                        parentName: savedNode.parentName,
-                        parentArr: savedNode.parentArr || []
-                    };
-                    // Replace array to guarantee reactivity
-                    parentNode.children = [...existingChildren, normalizedNode];
+                    // Check if node already exists to avoid duplicates
+                    const exists = existingChildren.some(child => child.mrid === savedNode.mrid || child.id === savedNode.mrid);
+                    if (!exists) {
+                        const normalizedNode = {
+                            id: savedNode.id || savedNode.mrid,
+                            mrid: savedNode.mrid,
+                            name: savedNode.name || '',
+                            mode: savedNode.mode || 'organisation',
+                            parentId: savedNode.parentId,
+                            parentName: savedNode.parentName || parentNode.name || '',
+                            parentArr: savedNode.parentArr || (parentNode.parentArr ? [...parentNode.parentArr, { mrid: parentNode.mrid, parent: parentNode.name }] : [])
+                        };
+                        // Replace array to guarantee reactivity
+                        parentNode.children = [...existingChildren, normalizedNode];
+                    }
                 } else {
-                    this.organisationClientList.push(savedNode);
+                    // Parent not found, try to find root node if parentId is ROOT
+                    const ROOT_ID = this.$constant?.ROOT || '00000000-0000-0000-0000-000000000000';
+                    if (savedNode.parentId === ROOT_ID && this.organisationClientList.length > 0) {
+                        // Try to use first node as root (root is always first in the list)
+                        const rootNode = this.organisationClientList[0];
+                        // Check if this is the root node by comparing mrid/id with ROOT_ID, or if it's the first node (which should be root)
+                        if (rootNode && (rootNode.mrid === ROOT_ID || rootNode.id === ROOT_ID || (this.organisationClientList.length === 1 && rootNode.mode === 'organisation'))) {
+                            // Initialize children array if it doesn't exist
+                            if (!Array.isArray(rootNode.children)) {
+                                rootNode.children = [];
+                            }
+                            const existingChildren = rootNode.children;
+                            const normalizedNode = {
+                                id: savedNode.id || savedNode.mrid,
+                                mrid: savedNode.mrid,
+                                name: savedNode.name || '',
+                                mode: savedNode.mode || 'organisation',
+                                parentId: savedNode.parentId,
+                                parentName: savedNode.parentName || rootNode.name || '',
+                                parentArr: savedNode.parentArr || (rootNode.parentArr ? [...rootNode.parentArr] : [{ mrid: rootNode.mrid || rootNode.id, parent: rootNode.name || 'Root' }])
+                            };
+                            // Check if node already exists to avoid duplicates
+                            const exists = existingChildren.some(child => child.mrid === savedNode.mrid);
+                            if (!exists) {
+                                rootNode.children = [...existingChildren, normalizedNode];
+                            }
+                        } else {
+                            this.organisationClientList.push(savedNode);
+                        }
+                    } else {
+                        this.organisationClientList.push(savedNode);
+                    }
                 }
             } else {
-                // Add to root level
+                // Add to root level (no parent)
                 const normalizedNode = {
                     id: savedNode.id || savedNode.mrid,
                     mrid: savedNode.mrid,
                     name: savedNode.name || '',
                     mode: savedNode.mode || 'organisation',
                     parentId: savedNode.parentId,
-                    parentName: savedNode.parentName,
+                    parentName: savedNode.parentName || '',
                     parentArr: savedNode.parentArr || []
                 };
                 this.organisationClientList = [...this.organisationClientList, normalizedNode];
@@ -1082,6 +1170,11 @@ export default {
         },
 
         showLocationRoot() {
+            // Prevent multiple simultaneous loads
+            if (this.isLoadingTree) {
+                return;
+            }
+
             const locationRoot = this.$refs.locationRoot;
             const ownerRoot = this.$refs.ownerRoot;
             if (locationRoot) {
@@ -1092,6 +1185,10 @@ export default {
                 ownerRoot.style.borderBottom = "2px #e6e4e4 solid";
                 ownerRoot.style.color = "rgba(0, 0, 0, 0.5)"; // Chữ bị làm mờ nhưng border vẫn giữ nguyên
             }
+
+            // Clear existing data first to prevent duplication
+            this.organisationClientList = []
+            this.isLoadingTree = true;
 
             this.$nextTick(async () => {
                 try {
@@ -1107,44 +1204,65 @@ export default {
                         };
 
                         // Load children of root (organisations and substations)
-                        const [organisationReturn, substationReturn] = await Promise.all([
-                            window.electronAPI.getParentOrganizationByParentMrid(this.$constant.ROOT),
-                            window.electronAPI.getSubstationsInOrganisationForUser(this.$constant.ROOT, this.$store.state.user.user_id)
-                        ]);
+                        const userId = this.$store.state.user?.user_id || null;
+                        
+                        let organisationReturn = { success: false, data: [] };
+                        let substationReturn = { success: false, data: [] };
+                        
+                        try {
+                            organisationReturn = await window.electronAPI.getParentOrganizationByParentMrid(this.$constant.ROOT);
+                        } catch (error) {
+                            this.$message.error('Failed to load organisations: ' + (error?.message || error));
+                        }
+                        
+                        try {
+                            substationReturn = await window.electronAPI.getSubstationsInOrganisationForUser(this.$constant.ROOT, userId);
+                        } catch (error) {
+                            this.$message.error('Failed to load substations: ' + (error?.message || error));
+                        }
 
                         const children = [];
 
                         // Add organisations as children
                         if (organisationReturn.success && organisationReturn.data && organisationReturn.data.length > 0) {
                             organisationReturn.data.forEach(row => {
-                                row.parentId = rootData.mrid;
-                                row.mode = 'organisation';
-                                row.id = row.mrid || row.id;
-                                row.parentName = rootData.name || '';
-                                row.parentArr = [{
-                                    mrid: rootData.mrid,
-                                    parent: rootData.name || ''
-                                }];
-                                children.push(row);
+                                // Check for duplicates before adding
+                                const exists = children.some(child => child.mrid === row.mrid || child.id === row.mrid);
+                                if (!exists) {
+                                    row.parentId = rootData.mrid;
+                                    row.mode = 'organisation';
+                                    row.id = row.mrid || row.id;
+                                    row.parentName = rootData.name || '';
+                                    row.parentArr = [{
+                                        mrid: rootData.mrid,
+                                        parent: rootData.name || ''
+                                    }];
+                                    children.push(row);
+                                }
                             });
                         }
 
                         // Add substations as children
                         if (substationReturn.success && substationReturn.data && substationReturn.data.length > 0) {
                             substationReturn.data.forEach(row => {
-                                row.parentId = rootData.mrid;
-                                row.mode = 'substation';
-                                row.id = row.mrid || row.id;
-                                row.parentName = rootData.name || '';
-                                row.parentArr = [{
-                                    mrid: rootData.mrid,
-                                    parent: rootData.name || ''
-                                }];
-                                children.push(row);
+                                // Check for duplicates before adding
+                                const exists = children.some(child => child.mrid === row.mrid || child.id === row.mrid);
+                                if (!exists) {
+                                    row.parentId = rootData.mrid;
+                                    row.mode = 'substation';
+                                    row.id = row.mrid || row.id;
+                                    row.parentName = rootData.name || '';
+                                    row.parentArr = [{
+                                        mrid: rootData.mrid,
+                                        parent: rootData.name || ''
+                                    }];
+                                    children.push(row);
+                                }
                             });
                         }
 
                         rootData.children = children;
+                        // Clear and set new data to prevent duplication
                         this.organisationClientList = [rootData]
                     } else {
                         const errorMsg = rs.message || "Cannot load root organisation"
@@ -1153,6 +1271,8 @@ export default {
                 } catch (error) {
                     this.$message.error("Error fetching root data")
                     console.error("Error fetching data:", error)
+                } finally {
+                    this.isLoadingTree = false;
                 }
             })
         },
@@ -1402,7 +1522,7 @@ export default {
                             assetPowerCableReturn.data.forEach(row => {
                                 row.parentId = clickedRow.mrid;
                                 row.mode = 'asset';
-                                row.asset = 'PowerCable';
+                                row.asset = 'Power cable';
                                 const parentName = clickedRow.parentName + "/" + clickedRow.name
                                 row.parentName = parentName
                                 row.parentArr = [...clickedRow.parentArr || []]
@@ -1476,7 +1596,7 @@ export default {
         async fetchAssetByPsr(psrId) {
             try {
                 const [responseSurge, responseBushing, responseVT, responseDisconnector, responsePowerCale, responseRotatingMachine] = await Promise.all([
-                    window.electronAPI.getSurgeArresterByPsrId(psrId),
+                    window.electronAPI.getAssetByPsrIdAndKind(psrId, 'Surge arrester'),
                     window.electronAPI.getBushingByPsrId(psrId),
                     window.electronAPI.getAssetByPsrIdAndKind(psrId, 'Voltage transformer'),
                     window.electronAPI.getAssetByPsrIdAndKind(psrId, 'Disconnector'),
@@ -1514,7 +1634,7 @@ export default {
                     let newRows = [];
                     if (node.mode == 'asset') {
                         if (node.asset && node.asset != 'Surge arrester') {
-                            const jobsReturn = await this.fetchJobsByAssetId(node.mode, node.mrid);
+                            const jobsReturn = await this.fetchJobsByAssetId(node.mrid);
                             if (jobsReturn.success) {
                                 newRows.push(...jobsReturn.data);
                             }
@@ -2046,21 +2166,73 @@ export default {
                     if (success) {
                         this.$message.success("Substation saved successfully")
                         this.signSubs = false
-                        let newRows = []
+                        
                         if (this.organisationClientList && this.organisationClientList.length > 0) {
                             const newRow = {
+                                id: data.mrid || data.id,
                                 mrid: data.mrid,
-                                name: data.name,
+                                name: data.name || '',
                                 parentId: this.parentOrganization.mrid,
-                                parentName: this.parentOrganization.name,
+                                parentName: this.parentOrganization.name || '',
                                 parentArr: this.parentOrganization.parentArr || [],
                                 mode: 'substation',
+                                children: [] // Initialize children array for expandable node
                             }
-                            newRows.push(newRow);
+                            
                             const node = this.findNodeById(this.parentOrganization.mrid, this.organisationClientList);
                             if (node) {
-                                const children = Array.isArray(node.children) ? node.children : [];
-                                node.children = [...children, ...newRows];
+                                // Reload children from database to ensure tree is updated correctly
+                                try {
+                                    const userId = this.$store.state.user?.user_id || null;
+                                    const substationReturn = await window.electronAPI.getSubstationsInOrganisationForUser(this.parentOrganization.mrid, userId);
+                                    
+                                    if (substationReturn.success && substationReturn.data) {
+                                        // Get existing children (organisations, voltage levels, bays, etc.)
+                                        const existingChildren = Array.isArray(node.children) ? node.children : [];
+                                        
+                                        // Separate substations from other children
+                                        const otherChildren = existingChildren.filter(child => child.mode !== 'substation');
+                                        
+                                        // Prepare new substations from database
+                                        const substationChildren = [];
+                                        substationReturn.data.forEach(row => {
+                                            // Check for duplicates before adding
+                                            const exists = substationChildren.some(child => child.mrid === row.mrid || child.id === row.mrid) ||
+                                                          otherChildren.some(child => (child.mrid === row.mrid || child.id === row.mrid) && child.mode === 'substation');
+                                            if (!exists) {
+                                                row.parentId = this.parentOrganization.mrid;
+                                                row.mode = 'substation';
+                                                row.id = row.mrid || row.id;
+                                                row.parentName = this.parentOrganization.name || '';
+                                                row.parentArr = this.parentOrganization.parentArr || [];
+                                                row.children = []; // Initialize for expandable
+                                                substationChildren.push(row);
+                                            }
+                                        });
+                                        
+                                        // Combine other children with new substations
+                                        node.children = [...otherChildren, ...substationChildren];
+                                    } else {
+                                        // Fallback: just add the new row if reload fails
+                                        if (!Array.isArray(node.children)) {
+                                            node.children = [];
+                                        }
+                                        const exists = node.children.some(child => child.mrid === newRow.mrid);
+                                        if (!exists) {
+                                            node.children = [...node.children, newRow];
+                                        }
+                                    }
+                                } catch (reloadError) {
+                                    console.error('Error reloading substations:', reloadError);
+                                    // Fallback: just add the new row
+                                    if (!Array.isArray(node.children)) {
+                                        node.children = [];
+                                    }
+                                    const exists = node.children.some(child => child.mrid === newRow.mrid);
+                                    if (!exists) {
+                                        node.children = [...node.children, newRow];
+                                    }
+                                }
                             } else {
                                 this.$message.error("Parent node not found in tree");
                             }
@@ -2082,7 +2254,21 @@ export default {
                     if (success) {
                         this.$message.success("Organisation saved successfully")
                         this.signOrg = false
-                        // Note: node is added via organisation-saved event emitted by child → Tabs → here
+                        if (org.properties) {
+                            // Đảm bảo parentId được set đúng - nếu không có parent thì dùng ROOT_ID
+                            const ROOT_ID = this.$constant?.ROOT || '00000000-0000-0000-0000-000000000000'
+                            const parentId = org.properties.parentId || this.parentOrganization?.mrid || ROOT_ID
+                            const savedNode = {
+                                mrid: org.properties.organisationId,
+                                id: org.properties.organisationId,
+                                name: org.properties.name,
+                                mode: 'organisation',
+                                parentId: parentId,
+                                parentName: this.parentOrganization?.name || (parentId === ROOT_ID ? 'Root' : ''),
+                                parentArr: this.parentOrganization?.parentArr || []
+                            }
+                            this.addOrganisationToTree(savedNode)
+                        }
                     } else {
                         this.$message.error("Failed to save organisation")
                     }
@@ -2750,15 +2936,10 @@ export default {
                 } else {
                     try {
                         if (node.mode == 'substation') {
-
-                            const entity = await window.electronAPI.getSubstationEntityByMrid(node.mrid, this.$store.state.user.user_id, node.parentId)
-                            if (!entity.success) {
-                                this.$message.error("Entity not found");
-                                return;
-                            }
-                            const deleteSign = await window.electronAPI.deleteSubstationEntityByMrid(entity.data);
+                            // deleteSubstationEntityByMrid chỉ cần mrid, không cần entity object
+                            const deleteSign = await window.electronAPI.deleteSubstationEntityByMrid(node.mrid);
                             if (!deleteSign.success) {
-                                this.$message.error("Delete data failed");
+                                this.$message.error("Delete data failed: " + (deleteSign.message || 'Unknown error'));
                                 return;
                             }
 
@@ -2776,19 +2957,31 @@ export default {
                                 this.$message.warning("Parent node not found in tree");
                             }
                         } else if (node.mode == 'organisation') {
-                            const entity = await window.electronAPI.getOrganisationEntityByMrid(node.mrid)
-                            if (!entity.success) {
-                                this.$message.error("Entity not found");
-                                return;
-                            }
-                            const deleteSign = await window.electronAPI.deleteParentOrganizationEntity(entity.data);
-                            // Delete operation completed
-                            if (!deleteSign.success) {
-                                this.$message.error("Delete data failed");
+                            // Normalize mrid: prefer node.mrid, fall back to node.id (some nodes only have id)
+                            const normalizedMrid = node.mrid || node.id || (this.$constant?.ROOT);
+                            if (!normalizedMrid) {
+                                this.$message.error("Cannot delete: mrid is missing");
                                 return;
                             }
 
-                            // ✅ Xóa node khỏi cây organisationClientList
+                            // Try to load entity first; if not found, pass mrid string so IPC handler will create minimal entity
+                            let entityData = null;
+                            const entity = await window.electronAPI.getOrganisationEntityByMrid(normalizedMrid);
+                            if (entity && entity.success && entity.data) {
+                                entityData = entity.data;
+                            } else {
+                                console.log('Entity not found or incomplete, will attempt deletion by mrid:', normalizedMrid);
+                                entityData = normalizedMrid;
+                            }
+
+                            const deleteSign = await window.electronAPI.deleteParentOrganizationEntity(entityData);
+                            // Delete operation completed
+                            if (!deleteSign.success) {
+                                this.$message.error("Delete data failed: " + (deleteSign.message || "Unknown error"));
+                                return;
+                            }
+
+                            // Xóa node khỏi cây organisationClientList
                             const parentNode = this.findNodeById(node.parentId, this.organisationClientList);
                             if (parentNode && Array.isArray(parentNode.children)) {
                                 const index = parentNode.children.findIndex(child => child.mrid === node.mrid);
@@ -2813,7 +3006,7 @@ export default {
                                 return;
                             }
 
-                            // ✅ Xóa node khỏi cây organisationClientList
+                            // Xóa node khỏi cây organisationClientList
                             const parentNode = this.findNodeById(node.parentId, this.organisationClientList);
                             if (parentNode && Array.isArray(parentNode.children)) {
                                 const index = parentNode.children.findIndex(child => child.mrid === node.mrid);
@@ -2838,7 +3031,7 @@ export default {
                                 return;
                             }
 
-                            // ✅ Xóa node khỏi cây organisationClientList
+                            // Xóa node khỏi cây organisationClientList
                             const parentNode = this.findNodeById(node.parentId, this.organisationClientList);
                             if (parentNode && Array.isArray(parentNode.children)) {
                                 const index = parentNode.children.findIndex(child => child.mrid === node.mrid);
@@ -2864,7 +3057,7 @@ export default {
                                     this.$message.error("Delete data failed");
                                     return;
                                 }
-                                // ✅ Xóa node khỏi cây organisationClientList
+                                // Xóa node khỏi cây organisationClientList
                                 const parentNode = this.findNodeById(node.parentId, this.organisationClientList);
                                 if (parentNode && Array.isArray(parentNode.children)) {
                                     const index = parentNode.children.findIndex(child => child.mrid === node.mrid);
@@ -2890,7 +3083,7 @@ export default {
                                     this.$message.error("Delete data failed: " + (deleteSign.message || 'Unknown error'));
                                     return;
                                 }
-                                // ✅ Xóa node khỏi cây organisationClientList
+                                // Xóa node khỏi cây organisationClientList
                                 const parentNode = this.findNodeById(node.parentId, this.organisationClientList);
                                 if (parentNode && Array.isArray(parentNode.children)) {
                                     const index = parentNode.children.findIndex(child => child.mrid === node.mrid);
@@ -2915,7 +3108,7 @@ export default {
                                     this.$message.error("Delete data failed: " + (deleteSign.message || 'Unknown error'));
                                     return;
                                 }
-                                // ✅ Xóa node khỏi cây organisationClientList
+                                // Xóa node khỏi cây organisationClientList
                                 const parentNode = this.findNodeById(node.parentId, this.organisationClientList);
                                 if (parentNode && Array.isArray(parentNode.children)) {
                                     const index = parentNode.children.findIndex(child => child.mrid === node.mrid);
@@ -2940,7 +3133,7 @@ export default {
                                     this.$message.error("Delete data failed: " + (deleteSign.message || 'Unknown error'));
                                     return;
                                 }
-                                // ✅ Xóa node khỏi cây organisationClientList
+                                // Xóa node khỏi cây organisationClientList
                                 const parentNode = this.findNodeById(node.parentId, this.organisationClientList);
                                 if (parentNode && Array.isArray(parentNode.children)) {
                                     const index = parentNode.children.findIndex(child => child.mrid === node.mrid);
@@ -3492,8 +3685,10 @@ export default {
         },
 
         findNodeById(mrid, nodes) {
+            if (!nodes || !Array.isArray(nodes)) return null;
             for (const node of nodes) {
-                if (node.mrid === mrid) return node;
+                // Check both mrid and id to handle cases where they might differ
+                if (node.mrid === mrid || node.id === mrid) return node;
                 if (node.children) {
                     const result = this.findNodeById(mrid, node.children);
                     if (result) return result;
@@ -3528,7 +3723,7 @@ export default {
 
 .resizable-sidebar {
     display: flex;
-    height: calc(100% - 30px);
+    height: calc(100% - 60px);
 }
 
 .sidebar {
@@ -3669,6 +3864,26 @@ export default {
     box-sizing: border-box;
     width: 100%;
     padding-left: 10px;
+}
+
+.toolbar-setting {
+    background-color: white;
+    height: 30px;
+    display: flex;
+    gap: 30px;
+    border-bottom: 1px solid #CCCCCC;
+    /* Độ dày 2px, màu đen */
+    align-items: center;
+    font-size: 12px;
+    color: #555;
+    font-weight: 600;
+    box-sizing: border-box;
+    width: 100%;
+    padding-left: 10px;
+}
+
+.toolbar-setting div {
+    cursor: pointer;
 }
 
 .properties {

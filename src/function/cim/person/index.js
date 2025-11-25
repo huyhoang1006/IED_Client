@@ -1,6 +1,7 @@
-import db from '../../datacontext/index'
+import db from '../../datacontext/index.js'
 import * as identifiedObjectFunc from '../identifiedObject/index.js'
-
+    
+// Thêm person
 export const insertPerson = async (person) => {
     return new Promise((resolve, reject) => {
         db.serialize(() => {
@@ -64,62 +65,132 @@ export const insertPerson = async (person) => {
     })
 }
 
+// Thêm person transaction
 export const insertPersonTransaction = async (person, dbsql) => {
     return new Promise((resolve, reject) => {
-        identifiedObjectFunc.insertIdentifiedObjectTransaction(person, dbsql)
-            .then(identifiedResult => {
-                if (!identifiedResult.success) {
-                    return reject({ success: false, message: 'Insert identified object failed', err: identifiedResult.err })
-                }
-                dbsql.run(
-                    `INSERT INTO person(
-                        mrid,
-                        electronic_address,
-                        first_name,
-                        landline_phone,
-                        last_name,
-                        m_name,
-                        mobile_phone,
-                        prefix,
-                        special_need,
-                        suffix
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    ON CONFLICT(mrid) DO UPDATE SET
-                        electronic_address = excluded.electronic_address,
-                        first_name = excluded.first_name,
-                        landline_phone = excluded.landline_phone,
-                        last_name = excluded.last_name,
-                        m_name = excluded.m_name,
-                        mobile_phone = excluded.mobile_phone,
-                        prefix = excluded.prefix,
-                        special_need = excluded.special_need,
-                        suffix = excluded.suffix`,
-                    [
-                        person.mrid,
-                        person.electronic_address,
-                        person.first_name,
-                        person.landline_phone,
-                        person.last_name,
-                        person.m_name,
-                        person.mobile_phone,
-                        person.prefix,
-                        person.special_need,
-                        person.suffix,
-                    ],
-                    function (err) {
-                        if (err) {
-                            return reject({ success: false, err, message: 'Insert person failed' })
+        // Kiểm tra xem record đã tồn tại chưa
+        dbsql.get("SELECT * FROM person WHERE mrid = ?", [person.mrid], async (err, existingRow) => {
+            if (err) {
+                return reject({ success: false, err, message: 'Check existing person failed' })
+            }
+            
+            if (existingRow) {
+                // Record đã tồn tại, chỉ update những trường có giá trị
+                identifiedObjectFunc.insertIdentifiedObjectTransaction(person, dbsql)
+                    .then(identifiedResult => {
+                        if (!identifiedResult.success) {
+                            return reject({ success: false, message: 'Update identified object failed', err: identifiedResult.err })
                         }
-                        return resolve({ success: true, data: person, message: 'Insert person completed' })
-                    }
-                )
-            })
-            .catch(err => {
-                return reject({ success: false, err, message: 'Insert person transaction failed' })
-            })
+                        // Chỉ update những trường có giá trị (không null/undefined)
+                        const updateFields = [];
+                        const updateValues = [];
+                        
+                        if (person.electronic_address !== null && person.electronic_address !== undefined) {
+                            updateFields.push('electronic_address = ?');
+                            updateValues.push(person.electronic_address);
+                        }
+                        if (person.first_name !== null && person.first_name !== undefined) {
+                            updateFields.push('first_name = ?');
+                            updateValues.push(person.first_name);
+                        }
+                        if (person.landline_phone !== null && person.landline_phone !== undefined) {
+                            updateFields.push('landline_phone = ?');
+                            updateValues.push(person.landline_phone);
+                        }
+                        if (person.last_name !== null && person.last_name !== undefined) {
+                            updateFields.push('last_name = ?');
+                            updateValues.push(person.last_name);
+                        }
+                        if (person.m_name !== null && person.m_name !== undefined) {
+                            updateFields.push('m_name = ?');
+                            updateValues.push(person.m_name);
+                        }
+                        if (person.mobile_phone !== null && person.mobile_phone !== undefined) {
+                            updateFields.push('mobile_phone = ?');
+                            updateValues.push(person.mobile_phone);
+                        }
+                        if (person.prefix !== null && person.prefix !== undefined) {
+                            updateFields.push('prefix = ?');
+                            updateValues.push(person.prefix);
+                        }
+                        if (person.special_need !== null && person.special_need !== undefined) {
+                            updateFields.push('special_need = ?');
+                            updateValues.push(person.special_need);
+                        }
+                        if (person.suffix !== null && person.suffix !== undefined) {
+                            updateFields.push('suffix = ?');
+                            updateValues.push(person.suffix);
+                        }
+                        
+                        if (updateFields.length === 0) {
+                            // Không có trường nào cần update
+                            return resolve({ success: true, data: person, message: 'Person already exists, no changes needed' })
+                        }
+                        
+                        updateValues.push(person.mrid);
+                        dbsql.run(
+                            `UPDATE person SET ${updateFields.join(', ')} WHERE mrid = ?`,
+                            updateValues,
+                            function (updateErr) {
+                                if (updateErr) {
+                                    return reject({ success: false, err: updateErr, message: 'Update person failed' })
+                                }
+                                return resolve({ success: true, data: person, message: 'Update person completed' })
+                            }
+                        )
+                    })
+                    .catch(err => {
+                        return reject({ success: false, err, message: 'Update person transaction failed' })
+                    })
+            } else {
+                // Record chưa tồn tại, insert mới
+                identifiedObjectFunc.insertIdentifiedObjectTransaction(person, dbsql)
+                    .then(identifiedResult => {
+                        if (!identifiedResult.success) {
+                            return reject({ success: false, message: 'Insert identified object failed', err: identifiedResult.err })
+                        }
+                        dbsql.run(
+                            `INSERT INTO person(
+                                mrid,
+                                electronic_address,
+                                first_name,
+                                landline_phone,
+                                last_name,
+                                m_name,
+                                mobile_phone,
+                                prefix,
+                                special_need,
+                                suffix
+                            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                            [
+                                person.mrid,
+                                person.electronic_address || null,
+                                person.first_name || null,
+                                person.landline_phone || null,
+                                person.last_name || null,
+                                person.m_name || null,
+                                person.mobile_phone || null,
+                                person.prefix || null,
+                                person.special_need || null,
+                                person.suffix || null,
+                            ],
+                            function (insertErr) {
+                                if (insertErr) {
+                                    return reject({ success: false, err: insertErr, message: 'Insert person failed' })
+                                }
+                                return resolve({ success: true, data: person, message: 'Insert person completed' })
+                            }
+                        )
+                    })
+                    .catch(err => {
+                        return reject({ success: false, err, message: 'Insert person transaction failed' })
+                    })
+            }
+        })
     })
 }
 
+// Lấy person theo mrid
 export const getPersonById = async (mrid) => {
     try {
         // Lấy thông tin từ bảng identified_object (lớp cha)
@@ -143,6 +214,7 @@ export const getPersonById = async (mrid) => {
     }
 }
 
+// Lấy person theo organisationId
 export const getPersonByOrganisationId = async (organisationId) => {
     return new Promise((resolve, reject) => {
         const query = `
@@ -191,6 +263,7 @@ export const deletePersonById = async (mrid) => {
     })
 }
 
+// Xóa person theo mrid transaction
 export const deletePersonByIdTransaction = async (mrid, dbsql) => {
     return new Promise((resolve, reject) => {
         identifiedObjectFunc.deleteIdentifiedObjectByIdTransaction(mrid, dbsql)
@@ -227,7 +300,7 @@ export const updatePersonById = async (mrid, person) => {
                             mobile_phone = ?,
                             prefix = ?,
                             special_need = ?,
-                            suffix = ?,
+                            suffix = ?
                         WHERE mrid = ?`,
                         [
                             person.electronic_address,
@@ -277,7 +350,7 @@ export const updatePersonByIdTransaction = async (mrid, person, dbsql) => {
                         mobile_phone = ?,
                         prefix = ?,
                         special_need = ?,
-                        suffix = ?,
+                        suffix = ?
                     WHERE mrid = ?`,
                     [
                         person.electronic_address,

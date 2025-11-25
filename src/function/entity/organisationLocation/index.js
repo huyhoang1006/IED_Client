@@ -1,12 +1,15 @@
 import db from '../../datacontext/index.js'
 
-// Thêm mới Organisation-Location relationship
-export const insertOrganisationLocation = (organisationLocation) => {
+// Thêm mới OrganisationLocation
+export const insertOrganisationLocation = async (organisationLocation) => {
     return new Promise((resolve, reject) => {
         db.run(
-            `INSERT INTO organisation_location(mrid, organisation_id, location_id)
-             VALUES (?, ?, ?)
-             ON CONFLICT(mrid) DO UPDATE SET
+            `INSERT INTO organisation_location(
+                mrid,
+                organisation_id,
+                location_id
+            ) VALUES (?, ?, ?)
+            ON CONFLICT(mrid) DO UPDATE SET
                 organisation_id = excluded.organisation_id,
                 location_id = excluded.location_id`,
             [
@@ -15,112 +18,87 @@ export const insertOrganisationLocation = (organisationLocation) => {
                 organisationLocation.location_id
             ],
             function (err) {
-                if (err) return reject({ success: false, err, message: 'Insert organisation location failed' })
-                return resolve({ success: true, data: organisationLocation, message: 'Insert organisation location completed' })
+                if (err) return reject({ success: false, err, message: 'Insert organisationLocation failed' })
+                return resolve({ success: true, data: organisationLocation, message: 'Insert organisationLocation completed' })
             }
         )
     })
 }
 
-// Thêm mới Organisation-Location trong transaction
-export const insertOrganisationLocationTransaction = (organisationLocation, dbsql) => {
+// Insert OrganisationLocation transaction
+export const insertOrganisationLocationTransaction = async (organisationLocation, dbsql) => {
     return new Promise((resolve, reject) => {
         dbsql.run(
-            `INSERT INTO organisation_location(mrid, organisation_id, location_id)
-             VALUES (?, ?, ?)
-             ON CONFLICT(mrid) DO UPDATE SET
-                organisation_id = excluded.organisation_id,
-                location_id = excluded.location_id`,
+            `INSERT INTO organisation_location(
+                mrid,
+                organisation_id,
+                location_id
+            ) VALUES (?, ?, ?)
+            ON CONFLICT(organisation_id, location_id) DO NOTHING`,
             [
                 organisationLocation.mrid,
                 organisationLocation.organisation_id,
                 organisationLocation.location_id
             ],
             function (err) {
-                if (err) return reject({ success: false, err, message: 'Insert organisation location failed' })
-                return resolve({ success: true, data: organisationLocation, message: 'Insert organisation location completed' })
+                if (err) return reject({ success: false, err, message: 'Insert organisationLocation failed' })
+                return resolve({ success: true, data: organisationLocation, message: 'Insert organisationLocation completed' })
             }
         )
     })
 }
 
-// Lấy Organisation-Location theo mrid
-export const getOrganisationLocationByMrid = (mrid) => {
+// Lấy OrganisationLocation theo mrid
+export const getOrganisationLocationById = async (mrid) => {
     return new Promise((resolve, reject) => {
         db.get("SELECT * FROM organisation_location WHERE mrid = ?", [mrid], (err, row) => {
-            if (err) {
-                return reject({ success: false, err, message: 'Get organisation location failed' })
-            }
-            if (!row) {
-                return resolve({ success: false, data: null, message: 'Organisation location not found' })
-            }
-            return resolve({
-                success: true,
-                data: row,
-                message: 'Get organisation location completed'
-            })
+            if (err) return reject({ success: false, err, message: 'Get organisationLocation failed' })
+            if (!row) return resolve({ success: false, data: null, message: 'OrganisationLocation not found' })
+            return resolve({ success: true, data: row, message: 'Get organisationLocation completed' })
         })
     })
 }
 
-// Lấy danh sách Organisation-Location theo organisation_id
-export const getOrganisationLocationsByOrganisationId = (organisationId) => {
+// Get OrganisationLocation by organisationId and locationId
+export const getOrganisationLocationByOrganisationIdAndLocationId = async (organisation_id, location_id) => {
     return new Promise((resolve, reject) => {
-        db.all("SELECT * FROM organisation_location WHERE organisation_id = ?", [organisationId], (err, rows) => {
-            if (err) {
-                return reject({ success: false, err, message: 'Get organisation locations failed' })
-            }
-            return resolve({
-                success: true,
-                data: rows,
-                message: 'Get organisation locations completed'
-            })
+        db.get("SELECT * FROM organisation_location WHERE organisation_id = ? AND location_id = ?", [organisation_id, location_id], (err, row) => {
+            if (err) return reject({ success: false, err, message: 'Get organisationLocation failed' })
+            if (!row) return resolve({ success: false, data: null, message: 'OrganisationLocation not found' })
+            return resolve({ success: true, data: row, message: 'Get organisationLocation completed' })
         })
     })
 }
 
-// Lấy danh sách Organisation-Location theo location_id
-export const getOrganisationLocationsByLocationId = (locationId) => {
-    return new Promise((resolve, reject) => {
-        db.all("SELECT * FROM organisation_location WHERE location_id = ?", [locationId], (err, rows) => {
-            if (err) {
-                return reject({ success: false, err, message: 'Get organisation locations failed' })
-            }
-            return resolve({
-                success: true,
-                data: rows,
-                message: 'Get organisation locations completed'
-            })
-        })
-    })
-}
-
-// Cập nhật Organisation-Location theo mrid
-export const updateOrganisationLocationByMrid = (mrid, organisationLocation) => {
+// Cập nhật OrganisationLocation theo mrid
+export const updateOrganisationLocationById = async (mrid, organisationLocation) => {
     return new Promise((resolve, reject) => {
         db.run(
-            `UPDATE organisation_location 
-             SET organisation_id = ?, location_id = ?
-             WHERE mrid = ?`,
+            `UPDATE organisation_location SET
+                organisation_id = ?,
+                location_id = ?
+            WHERE mrid = ?`,
             [
                 organisationLocation.organisation_id,
                 organisationLocation.location_id,
                 mrid
             ],
             function (err) {
-                if (err) return reject({ success: false, err, message: 'Update organisation location failed' })
-                return resolve({ success: true, data: organisationLocation, message: 'Update organisation location completed' })
+                if (err) return reject({ success: false, err, message: 'Update organisationLocation failed' })
+                if (this.changes === 0) return resolve({ success: false, message: 'OrganisationLocation not found' })
+                return resolve({ success: true, data: organisationLocation, message: 'Update organisationLocation completed' })
             }
         )
     })
 }
 
-// Xóa Organisation-Location theo mrid
-export const deleteOrganisationLocationByMrid = (mrid) => {
+// Xóa OrganisationLocation theo mrid
+export const deleteOrganisationLocationById = async (mrid) => {
     return new Promise((resolve, reject) => {
         db.run("DELETE FROM organisation_location WHERE mrid = ?", [mrid], function (err) {
-            if (err) return reject({ success: false, err, message: 'Delete organisation location failed' })
-            return resolve({ success: true, message: 'Delete organisation location completed' })
+            if (err) return reject({ success: false, err, message: 'Delete organisationLocation failed' })
+            if (this.changes === 0) return resolve({ success: false, message: 'OrganisationLocation not found' })
+            return resolve({ success: true, message: 'Delete organisationLocation completed' })
         })
     })
 }

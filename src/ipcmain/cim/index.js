@@ -5,32 +5,25 @@ import * as ipcPowerSystemResource from './powerSystemResource/index.js'
 import * as ipcLocation from './location/index.js'
 import * as ipcVoltageLevel from './voltageLevel/index.js'
 import * as ipcAsset from './asset/index.js'
-import * as ipcSurgeArrester from './surgeArrester/index.js'
 import * as ipcBushing from './bushing/index.js'
-// import * as ipcLocation from './location/index.js' // Module not found
-// import * as ipcStreetDetail from './streetDetail/index.js' // Module not found
-// import * as ipcTownDetail from './townDetail/index.js' // Module not found
-// import * as ipcStreetAddress from './streetAddress/index.js' // Module not found
-// import * as ipcPerson from './person/index.js' // Module not found
-// import * as ipcPersonRole from './personRole/index.js' // Module not found
-// import * as ipcElectronicAddress from './electronicAddress/index.js' // Module not found
-// import * as ipcTelephoneNumber from './telephoneNumber/index.js' // Module not found
-// import * as ipcConfigurationEvent from './configurationEvent/index.js' // Module not found
-// import * as ipcPositionPoint from './positionPoint/index.js' // Module not found
-// import * as ipcVoltageLevel from './voltageLevel/index.js' // Module not found
-// import * as ipcVoltage from './voltage/index.js' // Module not found
-// import * as ipcBaseVoltage from './baseVoltage/index.js' // Module not found
-// import * as ipcPowerSystemResource from './powerSystemResource/index.js' // Module not found
-// import * as ipcProductAssetModel from './productAssetModel/index.js' // Module not found
-// import * as ipcSurgeArrester from './surgeArrester/index.js' // Module not found
-// import * as ipcOldWork from './oldWork/index.js' // Module not found
-// import * as ipcAsset from './asset/index.js' // Module not found
-// import * as ipcAnalog from './analog/index.js' // Module not found
-// import * as ipcStringMeasurement from './stringMeasurement/index.js' // Module not found
-// import * as ipcDiscrete from './discrete/index.js' // Module not found
-// import * as ipcValueToAlias from './valueToAlias/index.js' // Module not found
-// import * as ipcValueAliasSet from './valueAliasSet/index.js' // Module not found
-// import * as ipcBushing from './bushing/index.js' // Module not found
+import * as ipcStreetDetail from './streetDetail/index.js'
+import * as ipcTownDetail from './townDetail/index.js' 
+import * as ipcStreetAddress from './streetAddress/index.js'
+import * as ipcPerson from './person/index.js'
+import * as ipcPersonRole from './personRole/index.js'
+import * as ipcElectronicAddress from './electronicAddress/index.js'
+import * as ipcTelephoneNumber from './telephoneNumber/index.js' 
+import * as ipcConfigurationEvent from './configurationEvent/index.js'
+import * as ipcPositionPoint from './positionPoint/index.js'
+import * as ipcVoltage from './voltage/index.js' 
+import * as ipcBaseVoltage from './baseVoltage/index.js' 
+import * as ipcProductAssetModel from './productAssetModel/index.js'
+import * as ipcOldWork from './oldWork/index.js'
+import * as ipcAnalog from './analog/index.js' 
+// import * as ipcStringMeasurement from './stringMeasurement/index.js'
+import * as ipcDiscrete from './discrete/index.js'
+import * as ipcValueToAlias from './valueToAlias/index.js'
+import * as ipcValueAliasSet from './valueAliasSet/index.js'
 
 
 export const active = () => {
@@ -41,30 +34,23 @@ export const active = () => {
     ipcVoltageLevel.active()
     ipcAsset.active()
     ipcLocation.active()
-    ipcSurgeArrester.active()
     ipcBushing.active()
-    // ipcLocation.active() // Module not found
-    // ipcStreetDetail.active() // Module not found
-    // ipcTownDetail.active() // Module not found
-    // ipcStreetAddress.active() // Module not found
-    // ipcPerson.active() // Module not found
-    // ipcPersonRole.active() // Module not found
-    // ipcElectronicAddress.active() // Module not found
-    // ipcTelephoneNumber.active() // Module not found
-    // ipcConfigurationEvent.active() // Module not found
-    // ipcPositionPoint.active() // Module not found
-    // ipcVoltageLevel.active() // Module not found
-    // ipcVoltage.active() // Module not found
-    // ipcBaseVoltage.active() // Module not found
-    // ipcPowerSystemResource.active() // Module not found
-    // ipcSurgeArrester.active() // Module not found
-    // ipcProductAssetModel.active() // Module not found
-    // ipcOldWork.active() // Module not found
-    // ipcAsset.active() // Module not found
-    // ipcAnalog.active() // Module not found
-    // ipcStringMeasurement.active() // Module not found
-    // ipcDiscrete.active() // Module not found
-    // ipcValueToAlias.active() // Module not found
-    // ipcValueAliasSet.active() // Module not found
-    // ipcBushing.active() // Module not found
+    ipcStreetDetail.active()
+    ipcTownDetail.active() 
+    ipcStreetAddress.active()
+    ipcPerson.active()
+    ipcPersonRole.active()
+    ipcElectronicAddress.active()
+    ipcTelephoneNumber.active()
+    ipcConfigurationEvent.active()
+    ipcPositionPoint.active()
+    ipcVoltage.active()
+    ipcBaseVoltage.active()
+    ipcProductAssetModel.active()
+    ipcOldWork.active()
+    ipcAnalog.active()
+    // ipcStringMeasurement.active() 
+    ipcDiscrete.active()
+    ipcValueToAlias.active()
+    ipcValueAliasSet.active()
 }

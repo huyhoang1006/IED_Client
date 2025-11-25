@@ -1,6 +1,5 @@
 import db from '../../datacontext/index.js'
 import * as connectivityNodeContainerFunc from '../connectivityNodeContainer/index.js'
-import util from 'util'
 
 // Thêm mới EquipmentContainer (gồm cả insert ConnectivityNodeContainer)
 export const insertEquipmentContainer = async (equipmentContainer) => {
@@ -30,8 +29,6 @@ export const insertEquipmentContainer = async (equipmentContainer) => {
                 })
                 .catch(err => {
                     db.run('ROLLBACK')
-                    console.error('insertEquipmentContainerTransaction catch:', err)
-                    try { console.error('insertEquipmentContainerTransaction detailed:', util.inspect(err, { depth: 6 })) } catch (e) {}
                     return reject({ success: false, err, message: 'Insert EquipmentContainer transaction failed' })
                 })
         })
@@ -46,29 +43,39 @@ export const insertEquipmentContainerTransaction = async (equipmentContainer, db
                 if (!result.success) {
                     return reject({ success: false, message: 'Insert ConnectivityNodeContainer failed', err: result.err })
                 }
-                dbsql.run(
-                    `INSERT INTO equipment_container(mrid)
-                     VALUES (?)
-                     ON CONFLICT(mrid) DO NOTHING`,
-                    [equipmentContainer.mrid],
-                    function (err) {
-                        if (err) {
-                            return reject({ success: false, err, message: 'Insert EquipmentContainer failed' })
-                        }
-                        return resolve({ success: true, data: equipmentContainer, message: 'Insert EquipmentContainer completed' })
+                
+                // Verify mrid exists in connectivity_node_container before inserting into equipment_container
+                // This ensures the foreign key constraint is satisfied
+                dbsql.get('SELECT mrid FROM connectivity_node_container WHERE mrid = ?', [equipmentContainer.mrid], (verifyErr, verifyRow) => {
+                    if (verifyErr) {
+                        return reject({ success: false, err: verifyErr, message: 'Failed to verify ConnectivityNodeContainer exists' })
                     }
-                )
+                    if (!verifyRow) {
+                        return reject({ 
+                            success: false, 
+                            err: new Error('ConnectivityNodeContainer not found'), 
+                            message: `Cannot insert EquipmentContainer: mrid '${equipmentContainer.mrid}' does not exist in connectivity_node_container table` 
+                        })
+                    }
+                    
+                    // Now safe to insert into equipment_container
+                    dbsql.run(
+                        `INSERT INTO equipment_container(mrid)
+                         VALUES (?)
+                         ON CONFLICT(mrid) DO NOTHING`,
+                        [equipmentContainer.mrid],
+                        function (err) {
+                            if (err) {
+                                return reject({ success: false, err, message: 'Insert EquipmentContainer failed' })
+                            }
+                            return resolve({ success: true, data: equipmentContainer, message: 'Insert EquipmentContainer completed' })
+                        }
+                    )
+                })
             })
             .catch(err => {
-                return reject({ 
-                    success: false, 
-                    err: {
-                        message: err?.message || err?.err?.message || 'Unknown error',
-                        code: err?.code || err?.err?.code,
-                        errno: err?.errno || err?.err?.errno
-                    }, 
-                    message: 'Insert EquipmentContainer transaction failed: ' + (err?.message || err?.err?.message || 'Unknown error')
-                })
+                console.error('Insert EquipmentContainer failed:', err)
+                return reject({ success: false, err, message: 'Insert EquipmentContainer transaction failed' })
             })
     })
 }

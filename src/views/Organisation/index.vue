@@ -114,9 +114,9 @@
                 </div>
             </el-col>        
         </el-row>
-        
+
         <el-dialog
-            :visible.sync="signAddGeo"
+            v-model="signAddGeo"
             :title="titleGeo"
             width="35%"
             align-center
@@ -134,10 +134,10 @@
                     <el-input type="number" v-model="geoChosen.z"></el-input>
                 </el-form-item>
             </el-form>
-            <span slot="footer" class="dialog-footer">
+            <template #footer>
                 <el-button type="danger" @click="handleCloseGeo()" size="small">Cancel</el-button>
                 <el-button type="primary" @click="handleConfirmGeo()" size="small">Confirm</el-button>
-            </span>
+            </template>
 
         </el-dialog>
     </div>
@@ -145,10 +145,10 @@
 
 <script>
 /* eslint-disable */
-import mixin from './mixin'
+import mixin from './mixin/index.js'
 import Attachment from '@/views/Common/Attachment.vue'
-import GeoMap from '../Common/GeoMap.vue'
-import {country} from '../ConstantAsset/index'
+import GeoMap from '@/views/Common/GeoMap.vue'
+import {country} from '@/views/ConstantAsset/index.js'
 
 export default {
     components: { 
@@ -169,6 +169,10 @@ export default {
         parent: {
             type: Object,
             default: () => ({})
+        },
+        personList: {
+            type: Array,
+            default: () => []
         }
     },
     data() {
@@ -186,14 +190,83 @@ export default {
             countryData : country.default,
             voltageList : ['500 kV', '220 kV', '110 kV', '35 kV', '26 kV', '22 kV', '21 kV', '15.75 kV', '13.8 kV', '10 kV', '6.6 kV', '0.4 kV'],
             deleteList : [],
-            deleteImage : {}
+            deleteImage : {},
+            personListData: []
+        }
+    },
+    watch: {
+        personList: {
+            immediate: true,
+            handler(newVal) {
+                if (newVal && Array.isArray(newVal)) {
+                    this.personListData = newVal
+                }
+            }
         }
     },
     methods: {
         getDataAttachment(rowData) {
             this.attachmentData = rowData
         },
+        async changePersonName(value) {
+            try {
+                const index = this.personListData.findIndex(p => p.mrid === value);
+                if (index !== -1) {
+                    this.properties.personName = this.personListData[index].name;
+                    this.properties.personId = this.personListData[index].mrid;
+                    // Load thông tin person nếu có
+                    const [telephoneNumberData, electronicAddressData, personRoleData] = await Promise.all([
+                        this.personListData[index].mobile_phone ? window.electronAPI.getTelephoneNumberByMrid(this.personListData[index].mobile_phone).catch(() => ({success: false})) : Promise.resolve({success: false}),
+                        this.personListData[index].electronic_address ? window.electronAPI.getElectronicAddressByMrid(this.personListData[index].electronic_address).catch(() => ({success: false})) : Promise.resolve({success: false}),
+                        window.electronAPI.getPersonRoleByPersonId(this.properties.personId).catch(() => ({success: false}))
+                    ])
+                    if (telephoneNumberData.success && telephoneNumberData.data) {
+                        this.properties.phoneNumber = telephoneNumberData.data.itu_phone || '';
+                        this.properties.telephoneNumberId = telephoneNumberData.data.mrid || null;
+                    }
+                    if (electronicAddressData.success && electronicAddressData.data) {
+                        this.properties.email = electronicAddressData.data.email || '';
+                        this.properties.fax = electronicAddressData.data.fax || '';
+                        this.properties.electronicAddressId = electronicAddressData.data.mrid || null;
+                    }
+                    if (personRoleData.success && personRoleData.data) {
+                        this.properties.department = personRoleData.data.department || '';
+                        this.properties.position = personRoleData.data.position || '';
+                    }
+                } else {
+                    // Nếu không tìm thấy, người dùng đang tạo person mới
+                    // KHÔNG được gán text vào personId vì sẽ gây lỗi FOREIGN KEY
+                    // personId phải là UUID hoặc null, logic tạo UUID sẽ xử lý khi save
+                    this.properties.personName = value || '';
+                    this.properties.personId = null; // Set null, UUID sẽ được tạo khi save
+                    // Reset các trường liên quan
+                    this.properties.phoneNumber = '';
+                    this.properties.email = '';
+                    this.properties.fax = '';
+                    this.properties.department = '';
+                    this.properties.position = '';
+                    this.properties.telephoneNumberId = null;
+                    this.properties.electronicAddressId = null;
+                }
+            } catch (error) {
+                console.error('Error changing person name:', error);
+            }
+        },
         async changeValueGeo(index) {
+            if (!this.properties.positionPoints || 
+                !this.properties.positionPoints.x || 
+                !this.properties.positionPoints.y || 
+                !this.properties.positionPoints.z) {
+                this.$message.error('Position points not initialized')
+                return
+            }
+            if (index < 0 || 
+                index >= this.properties.positionPoints.x.length || 
+                index >= this.properties.positionPoints.y.length || 
+                index >= this.properties.positionPoints.z.length) {
+                this.$message.error('Invalid coordinate index')
+                return
+            }
             this.indexGeo = index
             this.properties.x_position = this.properties.positionPoints.x[index].coor
             this.properties.y_position = this.properties.positionPoints.y[index].coor
@@ -228,6 +301,24 @@ export default {
             this.signAddGeo = false
         },
         async handleConfirmGeo() {
+            // Ensure positionPoints is initialized
+            if (!this.properties.positionPoints) {
+                this.properties.positionPoints = {
+                    x: [],
+                    y: [],
+                    z: []
+                }
+            }
+            if (!this.properties.positionPoints.x) {
+                this.properties.positionPoints.x = []
+            }
+            if (!this.properties.positionPoints.y) {
+                this.properties.positionPoints.y = []
+            }
+            if (!this.properties.positionPoints.z) {
+                this.properties.positionPoints.z = []
+            }
+
             if(this.titleGeo == 'Add coordinate') {
                 if(this.geoChosen.x == '' || this.geoChosen.y == '') {
                     this.$message.error("X or Y cannot be null or empty")
@@ -259,6 +350,13 @@ export default {
                 }
             } else {
                 try {
+                    if (this.indexGeo < 0 || 
+                        this.indexGeo >= this.properties.positionPoints.x.length ||
+                        this.indexGeo >= this.properties.positionPoints.y.length ||
+                        this.indexGeo >= this.properties.positionPoints.z.length) {
+                        this.$message.error("Invalid coordinate index")
+                        return
+                    }
                     this.properties.positionPoints.x[this.indexGeo].coor = JSON.parse(JSON.stringify(this.geoChosen.x))
                     this.properties.positionPoints.y[this.indexGeo].coor = JSON.parse(JSON.stringify(this.geoChosen.y))
                     this.properties.positionPoints.z[this.indexGeo].coor = JSON.parse(JSON.stringify(this.geoChosen.z))
@@ -271,6 +369,20 @@ export default {
             }
         },
         async editCoor(index) {
+            if (!this.properties.positionPoints || 
+                !this.properties.positionPoints.x || 
+                !this.properties.positionPoints.y || 
+                !this.properties.positionPoints.z) {
+                this.$message.error('Position points not initialized')
+                return
+            }
+            if (index < 0 || 
+                index >= this.properties.positionPoints.x.length || 
+                index >= this.properties.positionPoints.y.length || 
+                index >= this.properties.positionPoints.z.length) {
+                this.$message.error('Invalid coordinate index')
+                return
+            }
             this.signAddGeo = true
             this.indexGeo = index
             this.titleGeo = "Edit coordinate"
@@ -279,6 +391,20 @@ export default {
             this.geoChosen.z = this.properties.positionPoints.z[index].coor
         },
         async deleteCoor(index) {
+            if (!this.properties.positionPoints || 
+                !this.properties.positionPoints.x || 
+                !this.properties.positionPoints.y || 
+                !this.properties.positionPoints.z) {
+                this.$message.error('Position points not initialized')
+                return
+            }
+            if (index < 0 || 
+                index >= this.properties.positionPoints.x.length || 
+                index >= this.properties.positionPoints.y.length || 
+                index >= this.properties.positionPoints.z.length) {
+                this.$message.error('Invalid coordinate index')
+                return
+            }
             this.$confirm('Are you sure you want to delete this item?', 'Warning', {
                 confirmButtonText: 'Yes',
                 cancelButtonText: 'No',

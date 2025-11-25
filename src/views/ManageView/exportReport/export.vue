@@ -1,7 +1,7 @@
 <template>
     <div>
         <el-dialog
-        :visible.sync="showExport_"
+        v-model="showExport_"
         title="Export template"
         width="1000px"
         align-center

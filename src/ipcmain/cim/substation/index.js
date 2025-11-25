@@ -19,7 +19,6 @@ export const getSubstationByMrid = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 success: false,
                 message: (error && error.message) ? error.message : "Internal error",
@@ -39,21 +38,22 @@ export const getSubstationsInOrganisationForUser = () => {
                 }));
                 return {
                     success: true,
-                    message: "Success",
+                    message: rs.message || "Success",
                     data: mappedData
                 }
             }
             else {
                 return {
                     success: false,
-                    message: "fail",
+                    message: rs.message || "fail",
+                    data: rs.data || []
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 success: false,
                 message: (error && error.message) ? error.message : "Internal error",
+                data: []
             }
         }
     })
@@ -62,7 +62,31 @@ export const getSubstationsInOrganisationForUser = () => {
 export const insertSubstation = () => {
     ipcMain.handle('insertSubstation', async function (event, data) {
         try {
-            const rs = await cimFunc.substationFunc.insertSubstation(data)
+            // Validate input data
+            if (!data) {
+                return {
+                    success: false,
+                    message: "Insert substation failed: data is required",
+                    error: "Data parameter is null or undefined"
+                }
+            }
+            
+            // Handle both formats: direct substation object or entity object with nested substation
+            let substationData = data
+            if (data.substation && typeof data.substation === 'object') {
+                // If data is an entity object, extract the substation part
+                substationData = data.substation
+            }
+            
+            if (!substationData.mrid) {
+                return {
+                    success: false,
+                    message: "Insert substation failed: mrid is required",
+                    error: "Substation mrid is missing in input data"
+                }
+            }
+            
+            const rs = await cimFunc.substationFunc.insertSubstation(substationData)
             if (rs.success == true) {
                 return {
                     success: true,
@@ -78,7 +102,6 @@ export const insertSubstation = () => {
                 }
             }
         } catch (error) {
-            console.log('insertSubstation error:', error)
             return {
                 success: false,
                 message: (error && error.message) ? error.message : "Internal error",
@@ -105,7 +128,6 @@ export const updateSubstationByMrid = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 success: false,
                 message: (error && error.message) ? error.message : "Internal error",
@@ -131,7 +153,6 @@ export const deleteSubstationByMrid = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 success: false,
                 message: (error && error.message) ? error.message : "Internal error",

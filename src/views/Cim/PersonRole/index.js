@@ -9,6 +9,8 @@ export default class PersonRole {
         this.organisation = null;
         this.startDate = null;
         this.endDate = null;
+        this.department = null;
+        this.position = null;
     }
 
     setMRID(mrid) {
@@ -43,6 +45,14 @@ export default class PersonRole {
         this.endDate = endDate;
     }
 
+    setDepartment(department) {
+        this.department = department;
+    }
+
+    setPosition(position) {
+        this.position = position;
+    }
+
     toJSON() {
         return {
             mrid: this.mrid,
@@ -52,7 +62,9 @@ export default class PersonRole {
             person: this.person,
             organisation: this.organisation,
             startDate: this.startDate,
-            endDate: this.endDate
+            endDate: this.endDate,
+            department: this.department,
+            position: this.position
         };
     }
 
@@ -66,6 +78,8 @@ export default class PersonRole {
         entity.organisation = data.organisation;
         entity.startDate = data.startDate;
         entity.endDate = data.endDate;
+        entity.department = data.department;
+        entity.position = data.position;
         return entity;
     }
 }
