@@ -1430,15 +1430,40 @@ export const updateOrganisationEntity = async (entity) => {
                                     await updateParentOrganizationTransaction(entity.organisation.mrid, entity.organisation, db);
                                 }
                                 
-                                // Step 5: Update geoMap - delete old ones and insert/update new ones
-                                if (existingEntity && existingEntity.positionPoints && Array.isArray(existingEntity.positionPoints) && existingEntity.positionPoints.length > 0) {
-                                    const oldMrids = existingEntity.positionPoints.map(p => p.mrid).filter(m => m);
-                                    if (oldMrids.length > 0) {
-                                        await deleteGeoMapByArrayMridTransaction(oldMrids, db);
-                                    }
-                                }
+                                // Step 5: Update geoMap - update existing ones, insert new ones, delete removed ones
                                 if (Array.isArray(entity.positionPoints) && entity.positionPoints.length > 0) {
-                                    await insertGeoMapArrayTransaction(entity.positionPoints, db);
+                                    // Separate existing (with mrid) and new (without mrid) position points
+                                    const existingPoints = entity.positionPoints.filter(p => p.mrid && p.mrid !== '');
+                                    const newPoints = entity.positionPoints.filter(p => !p.mrid || p.mrid === '');
+                                    
+                                    // Update existing position points
+                                    if (existingPoints.length > 0) {
+                                        await updateGeoMapArrayByIdTransaction(existingPoints, db);
+                                    }
+                                    
+                                    // Insert new position points
+                                    if (newPoints.length > 0) {
+                                        await insertGeoMapArrayTransaction(newPoints, db);
+                                    }
+                                    
+                                    // Delete position points that are no longer in the list
+                                    if (existingEntity && existingEntity.positionPoints && Array.isArray(existingEntity.positionPoints) && existingEntity.positionPoints.length > 0) {
+                                        const newMrids = existingPoints.map(p => p.mrid).filter(m => m);
+                                        const oldMrids = existingEntity.positionPoints.map(p => p.mrid).filter(m => m);
+                                        const mridsToDelete = oldMrids.filter(mrid => !newMrids.includes(mrid));
+                                        
+                                        if (mridsToDelete.length > 0) {
+                                            await deleteGeoMapByArrayMridTransaction(mridsToDelete, db);
+                                        }
+                                    }
+                                } else {
+                                    // If no position points in new data, delete all existing ones
+                                    if (existingEntity && existingEntity.positionPoints && Array.isArray(existingEntity.positionPoints) && existingEntity.positionPoints.length > 0) {
+                                        const oldMrids = existingEntity.positionPoints.map(p => p.mrid).filter(m => m);
+                                        if (oldMrids.length > 0) {
+                                            await deleteGeoMapByArrayMridTransaction(oldMrids, db);
+                                        }
+                                    }
                                 }
                                 
                                 // Step 6: Update attachment
@@ -1627,14 +1652,40 @@ export const updateOrganisationEntity = async (entity) => {
                                     await updateParentOrganizationTransaction(entity.organisation.mrid, entity.organisation, db);
                                 }
                                 
-                                if (existingEntity && existingEntity.positionPoints && Array.isArray(existingEntity.positionPoints) && existingEntity.positionPoints.length > 0) {
-                                    const oldMrids = existingEntity.positionPoints.map(p => p.mrid).filter(m => m);
-                                    if (oldMrids.length > 0) {
-                                        await deleteGeoMapByArrayMridTransaction(oldMrids, db);
-                                    }
-                                }
+                                // Step 5: Update geoMap - update existing ones, insert new ones, delete removed ones
                                 if (Array.isArray(entity.positionPoints) && entity.positionPoints.length > 0) {
-                                    await insertGeoMapArrayTransaction(entity.positionPoints, db);
+                                    // Separate existing (with mrid) and new (without mrid) position points
+                                    const existingPoints = entity.positionPoints.filter(p => p.mrid && p.mrid !== '');
+                                    const newPoints = entity.positionPoints.filter(p => !p.mrid || p.mrid === '');
+                                    
+                                    // Update existing position points
+                                    if (existingPoints.length > 0) {
+                                        await updateGeoMapArrayByIdTransaction(existingPoints, db);
+                                    }
+                                    
+                                    // Insert new position points
+                                    if (newPoints.length > 0) {
+                                        await insertGeoMapArrayTransaction(newPoints, db);
+                                    }
+                                    
+                                    // Delete position points that are no longer in the list
+                                    if (existingEntity && existingEntity.positionPoints && Array.isArray(existingEntity.positionPoints) && existingEntity.positionPoints.length > 0) {
+                                        const newMrids = existingPoints.map(p => p.mrid).filter(m => m);
+                                        const oldMrids = existingEntity.positionPoints.map(p => p.mrid).filter(m => m);
+                                        const mridsToDelete = oldMrids.filter(mrid => !newMrids.includes(mrid));
+                                        
+                                        if (mridsToDelete.length > 0) {
+                                            await deleteGeoMapByArrayMridTransaction(mridsToDelete, db);
+                                        }
+                                    }
+                                } else {
+                                    // If no position points in new data, delete all existing ones
+                                    if (existingEntity && existingEntity.positionPoints && Array.isArray(existingEntity.positionPoints) && existingEntity.positionPoints.length > 0) {
+                                        const oldMrids = existingEntity.positionPoints.map(p => p.mrid).filter(m => m);
+                                        if (oldMrids.length > 0) {
+                                            await deleteGeoMapByArrayMridTransaction(oldMrids, db);
+                                        }
+                                    }
                                 }
                                 
                                 if (entity.attachment && entity.attachment.id && entity.attachment.path) {

@@ -1,4 +1,5 @@
 import db from '../../datacontext/index.js'
+import { v4 as newUuid } from 'uuid'
 
 // Get geoMap by id
 export const getGeoMapById = async (mrid) => {
@@ -123,14 +124,20 @@ export const insertGeoMapArrayTransaction = async (geoMaps, dbsql) => {
             return resolve({ success: true, data: [], message: 'No geo maps to insert' })
         }
 
-        // Filter out invalid entries - must have mrid and organisation_id
-        const validGeoMaps = geoMaps.filter(geoMap => 
-            geoMap && 
-            geoMap.mrid && 
-            geoMap.mrid !== '' && 
-            geoMap.organisation_id && 
-            geoMap.organisation_id !== ''
-        )
+        // Process and validate entries - create mrid if missing, but must have organisation_id
+        const validGeoMaps = geoMaps
+            .filter(geoMap => 
+                geoMap && 
+                geoMap.organisation_id && 
+                geoMap.organisation_id !== ''
+            )
+            .map(geoMap => {
+                // Create mrid if not exists
+                if (!geoMap.mrid || geoMap.mrid === '') {
+                    geoMap.mrid = newUuid();
+                }
+                return geoMap;
+            });
 
         if (validGeoMaps.length === 0) {
             return resolve({ success: true, data: [], message: 'No valid geo maps to insert' })

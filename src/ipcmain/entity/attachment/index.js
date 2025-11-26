@@ -1,11 +1,8 @@
 'use strict'
-import { ipcMain } from 'electron'
-const { shell } = require('electron')
-const { dialog } = require('electron')
+import { ipcMain, shell, dialog, BrowserWindow } from 'electron'
+import path from 'path'
 import { attachmentFunc } from '../../../function/index.js'
 import * as fileFunc from '../../../function/entity/file/index.js'
-var Path = require('path');
-import * as upath from 'upath';
 import * as attachmentContext from '../../../function/attachmentcontext/index.js'
 const pathUpload = attachmentContext.getAttachmentDir()
 import fs from 'fs'
@@ -26,7 +23,7 @@ export const openFile = () => {
 export const readFileData = () => {
     ipcMain.handle('readFileData', async function (event, file_Path) {
         try {
-            const data = await fs.promises.readFile(Path.join(pathUpload, `/${file_Path}`))
+            const data = await fs.promises.readFile(path.join(pathUpload, `/${file_Path}`))
             return data
         } catch (err) {
             return { success: false, message: 'Read file failed', err }
@@ -38,7 +35,7 @@ export const readFileData = () => {
 export const downloadFileData = () => {
     ipcMain.handle('downloadFileData', async function (event, base64, dirFile) {
         try {
-            await fs.promises.writeFile(Path.join(pathUpload, `/${dirFile}`), base64, { encoding: 'base64' })
+            await fs.promises.writeFile(path.join(pathUpload, `/${dirFile}`), base64, { encoding: 'base64' })
             return { success: true }
         } catch (err) {
             return { success: false, message: 'Download file data failed', err }
@@ -58,7 +55,7 @@ export const downloadFile = () => {
             })
             if (!rs.canceled) {
                 let nameFile = path.split(/[/\\]/).pop()
-                const dest = Path.join(rs.filePaths[0], nameFile)
+                const dest = path.join(rs.filePaths[0], nameFile)
                 const message = await fileFunc.downloadFile(path, dest)
                 return message
             } else {
@@ -77,27 +74,70 @@ export const downloadFile = () => {
 export const getAttachmentpath = () => {
     ipcMain.handle('getAttachmentpath', async function (event) {
         try {
-            const rs = await dialog.showOpenDialog({
+            // Get the BrowserWindow from the event sender
+            const win = BrowserWindow.fromWebContents(event.sender) || BrowserWindow.getFocusedWindow()
+            
+            // Define supported file types based on Attachment.vue
+            const rs = await dialog.showOpenDialog(win || null, {
                 title: 'Select the file to be uploaded',
                 buttonLabel: 'Upload',
-                filters: [],
+                filters: [
+                    {
+                        name: 'All Supported Files',
+                        extensions: ['png', 'jpg', 'jpeg', 'm4v', 'avi', 'mpg', 'mp4', 'doc', 'docx', 'xlsx', 'xls', 'csv', 'pptx', 'pdf']
+                    },
+                    {
+                        name: 'Images',
+                        extensions: ['png', 'jpg', 'jpeg']
+                    },
+                    {
+                        name: 'Videos',
+                        extensions: ['m4v', 'avi', 'mpg', 'mp4']
+                    },
+                    {
+                        name: 'Documents',
+                        extensions: ['doc', 'docx', 'pdf']
+                    },
+                    {
+                        name: 'Spreadsheets',
+                        extensions: ['xlsx', 'xls', 'csv']
+                    },
+                    {
+                        name: 'Presentations',
+                        extensions: ['pptx']
+                    },
+                    {
+                        name: 'All Files',
+                        extensions: ['*']
+                    }
+                ],
                 properties: ['openFile']
             })
-            if (!rs.canceled) {
-                let nameFileArr = rs.filePaths.toString()
+            
+            if (!rs.canceled && rs.filePaths && rs.filePaths.length > 0) {
+                // Get first file path from array
+                const filePath = rs.filePaths[0]
+                // Convert Windows path to Unix format (replace backslashes with forward slashes)
+                const unixPath = filePath.replace(/\\/g, '/')
                 return {
                     success: true,
                     message: '',
-                    path: upath.toUnix(nameFileArr)
+                    path: unixPath
                 }
             } else {
                 return {
                     success: false,
-                    message: ""
+                    message: rs.canceled ? "File selection cancelled" : "No file selected"
                 }
             }
         } catch (err) {
-            return { success: false, message: 'Get attachment path failed', err }
+            console.error('Get attachment path error:', err)
+            const errorMessage = err?.message || err?.toString() || 'Unknown error'
+            return { 
+                success: false, 
+                message: `Get attachment path failed: ${errorMessage}`,
+                err: err 
+            }
         }
     })
 }

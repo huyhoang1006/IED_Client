@@ -2162,6 +2162,10 @@ export default {
             try {
                 const subs = this.$refs.substation
                 if (subs) {
+                    if (subs.isSaving) {
+                        console.warn('handleSubsConfirm skipped because save already in progress')
+                        return
+                    }
                     const { success, data } = await subs.saveSubstation()
                     if (success) {
                         this.$message.success("Substation saved successfully")

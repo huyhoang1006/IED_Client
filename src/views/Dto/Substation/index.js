@@ -25,6 +25,9 @@ class SubstationDto {
             y: [],
             z: []
         }
+        this.x_position = ''
+        this.y_position = ''
+        this.z_position = ''
         this.attachment = new Attachment()
         this.subsId = ''
         this.locationId = ''
