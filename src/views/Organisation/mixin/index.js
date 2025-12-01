@@ -98,7 +98,9 @@ export default {
                 if (!this.properties.positionPoints.y) this.properties.positionPoints.y = []
                 if (!this.properties.positionPoints.z) this.properties.positionPoints.z = []
             }
-            
+
+            this.initFirstGeoPoint()
+
             // Ensure configurationEvent is an array
             if (!Array.isArray(this.properties.configurationEvent)) {
                 this.properties.configurationEvent = []
@@ -252,7 +254,7 @@ export default {
                     }
                     
                     if(result.success) {
-                        // Load lại entity từ database để lấy đầy đủ thông tin (bao gồm department và position)
+                        // Load lại entity từ database để lấy đầy đủ thông tin (bao gồm department, position, và positionPoints)
                         try {
                             const loadedEntity = await window.electronAPI.getOrganisationEntityByMrid(this.properties.organisationId)
                             if (loadedEntity && loadedEntity.success && loadedEntity.data) {
@@ -262,6 +264,22 @@ export default {
                                 this.properties.department = dto.department || ''
                                 this.properties.position = dto.position || ''
                                 this.properties.personRoleId = dto.personRoleId || ''
+                                
+                                // Update positionPoints từ database
+                                if (dto.positionPoints && typeof dto.positionPoints === 'object') {
+                                    this.properties.positionPoints = {
+                                        x: Array.isArray(dto.positionPoints.x) ? dto.positionPoints.x : [],
+                                        y: Array.isArray(dto.positionPoints.y) ? dto.positionPoints.y : [],
+                                        z: Array.isArray(dto.positionPoints.z) ? dto.positionPoints.z : []
+                                    }
+                                } else {
+                                    // Ensure positionPoints is initialized even if empty
+                                    this.properties.positionPoints = {
+                                        x: [],
+                                        y: [],
+                                        z: []
+                                    }
+                                }
                                 
                                 // Return loaded data
                                 return {
@@ -298,6 +316,35 @@ export default {
                 } finally {
                     this.isSaving = false; // Reset flag after save completes
                 }
+            }
+        },
+
+        initFirstGeoPoint() {
+            const points = this.properties.positionPoints || { x: [], y: [], z: [] }
+            const hasPoints = points.x?.length > 0 && points.y?.length > 0 && points.z?.length > 0
+            const mapRef = this.$refs?.geoMap
+
+            if (hasPoints) {
+                this.properties.x_position = points.x[0]?.coor || ''
+                this.properties.y_position = points.y[0]?.coor || ''
+                this.properties.z_position = points.z[0]?.coor || ''
+                this.$nextTick(() => {
+                    if (mapRef && typeof mapRef.loadMap === 'function') {
+                        mapRef.loadMap({
+                            x: this.properties.x_position,
+                            y: this.properties.y_position,
+                            z: this.properties.z_position
+                        }, true).catch(() => {})
+                    }
+                })
+                return
+            }
+
+            this.properties.x_position = ''
+            this.properties.y_position = ''
+            this.properties.z_position = ''
+            if (mapRef && typeof mapRef.reloadMap === 'function') {
+                mapRef.reloadMap()
             }
         },
         
@@ -371,14 +418,31 @@ export default {
             }
             if (dto.positionPoints.x.length !== 0) {
                 dto.positionPoints.x.forEach((element, index) => {
-                    if (element.id === null || element.id === '') {
-                        element.id = uuid.newUuid()
+                    // X, Y, Z của cùng một position point phải có cùng mrid
+                    // Lấy mrid từ x (hoặc y, z nếu x chưa có), nếu chưa có thì tạo mới
+                    let mrid = null;
+                    
+                    // Tìm mrid từ x, y, hoặc z (ưu tiên x)
+                    if (element.id && element.id !== null && element.id !== '') {
+                        mrid = element.id;
+                    } else if (dto.positionPoints.y[index] && dto.positionPoints.y[index].id && dto.positionPoints.y[index].id !== null && dto.positionPoints.y[index].id !== '') {
+                        mrid = dto.positionPoints.y[index].id;
+                    } else if (dto.positionPoints.z[index] && dto.positionPoints.z[index].id && dto.positionPoints.z[index].id !== null && dto.positionPoints.z[index].id !== '') {
+                        mrid = dto.positionPoints.z[index].id;
                     }
-                    if (dto.positionPoints.y[index] && (dto.positionPoints.y[index].id === null || dto.positionPoints.y[index].id === '')) {
-                        dto.positionPoints.y[index].id = uuid.newUuid()
+                    
+                    // Nếu chưa có mrid, tạo mới
+                    if (!mrid || mrid === null || mrid === '') {
+                        mrid = uuid.newUuid();
                     }
-                    if (dto.positionPoints.z[index] && (dto.positionPoints.z[index].id === null || dto.positionPoints.z[index].id === '')) {
-                        dto.positionPoints.z[index].id = uuid.newUuid()
+                    
+                    // Set cùng mrid cho x, y, z của cùng một position point
+                    element.id = mrid;
+                    if (dto.positionPoints.y[index]) {
+                        dto.positionPoints.y[index].id = mrid;
+                    }
+                    if (dto.positionPoints.z[index]) {
+                        dto.positionPoints.z[index].id = mrid;
                     }
                 });
             }

@@ -4,6 +4,7 @@ import * as ownerFunc from './organisation/index.js'
 import * as cimFunc from './cim/index.js'
 import * as userFunc from './transformer/user.js'
 import * as entityFunc from './entity/index.js'
+import * as attachmentFunc from './attachment/index.js'
 
 const assetFunc = {}
 const jobFunc = {}
@@ -14,7 +15,6 @@ const uploadFunc = {}
 const circuitFunc = {}
 const jobAssetFunc = {}
 const jobCircuitFunc = {}
-const attachmentFunc = {}
 const conditionFunc = {}
 const currentTransFunc = {}
 const currentTransJobFunc = {}

@@ -411,9 +411,41 @@ export default {
                 type: 'warning',
             }).then(async () => {
                 try {
+                    // Xóa trong UI
                     this.properties.positionPoints.x.splice(index, 1);
                     this.properties.positionPoints.y.splice(index, 1);
                     this.properties.positionPoints.z.splice(index, 1);
+                    
+                    // Lưu vào database nếu đang ở edit mode
+                    if (this.properties.organisationId && 
+                        this.properties.organisationId !== '' &&
+                        this.properties.organisationId !== '00000000-0000-0000-0000-000000000000') {
+                        // Save để cập nhật database
+                        const saveResult = await this.saveOrganisation();
+                        if (!saveResult || !saveResult.success) {
+                            // Nếu save thất bại, rollback UI
+                            this.$message.error('Failed to save changes to database');
+                            // Reload lại data từ database
+                            try {
+                                const loadedEntity = await window.electronAPI.getOrganisationEntityByMrid(this.properties.organisationId);
+                                if (loadedEntity && loadedEntity.success && loadedEntity.data) {
+                                    const orgMapper = await import('@/views/Mapping/Organisation/index.js');
+                                    const dto = orgMapper.OrgEntityToOrgDto(loadedEntity.data);
+                                    if (dto.positionPoints && typeof dto.positionPoints === 'object') {
+                                        this.properties.positionPoints = {
+                                            x: Array.isArray(dto.positionPoints.x) ? dto.positionPoints.x : [],
+                                            y: Array.isArray(dto.positionPoints.y) ? dto.positionPoints.y : [],
+                                            z: Array.isArray(dto.positionPoints.z) ? dto.positionPoints.z : []
+                                        };
+                                    }
+                                }
+                            } catch (loadErr) {
+                                console.error('Error reloading data:', loadErr);
+                            }
+                            return;
+                        }
+                    }
+                    
                     this.$message({
                         type: 'success',
                         message: 'Delete completed!',
@@ -423,7 +455,8 @@ export default {
                     this.properties.z_position = ''
                     await this.loadMapFirst()
                 } catch(e) {
-                    this.$message.error("Cannot delete coordinate")
+                    console.error('Error deleting coordinate:', e);
+                    this.$message.error("Cannot delete coordinate: " + (e?.message || 'Unknown error'))
                 }
             }).catch(() => {
                 this.$message({
@@ -435,6 +468,40 @@ export default {
         async loadMapForView() {
             try {
                 if(this.$refs.geoMap) {
+                    // Nếu có position points, load position point đầu tiên lên map
+                    if (this.properties.positionPoints && 
+                        this.properties.positionPoints.x && 
+                        this.properties.positionPoints.x.length > 0) {
+                        // Load position point đầu tiên
+                        const firstIndex = 0
+                        if (firstIndex < this.properties.positionPoints.x.length &&
+                            firstIndex < this.properties.positionPoints.y.length &&
+                            firstIndex < this.properties.positionPoints.z.length) {
+                            const x = this.properties.positionPoints.x[firstIndex]?.coor
+                            const y = this.properties.positionPoints.y[firstIndex]?.coor
+                            const z = this.properties.positionPoints.z[firstIndex]?.coor
+                            
+                            if (x && y && z) {
+                                // Set selected index
+                                this.indexGeo = firstIndex
+                                this.properties.x_position = x
+                                this.properties.y_position = y
+                                this.properties.z_position = z
+                                
+                                // Load map với position point đầu tiên
+                                await this.$refs.geoMap.loadMap(
+                                    {
+                                        x: x,
+                                        y: y,
+                                        z: z
+                                    },
+                                    true
+                                )
+                                return
+                            }
+                        }
+                    }
+                    // Nếu không có position points, chỉ reload map
                     this.$refs.geoMap.reloadMap()
                 }
             } catch(e) {

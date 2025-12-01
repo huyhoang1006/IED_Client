@@ -315,6 +315,11 @@ export function mapEntityToDto(entity) {
         })
     }
 
+    const firstPoint = Array.isArray(entity.positionPoint) && entity.positionPoint.length > 0 ? entity.positionPoint[0] : null
+    dto.x_position = firstPoint ? (firstPoint.x_position || '') : ''
+    dto.y_position = firstPoint ? (firstPoint.y_position || '') : ''
+    dto.z_position = firstPoint ? (firstPoint.z_position || '') : ''
+
     // user - safe access
     if (entity.user) {
         dto.userId = entity.user.user_id || ""

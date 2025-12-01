@@ -23,15 +23,15 @@ import * as positionPointFunc from './positionPoint/index.js'
 import * as activityRecordFunc from './activityRecord/index.js'
 import * as oldWorkFunc from './oldWork/index.js'
 import * as electronicAddressFunc from './electronicAddress/index.js'
+import * as telephoneNumberFunc from './telephoneNumber/index.js'
+import * as streetAddressFunc from './streetAddress/index.js'
+import * as streetDetailFunc from './streetDetail/index.js'
+import * as townDetailFunc from './townDetail/index.js'
 
 
 
 const identifiedObjectFunc = {}
 const psrTypeFunc = {}
-const streetAddressFunc = {}
-const streetDetailFunc = {}
-const townDetailFunc = {}
-const telephoneNumberFunc = {}
 const baseVoltageFunc = {}
 
 const ProductAssetModelFunc = {}

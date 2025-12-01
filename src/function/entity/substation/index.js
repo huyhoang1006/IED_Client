@@ -627,8 +627,9 @@ export const deleteSubstationEntityById = async (data) => {
                     await deleteOrganisationPersonById(entityData.organisationPerson.mrid);
                 }
                 // Xóa positionPoint nếu có location
-                if(entityData.location && entityData.location.mrid) {
-                    await deletePositionPointByLocationIdTransaction(entityData.location.mrid, db);
+                const locationIdToDelete = (entityData.location && entityData.location.mrid) || (entityData.substation && entityData.substation.location);
+                if (locationIdToDelete) {
+                    await deletePositionPointByLocationIdTransaction(locationIdToDelete, db);
                 }
                 // Xóa configurationEvent nếu có
                 if(entityData.configurationEvent && Array.isArray(entityData.configurationEvent) && entityData.configurationEvent.length > 0) {
