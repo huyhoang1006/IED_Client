@@ -1,7 +1,6 @@
 import {v4 as newUuid} from 'uuid'
 import {NIL as EMPTY} from 'uuid'
 import db from '../datacontext/index.js'
-import {newUuid, EMPTY} from '../../utils/uuid.js'
 
 export const insertTestingCondition = (id_foreign, info) => {
     let id = info.id || newUuid()

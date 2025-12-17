@@ -149,12 +149,7 @@ export default {
                         password: this.model.password
                     }
                     
-                    console.log('IPC LOGIN - Sending payload:', plainPayload)
-                    console.log('IPC LOGIN - Payload type:', typeof plainPayload, Object.keys(plainPayload || {}))
-                    console.log('IPC LOGIN - Payload preview:', JSON.stringify(plainPayload).slice(0, 1000))
-                    
                     const resp = await window.electronAPI.login(plainPayload)
-                    console.log('IPC login response:', resp)
 
                     if (!resp || resp.success !== true) {
                         // login failed
@@ -173,7 +168,6 @@ export default {
                 } else {
                     // Fallback to HTTP API
                     const response = await userApi.login(this.model)
-                    console.log('HTTP login response:', response)
                     const data = response.data || response
                     userData = {
                         name: this.model.username,
@@ -184,11 +178,8 @@ export default {
                     }
                 }
 
-                console.log('UserData created:', userData)
-
                 if (!userData.token) {
                     this.$message.warning('Login successful but no token received')
-                    console.warn('No token found in response for user:', userData)
                 }
 
                 this.$message.success('Login successfully')

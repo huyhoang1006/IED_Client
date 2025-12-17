@@ -2,6 +2,11 @@
 import {ipcMain} from 'electron'
 import {ownerFunc} from "../../function/index.js"
 import { conditionFunc, attachmentFunc } from '../../function/index.js'
+import * as attachmentContext from '../../function/attachmentcontext/index.js'
+import fs from 'fs'
+import path from 'path'
+
+const pathUpload = attachmentContext.getAttachmentDir()
 
 // Get Owner by name
 export const getOwnerByName = () => {
@@ -175,23 +180,38 @@ export const deleteOwnerById = () => {
 export const deleteOwner = () => {
     ipcMain.handle('deleteOwner', async function (event, ids) {
         try {
-            ids.forEach(async (id) => {
+            for (const id of ids) {
                 await ownerFunc.deleteOwnerById(id)
-                const atm = await attachmentFunc.getAllAttachment(id, "owner")
+                
+                // Get attachment by foreign id and type
+                const atmResult = await attachmentFunc.getAttachmentByForeignIdAndType(id, "owner")
+                if (atmResult.success && atmResult.data) {
+                    const atm = atmResult.data
+                    try {
+                        const nameData = JSON.parse(atm.name)
+                        if (Array.isArray(nameData)) {
+                            for (const e of nameData) {
+                                if (e.path) {
+                                    const filePath = path.join(pathUpload, `/${e.path}`)
+                                    if (fs.existsSync(filePath)) {
+                                        fs.unlinkSync(filePath)
+                                    }
+                                }
+                            }
+                        }
+                    } catch (parseError) {
+                        console.error('Error parsing attachment name:', parseError)
+                    }
+                    // Delete attachment record
+                    await attachmentFunc.deleteAttachmentById(atm.id)
+                }
+                
+                // Get and delete testing condition
                 const condi = await conditionFunc.getTestingCondition(id)
-                if(atm.length !== 0) {
-                    atm.forEach(element => {
-                        JSON.parse(element.name).forEach((e) => {
-                            fs.unlinkSync(path.join(pathUpload, `/${e.path}`))
-                        })
-                    })
-                    await deleteAttachment(id)
+                if (condi && condi.length !== 0) {
+                    await conditionFunc.deleteTestingCondition(id)
                 }
-                if(condi.length !== 0) {
-                    await deleteTestingCondition(id)
-                }
-
-            })
+            }
             return {
                 success: true,
                 message: "",
@@ -200,7 +220,7 @@ export const deleteOwner = () => {
         } catch (error) {
             return {
                 success: false,
-                message: error,
+                message: error.message || error.toString(),
                 data: null
             }
         }

@@ -7,10 +7,10 @@ export default {
     },
     methods: {
         handleKeyDown(event) {
-        if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {
-            event.preventDefault()
-            this.saveCtrS()
-        }
+            if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {
+                event.preventDefault()
+                this.saveCtrS()
+            }
         },
         saveCtrS() {
             if(this.clientSlide) {

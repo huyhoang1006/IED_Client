@@ -427,7 +427,6 @@ export default {
             }
         },
         ondupAsset() {
-            console.log(this.selectedAsset)
             if(this.selectedAsset[0].asset == "Transformer") {
                 this.$router.push({name: 'asset', query: {mode: 'dup', asset_id: this.selectedAsset[0].id}})
             } else if (this.selectedAsset[0].asset == "Circuit breaker") {

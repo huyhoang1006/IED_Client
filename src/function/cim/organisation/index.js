@@ -294,14 +294,12 @@ export const updateOrganisationByIdTransaction = async (mrid, organisation, dbsq
                 identifiedObjectExists = checkResult.exists;
             } catch (checkErr) {
                 // If check fails, assume it doesn't exist and try to insert
-                console.warn('Error checking identified_object existence, will try to insert:', checkErr);
                 identifiedObjectExists = false;
             }
             
             let identifiedResult;
             if (!identifiedObjectExists) {
                 // If identified_object doesn't exist, insert it first
-                console.log('Identified object not found, inserting new one for mrid:', mrid);
                 identifiedResult = await identifiedObjectFunc.insertIdentifiedObjectTransaction({
                     mrid: mrid,
                     name: organisation.name || null,

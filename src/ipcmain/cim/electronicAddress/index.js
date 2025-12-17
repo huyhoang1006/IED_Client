@@ -19,7 +19,6 @@ export const getElectronicAddressByMrid = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 error: error,
                 success: false,
@@ -47,7 +46,6 @@ export const insertElectronicAddress = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 error: error,
                 success: false,
@@ -73,7 +71,6 @@ export const deleteElectronicAddressByMrid = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 error: error,
                 success: false,
@@ -100,7 +97,6 @@ export const updateElectronicAddressByMrid = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 error: error,
                 success: false,

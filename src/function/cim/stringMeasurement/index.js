@@ -19,7 +19,6 @@ export const getStringMeasurementByMrid = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 error: error,
                 success: false,
@@ -47,7 +46,6 @@ export const getAllStringMeasurementByProcedure = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 error: error,
                 success: false,
@@ -74,7 +72,6 @@ export const insertStringMeasurement = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 error: error,
                 success: false,
@@ -100,7 +97,6 @@ export const deleteStringMeasurementByMrid = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 error: error,
                 success: false,

@@ -281,7 +281,6 @@ export default {
                     true
                 )
             } catch(e) {
-                console.log(e)
                 this.$message.error('Cannot load location in map')
             }
         },
@@ -289,7 +288,6 @@ export default {
             try {
                 await this.$refs.geoMap.loadMap(undefined, false)
             } catch(e) {
-                console.log(e)
                 this.$message.error('Cannot load location in map')
             }
         },
@@ -505,7 +503,6 @@ export default {
                     this.$refs.geoMap.reloadMap()
                 }
             } catch(e) {
-                console.log(e)
                 this.$message.error('Cannot load location in map')
             }
         }

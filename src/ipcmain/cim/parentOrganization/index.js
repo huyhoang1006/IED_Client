@@ -90,7 +90,6 @@ export const getParentOrganizationByParentMrid = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 success: false,
                 message: (error && error.message) ? error.message : "Internal error",
@@ -117,7 +116,6 @@ export const insertParentOrganization = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 success: false,
                 message: (error && error.message) ? error.message : "Internal error",
@@ -143,7 +141,6 @@ export const updateParentOrganizationByMrid = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 success: false,
                 message: (error && error.message) ? error.message : "Internal error",
@@ -169,7 +166,6 @@ export const deleteParentOrganizationByMrid = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 success: false,
                 message: (error && error.message) ? error.message : "Internal error",

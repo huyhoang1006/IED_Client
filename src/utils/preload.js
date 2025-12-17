@@ -14,7 +14,6 @@ function loaderStart() {
             })
         }
     } catch (error) {
-        console.warn('Loader start failed:', error)
     }
 }
 
@@ -25,7 +24,6 @@ function loaderEnd() {
             loader = null
         }
     } catch (error) {
-        console.warn('Loader end failed:', error)
     }
 }
 
@@ -42,7 +40,6 @@ function loaderContainerStart() {
             })
         }
     } catch (error) {
-        console.warn('Loader container start failed:', error)
     }
 }
 

@@ -725,7 +725,7 @@ import Bay from '@/views/Bay/index.vue'
 import JobSurgeArrester from '@/views/JobView/SurgeArrester/index.vue'
 // import * as rotatingMachineMapping from "@/views/Mapping/RotatingMachine/index"
 // import RotatingMachine from '@/views/AssetView/RotatingMachine/index.vue'
-import mixin from './mixin'
+import mixin from './mixin/index.js'
 import Attachment from '../Common/Attachment.vue';
 // import * as demoAPI from '@/api/demo'
 
@@ -919,17 +919,14 @@ export default {
             this.$message.error("Failed to fetch log data.");
         }
     },
-     methods: {
+    methods: {
 
         handleSelectDevice(deviceName) {
-            console.log(`Node được chọn:`, this.selectedNodes[0] || 'Không có');
-            console.log(`Thiết bị được yêu cầu thêm: ${deviceName}`);
             this.$message.info(`Yêu cầu thêm thiết bị: ${deviceName}`);
         },
 
         // Phương thức mới để xử lý các hành động chung
         handleContextMenuAction(action, node) {
-            console.log(`Hành động: ${action} trên node:`, node);
             this.$message.info(`Hành động: ${action}`);
             // Thêm logic xử lý cho Copy, Cut, Rename... tại đây
         },
@@ -1020,11 +1017,9 @@ export default {
 
         // Stub functions for missing APIs
         async getAssetByLocation(locationId) {
-            console.warn('assetApi.getAssetByLocation is not implemented')
             return { data: [] }
         },
         async findByLocationId(locationId) {
-            console.warn('API findByLocationId is not implemented')
             return { data: [] }
         },
         
@@ -1947,7 +1942,6 @@ export default {
             // Check if current node's mrid already exists in parentArr
             const exists = parentArr.some(parent => parent.mrid === node.mrid);
             if (exists) {
-                console.warn('Circular reference detected for node:', node.mrid);
                 return true;
             }
             
@@ -1960,7 +1954,6 @@ export default {
             
             // Check for circular reference
             if (this.hasCircularReference(clickedRow, clickedRow.parentArr || [])) {
-                console.warn('Circular reference in clickedRow, using empty parentArr');
                 return [];
             }
             
@@ -2029,7 +2022,6 @@ export default {
                             name: item.name || '',
                             parentName: '',
                             parentArr: [],
-                            mode: item.mode || '',
                             parentId: '',
                             mode: 'organisation',
                         }
@@ -2163,7 +2155,6 @@ export default {
                 const subs = this.$refs.substation
                 if (subs) {
                     if (subs.isSaving) {
-                        console.warn('handleSubsConfirm skipped because save already in progress')
                         return
                     }
                     const { success, data } = await subs.saveSubstation()
@@ -2974,7 +2965,6 @@ export default {
                             if (entity && entity.success && entity.data) {
                                 entityData = entity.data;
                             } else {
-                                console.log('Entity not found or incomplete, will attempt deletion by mrid:', normalizedMrid);
                                 entityData = normalizedMrid;
                             }
 
@@ -3590,8 +3580,8 @@ export default {
         },
 
         async resetAllServer() {
-            this.selectedNodes = [],
-                this.assetPropertySign = false
+            this.selectedNodes = []
+            this.assetPropertySign = false
             this.jobPropertySign = false
             this.pathMapServer = []
             this.properties = {
@@ -3703,7 +3693,7 @@ export default {
 
         async doubleClickNode(node) {
             await this.showDataClient(node);
-        },
+        }
 
     }
 }

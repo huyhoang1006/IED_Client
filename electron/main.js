@@ -16,19 +16,19 @@ function safeSerialize(data) {
     return data
 }
 
-import {app, protocol, BrowserWindow, ipcMain, dialog, screen} from 'electron'
+import { app, protocol, BrowserWindow, ipcMain, dialog, screen } from 'electron'
 import sqlite3 from 'sqlite3'
 import * as updateModule from '../src/update/index.js'
-import path, {resolve} from 'path'
-import {fileURLToPath} from 'url'
+import path, { resolve } from 'path'
+import { fileURLToPath } from 'url'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 import fs from 'fs'
-import {v4 as newUuid} from 'uuid'
-import {NIL as EMPTY} from 'uuid'
-import {parse} from 'csv-parse'
-import {userFunc, locationFunc, assetFunc, jobFunc, importHavec1pha1capFunc, importHavec3pha1capFunc, importHavec3pha2capFunc, entityFunc} from '../src/function/index.js'
+import { v4 as newUuid } from 'uuid'
+import { NIL as EMPTY } from 'uuid'
+import { parse } from 'csv-parse'
+import { userFunc, locationFunc, assetFunc, jobFunc, importHavec1pha1capFunc, importHavec3pha1capFunc, importHavec3pha2capFunc, entityFunc } from '../src/function/index.js'
 import {
     circuitFunc,
     jobAssetFunc,
@@ -39,12 +39,12 @@ import {
     surgeArresterFunc,
     powerCableFunc
 } from '../src/function/index.js'
-import {currentTransJobFunc, voltageTransJobFunc, disconnectorJobFunc, surgeArresterJobFunc, powerCableJobFunc} from '../src/function/index.js'
+import { currentTransJobFunc, voltageTransJobFunc, disconnectorJobFunc, surgeArresterJobFunc, powerCableJobFunc } from '../src/function/index.js'
 // import {ipcCircuit, ipcJobCircuit, ipcTransformer, ipcCurrentTrans, ipcVoltageTrans, ipcDisconnector, ipcSurgeArrester, ipcPowerCable} from '../src/ipcmain/index.js' // Modules not found
 // import { ipcJobCurrent, ipcJobVoltage, ipcJobDisconnector, ipcJobSurge, ipcJobPower, ipcJobTransformer } from '../src/ipcmain/index.js' // Modules not found
 // import { ipcUploadCustom, ipcUpdateManu } from '../src/ipcmain/index.js' // ipcUpdateManu not found
-import {ipcOwner} from '../src/ipcmain/index.js'
-import {ipcCim, ipcEntity} from '../src/ipcmain/index.js'
+import { ipcOwner } from '../src/ipcmain/index.js'
+import { ipcCim, ipcEntity } from '../src/ipcmain/index.js'
 let win
 
 const nameDB = 'database.db'
@@ -56,13 +56,13 @@ db.run('PRAGMA foreign_keys=ON')
 
 const isDevelopment = process.env.NODE_ENV === 'development'
 
-protocol.registerSchemesAsPrivileged([{scheme: 'app', privileges: {secure: true, standard: true}}])
+protocol.registerSchemesAsPrivileged([{ scheme: 'app', privileges: { secure: true, standard: true } }])
 
 function adjustWindowSize() {
     const primaryDisplay = screen.getPrimaryDisplay()
-    const {width, height} = primaryDisplay.workAreaSize 
+    const { width, height } = primaryDisplay.workAreaSize
 
-    win.setBounds({x: 0, y: 0, width, height})
+    win.setBounds({ x: 0, y: 0, width, height })
 }
 
 async function createWindow() {
@@ -91,8 +91,9 @@ async function createWindow() {
     }
 }
 
-if (process.platform !== 'darwin') {
-}
+// Platform-specific code can be added here if needed
+// if (process.platform !== 'darwin') {
+// }
 
 app.on('activate', async () => {
     if (BrowserWindow.getAllWindows().length === 0) await createWindow()
@@ -422,7 +423,7 @@ const importHavecBushing = async (asset_id) => {
     return new Promise((resolve, reject) => {
         db.run(
             'INSERT INTO bushings(asset_id, asset_type, serial_no, manufacturer, manufacturer_type,manufacturer_year, insull_level, voltage_gr, max_sys_voltage, rate_current, df_c1, cap_c1, df_c2, cap_c2, insulation_type)' +
-                'VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            'VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
             [
                 asset_id,
                 JSON.stringify(bushing.asset_type),
@@ -693,8 +694,8 @@ const updateOnlineMonitoringData = (online_monitoring) => {
     return new Promise((resolve, reject) => {
         db.run(
             'UPDATE online_monitor' +
-                ' SET ageing_insulation = ?, moisture_insulation = ?, bushings_online = ?, patital_discharge = ?, dga = ?, bushing_df_worst = ?,  bushing_df_average= ?, bushing_c_worst   = ?, bushing_c_average = ?, condition_mois    = ?, health_index      = ?, weight_bushing_df = ?, weight_bushing_c  = ?, weight_mois = ?' +
-                ' WHERE asset_id = ?',
+            ' SET ageing_insulation = ?, moisture_insulation = ?, bushings_online = ?, patital_discharge = ?, dga = ?, bushing_df_worst = ?,  bushing_df_average= ?, bushing_c_worst   = ?, bushing_c_average = ?, condition_mois    = ?, health_index      = ?, weight_bushing_df = ?, weight_bushing_c  = ?, weight_mois = ?' +
+            ' WHERE asset_id = ?',
             [
                 JSON.stringify(online_monitoring.aois),
                 JSON.stringify(online_monitoring.moip),
@@ -725,7 +726,7 @@ const insertOnlineMonitoringData = (assetId, online_monitoring) => {
     return new Promise((resolve, reject) => {
         db.run(
             'INSERT INTO online_monitor(id, asset_id, ageing_insulation, moisture_insulation, bushings_online, patital_discharge, dga, bushing_df_worst, bushing_df_average, bushing_c_worst, bushing_c_average, condition_mois, health_index, weight_bushing_df, weight_bushing_c, weight_mois, created_on, created_by, updated_on, updated_by )' +
-                ' VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? )',
+            ' VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? )',
             [
                 online_monitoring.id,
                 assetId,
@@ -801,7 +802,7 @@ const objectToXls = (data) => {
 
 const csvToObject = (csvData) => {
     return new Promise((resolve, reject) => {
-        parse(csvData, {columns: true, delimiter: ','}, function (err, data_) {
+        parse(csvData, { columns: true, delimiter: ',' }, function (err, data_) {
             if (err) reject(err)
             else {
                 var data = JSON.stringify(data_, null, 2)
@@ -825,7 +826,7 @@ const importAssetXls = (locationId, data) => {
     return new Promise((resolve, reject) => {
         db.run(
             'INSERT INTO assets(id, location_id, serial_no, feeder, manufacturer, manufacturing_year, manufacturer_type, apparatus_id, asset_system_code, rated_frequency, comment, unsupported_vector_group, phases, base_power, base_voltage, ref_temp, max_short_circuit_current_ka, insulation_weight,  insulation_volume, total_weight, category, tank_type, insulation_medium, asset, asset_type, vector_group, voltage_ratings, power_ratings, current_ratings, prim_sec, prim_tert, sec_tert, winding)' +
-                ' VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            ' VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
             [
                 data.Id,
                 locationId,
@@ -873,7 +874,7 @@ export const importBushingXls = (assetId, data) => {
     return new Promise((resolve, reject) => {
         db.run(
             'INSERT INTO bushings(id, asset_id, asset_type, serial_no, manufacturer, manufacturer_type, manufacturer_year, insull_level, voltage_gr, max_sys_voltage, rate_current, df_c1, cap_c1, df_c2, cap_c2, insulation_type)' +
-                ' VALUES( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            ' VALUES( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
             [
                 data.Id,
                 assetId,
@@ -904,7 +905,7 @@ const importTapChangersXls = (asset_id, data) => {
     return new Promise((resolve, reject) => {
         db.run(
             'INSERT INTO tap_changers(id, asset_id, mode, serial_no, manufacturer, manufacturer_type, winding, tap_scheme, no_of_taps, voltage_table)' +
-                ' VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            ' VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
             [
                 data.Id,
                 asset_id,
@@ -947,7 +948,6 @@ const xlsToObject = (xlsData) => {
 
 // Handle app quit events
 app.on('before-quit', (event) => {
-    console.log('App is quitting...')
     // Force close all windows
     if (win) {
         win.removeAllListeners('close')
@@ -956,7 +956,6 @@ app.on('before-quit', (event) => {
 })
 
 app.on('window-all-closed', () => {
-    console.log('All windows closed, quitting app...')
     app.exit(0)
     process.exit(0) // Force exit process
 })
@@ -976,7 +975,7 @@ app.on('ready', async () => {
             const _user = await userFunc.getUser(user)
 
             if (_user === undefined || _user === null) {
-                return {success: false, message: 'Invalid credentials'}
+                return { success: false, message: 'Invalid credentials' }
             }
 
             // Generate token (UUID). For a more secure approach use JWT with expiry.
@@ -1003,8 +1002,7 @@ app.on('ready', async () => {
                 user: safeSerialize(_user)
             }
         } catch (error) {
-            console.error('IPC LOGIN - Error:', error)
-            return {success: false, message: error?.message || String(error)}
+            return { success: false, message: error?.message || String(error) }
         }
     })
 
@@ -1717,7 +1715,7 @@ app.on('ready', async () => {
         const rs = await dialog.showSaveDialog({
             title: 'Select the file path to save',
             buttonLabel: 'Save',
-            filters: [{name: 'xls', extensions: ['xls']}],
+            filters: [{ name: 'xls', extensions: ['xls'] }],
             properties: []
         })
 
@@ -1747,12 +1745,11 @@ app.on('ready', async () => {
         const rs = await dialog.showSaveDialog({
             title: 'Select the file path to save',
             buttonLabel: 'Save',
-            filters: [{name: 'json', extensions: ['json']}],
+            filters: [{ name: 'json', extensions: ['json'] }],
             properties: []
         })
         try {
             if (!rs.canceled) {
-                console.log(data)
                 fs.writeFileSync(rs.filePath.toString(), JSON.stringify(data, null, 4))
                 return {
                     success: true,
@@ -1786,7 +1783,7 @@ app.on('ready', async () => {
         })
 
         if (!rs.canceled) {
-            const xlsData = fs.readFileSync(rs.filePaths[0].toString(), {encoding: 'utf-8'})
+            const xlsData = fs.readFileSync(rs.filePaths[0].toString(), { encoding: 'utf-8' })
             var data = await xlsToObject(xlsData)
             await importAssetXls(locationId, data[0])
             await importBushingXls(data[0].Id, data[1])
@@ -1818,13 +1815,12 @@ app.on('ready', async () => {
 
         try {
             if (!rs.canceled) {
-                const jsonStr = fs.readFileSync(rs.filePaths[0].toString(), {encoding: 'utf-8'})
+                const jsonStr = fs.readFileSync(rs.filePaths[0].toString(), { encoding: 'utf-8' })
                 const locations = JSON.parse(jsonStr)
-                console.log(locations)
                 locations.forEach(async (location, index, arr) => {
                     try {
                         await locationFunc.importLocation(userId, location)
-                    } catch (error) {}
+                    } catch (error) { }
                 })
 
                 return {
@@ -1860,11 +1856,11 @@ app.on('ready', async () => {
 
         try {
             if (!rs.canceled) {
-                const jsonStr = fs.readFileSync(rs.filePaths[0].toString(), {encoding: 'utf-8'})
+                const jsonStr = fs.readFileSync(rs.filePaths[0].toString(), { encoding: 'utf-8' })
                 const fullAssets = JSON.parse(jsonStr)
                 fullAssets.forEach(async (fullAsset, index, arr) => {
                     try {
-                        const {asset, bushing, tap_changer} = fullAsset
+                        const { asset, bushing, tap_changer } = fullAsset
                         if (asset.asset == 'Transformer') {
                             const assetId = await assetFunc.importAsset(locationId, asset)
                             await assetFunc.importBushing(bushing, assetId)
@@ -1882,7 +1878,7 @@ app.on('ready', async () => {
                         } else if (asset.asset == 'Power cable') {
                             powerCableFunc.importAsset(asset, locationId)
                         }
-                    } catch (error) {}
+                    } catch (error) { }
                 })
 
                 return {
@@ -1923,7 +1919,7 @@ app.on('ready', async () => {
     ipcMain.handle('getTestByJobId', async function (event, jobId) {
         try {
             let testList = await jobFunc.getTestByJobId(jobId)
-            testList = testList.map((test) => ({...test, job_id: jobId}))
+            testList = testList.map((test) => ({ ...test, job_id: jobId }))
             return {
                 success: true,
                 message: '',
@@ -2223,7 +2219,7 @@ app.on('ready', async () => {
             const job = await jobFunc.getJobById(id)
             const job_id = job.id
             let testList = await jobFunc.getTestByJobId(id)
-            testList = testList.map((test) => ({...test, job_id}))
+            testList = testList.map((test) => ({ ...test, job_id }))
             return {
                 success: true,
                 message: '',
@@ -2483,7 +2479,7 @@ app.on('ready', async () => {
             const job = await jobCircuitFunc.getJobById(id)
             const job_id = job.id
             let testList = await jobCircuitFunc.getTestByJobId(id)
-            testList = testList.map((test) => ({...test, job_id}))
+            testList = testList.map((test) => ({ ...test, job_id }))
             return {
                 success: true,
                 message: '',
@@ -2548,10 +2544,10 @@ app.on('ready', async () => {
 
         try {
             if (!rs.canceled) {
-                const jsonStr = fs.readFileSync(rs.filePaths[0].toString(), {encoding: 'utf-8'})
+                const jsonStr = fs.readFileSync(rs.filePaths[0].toString(), { encoding: 'utf-8' })
                 const fullJobs = JSON.parse(jsonStr)
                 fullJobs.forEach(async (fullJob) => {
-                    const {job, tests} = fullJob
+                    const { job, tests } = fullJob
                     if (assetType == 'Transformer') {
                         const jobId = await jobFunc.importJob(assetId, job)
                         tests.forEach(async (test) => {
@@ -2676,73 +2672,77 @@ app.on('ready', async () => {
                 data: null
             }
         }
-    }),
-        ipcMain.handle('getFmecaName', async function (event) {
-            try {
-                const fmeca = await getFmecaName()
-                return {
-                    success: true,
-                    message: '',
+    })
+
+    ipcMain.handle('getFmecaName', async function (event) {
+        try {
+            const fmeca = await getFmecaName()
+            return {
+                success: true,
+                message: '',
+                fmeca
+            }
+        } catch (error) {
+            return {
+                success: false,
+                message: error,
+                data: null
+            }
+        }
+    })
+
+    ipcMain.handle('getFmeca', async function (event, id) {
+        try {
+            const fmeca = await getFmeca(id)
+            return {
+                success: true,
+                message: '',
+                data: {
                     fmeca
                 }
-            } catch (error) {
-                return {
-                    success: false,
-                    message: error,
-                    data: null
+            }
+        } catch (error) {
+            return {
+                success: false,
+                message: error,
+                data: null
+            }
+        }
+    })
+
+    ipcMain.handle('checkFmecaExist', async function (event) {
+        try {
+            const fmeca = await checkFmecaExist()
+            return {
+                success: true,
+                message: '',
+                data: {
+                    fmeca
                 }
             }
-        }),
-        ipcMain.handle('getFmeca', async function (event, id) {
-            try {
-                const fmeca = await getFmeca(id)
-                return {
-                    success: true,
-                    message: '',
-                    data: {
-                        fmeca
-                    }
-                }
-            } catch (error) {
-                return {
-                    success: false,
-                    message: error,
-                    data: null
-                }
+        } catch (error) {
+            return {
+                success: false,
+                message: error,
+                data: null
             }
-        }),
-        ipcMain.handle('checkFmecaExist', async function (event) {
-            try {
-                const fmeca = await checkFmecaExist()
-                return {
-                    success: true,
-                    message: '',
-                    data: {
-                        fmeca
-                    }
-                }
-            } catch (error) {
-                return {
-                    success: false,
-                    message: error,
-                    data: null
-                }
+        }
+    })
+
+    ipcMain.handle('insertFmeca', async function (event, fmeca) {
+        try {
+            await insertFmeca(fmeca)
+            return {
+                success: true,
+                message: 'Success'
             }
-        }),
-        ipcMain.handle('insertFmeca', async function (event, fmeca) {
-            try {
-                await insertFmeca(fmeca)
-                return {
-                    success: true,
-                    message: 'Success'
-                }
-            } catch (error) {
-                return {
-                    success: false,
-                    message: error
-                }
+        } catch (error) {
+            return {
+                success: false,
+                message: error
             }
-        })
+        }
+    })
 
     ipcMain.handle('deleteFmeca', async function (event, id) {
         try {
@@ -2819,34 +2819,34 @@ app.on('ready', async () => {
                 data: null
             }
         }
-    }),
-        ipcMain.handle('insertOnlineMonitoringData', async function (event, assetId, online_monitoring) {
-            try {
-                await insertOnlineMonitoringData(assetId, online_monitoring)
-                return {
-                    success: true,
-                    message: 'Success'
-                }
-            } catch (error) {
-                return {
-                    success: false,
-                    message: error
-                }
-            }
-        }),
-        // Location APIs - moved to src/ipcmain/cim/location/index.js
-        // Person APIs - moved to src/ipcmain/cim/person/index.js
-        ipcMain.on('closeApp', () => {
-            console.log('App closing...')
-            try {
-                db.close()
-            } catch (e) {
-                console.log('DB already closed')
-            }
+    })
 
-            // Force exit with error code to kill npm script
-            process.exit(1)
-        })
+    ipcMain.handle('insertOnlineMonitoringData', async function (event, assetId, online_monitoring) {
+        try {
+            await insertOnlineMonitoringData(assetId, online_monitoring)
+            return {
+                success: true,
+                message: 'Success'
+            }
+        } catch (error) {
+            return {
+                success: false,
+                message: error
+            }
+        }
+    })
+
+    // Location APIs - moved to src/ipcmain/cim/location/index.js
+    // Person APIs - moved to src/ipcmain/cim/person/index.js
+    ipcMain.on('closeApp', () => {
+        try {
+            db.close()
+        } catch (e) {
+        }
+
+        // Force exit with error code to kill npm script
+        process.exit(1)
+    })
 
     ipcMain.on('minimizeApp', () => {
         win.minimize()
@@ -2866,11 +2866,9 @@ app.on('ready', async () => {
     })
 
     ipcMain.handle('window:close', () => {
-        console.log('Window closing...')
         try {
             db.close()
         } catch (e) {
-            console.log('DB already closed')
         }
 
         // Force exit with error code to kill npm script

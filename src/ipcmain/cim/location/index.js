@@ -19,7 +19,6 @@ export const getLocationByMrid = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 error: error,
                 success: false,
@@ -47,7 +46,6 @@ export const getLocationByOrganisationId = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 error: error,
                 success: false,
@@ -74,7 +72,6 @@ export const getAllLocations = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 error: error,
                 success: false,
@@ -102,7 +99,6 @@ export const insertLocation = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 error: error,
                 success: false,
@@ -129,7 +125,6 @@ export const deleteLocationByMrid = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 error: error,
                 success: false,
@@ -156,7 +151,6 @@ export const updateLocationByMrid = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 error: error,
                 success: false,
@@ -183,7 +177,6 @@ export const getLocationDetailByMrid = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 error: error,
                 success: false,

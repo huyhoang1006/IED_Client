@@ -35,7 +35,6 @@ export const volEntityToVolDto = (volEntity) => {
 
     // Check if voltageLevel exists
     if (!volEntity || !volEntity.voltageLevel) {
-        console.warn('volEntityToVolDto: volEntity or voltageLevel is missing')
         return volDto
     }
 

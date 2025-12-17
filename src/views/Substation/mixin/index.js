@@ -37,7 +37,6 @@ export default {
             try {
                 const { locationList, personList, dto, substation } = data
                 this.properties = dto
-                console.log('[DEBUG] Substation.loadData - properties.positionPoints', this.properties.positionPoints)
                 this.locationListData = locationList
                 this.personListData = personList
                 this.locationTemp = this.properties.locationId || ""
@@ -62,7 +61,6 @@ export default {
         async saveSubstation() {
             // Prevent duplicate saves
             if (this.isSaving) {
-                console.warn('Save already in progress, ignoring duplicate save request');
                 return { success: false, message: 'Save already in progress' };
             }
             
@@ -95,7 +93,6 @@ export default {
                             }
                             
                             const substationEntity = subsMapper.mapDtoToEntity(dto)
-                            console.log('[DEBUG] Substation.saveSubstation - entity.positionPoint', substationEntity.positionPoint)
                             
                             // Validate entity has substation with mrid
                             if (!substationEntity.substation || !substationEntity.substation.mrid) {
@@ -495,7 +492,6 @@ export default {
                                 this.properties.positionPoints.y.push(posY);
                                 this.properties.positionPoints.z.push(posZ);
                             });
-                            console.log('[DEBUG] Substation.changeLocationName - properties.positionPoints', this.properties.positionPoints)
                         }
                     } else {
                         this.properties.positionPoints = {x: [], y: [], z: []};

@@ -19,7 +19,6 @@ export const getBushingByMrid = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 error: error,
                 success: false,
@@ -46,7 +45,6 @@ export const getBushingByPsrId = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 error: error,
                 success: false,
