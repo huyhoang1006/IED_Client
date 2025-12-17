@@ -67,7 +67,6 @@ export const insertAssetInfo = async (info) => {
 export const insertAssetInfoTransaction = (info, dbsql) => {
     return new Promise(async (resolve, reject) => {
         try {
-            console.log('start insert asset info : ' + JSON.stringify(info));
             const identifiedResult = await IdentifiedObjectFunc.insertIdentifiedObjectTransaction(info, dbsql)
             if (!identifiedResult.success) {
                 return reject({ success: false, message: 'Insert identified object failed', err: identifiedResult.err })
@@ -201,12 +200,10 @@ export const deleteAssetInfoByIdTransaction = (mrid, dbsql) => {
                     if (err) {
                         return reject({ success: false, err: err, message: 'Delete assetInfo transaction failed' })
                     }
-                    console.log('Delete assetInfo transaction completed');
                     return resolve({ success: true, data: mrid, message: 'Delete assetInfo transaction completed' })
                 })
             })
             .catch(err => {
-                console.log(err);
                 return reject({ success: false, err: err, message: 'Delete assetInfo transaction failed' })
             })
     })

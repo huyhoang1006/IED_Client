@@ -426,7 +426,6 @@ export default {
                 }
             }
 
-            console.log(ownerListDelete)
             this.$confirm('Do you want to delete this location?', 'Warning', {
                 confirmButtonText: 'OK',
                 cancelButtonText: 'Cancel',
@@ -585,7 +584,6 @@ export default {
                         })
                         .catch((error) => {
                             loader.loaderEnd()
-                            console.log(error)
                             this.$message.error(error.message)
                         })
                 })

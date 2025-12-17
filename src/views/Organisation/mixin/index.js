@@ -153,7 +153,6 @@ export default {
                 try {
                     this.attachmentData = JSON.parse(data.attachment.path)
                 } catch (e) {
-                    console.error('Error parsing attachment path:', e)
                     this.attachmentData = []
                 }
             } else {
@@ -181,7 +180,6 @@ export default {
                         }
                     }
                 } catch (error) {
-                    console.error('Error loading person role data:', error)
                 }
             }
             
@@ -197,7 +195,6 @@ export default {
         async saveOrganisation() {
             // Prevent duplicate saves
             if (this.isSaving) {
-                console.warn('Save already in progress, ignoring duplicate save request');
                 return { success: false, message: 'Save already in progress' };
             }
             
@@ -288,7 +285,6 @@ export default {
                                 }
                             }
                         } catch (loadError) {
-                            console.error('Error loading entity after save:', loadError)
                             // Fallback to result data if load fails
                         }
                         

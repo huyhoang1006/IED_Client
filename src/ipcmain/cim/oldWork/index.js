@@ -19,7 +19,6 @@ export const getOldWorkByMrid = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 error: error,
                 success: false,

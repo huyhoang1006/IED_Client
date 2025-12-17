@@ -10,7 +10,6 @@ export const insertValueToColumn = (db, tableName, columns, values) => {
     }
     sqlQuery = sqlQuery.slice(0, -1)
     sqlQuery = sqlQuery + ")"
-    console.log(sqlQuery)
 
     return new Promise((resolve, reject) => {
         db.run(sqlQuery, [], function(err) {

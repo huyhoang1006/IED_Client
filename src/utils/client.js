@@ -16,7 +16,6 @@ client.interceptors.request.use(
         
         // Chỉ kiểm tra serverAddr nếu đang gọi API HTTP
         if (!store.state.serverAddr && config.url && !config.url.startsWith('data:')) {
-            console.warn('Server address not configured, but making HTTP request to:', config.url)
             // Không reject, chỉ warning
         }
         return config

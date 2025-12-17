@@ -124,7 +124,6 @@ export default {
                     this.$message.success('Successful')
                 })
                 .catch((error) => {
-                    console.log(error)
                     this.$message.error(error.message)
                 })
         },
@@ -159,7 +158,6 @@ export default {
                 jobApi.collab(this.id, this.collabs).then((data) => {
                     this.$message.success('Successful')
                 }).catch((error) => {
-                    console.log(error)
                     this.$message.error(error.message)
                 })
             } else {

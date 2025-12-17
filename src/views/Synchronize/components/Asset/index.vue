@@ -385,7 +385,6 @@ export default {
                     await this.getAssets()
                 })
                 .catch((error) => {
-                    console.log(error)
                     this.$message.error(error.message)
                 })
         },
@@ -501,7 +500,6 @@ export default {
                     console.error("Lỗi xử lý file đính kèm:", error);
                 }
             }
-            console.log("B")
             let transformer = this.selectedAsset.filter(item => item.asset == "Transformer")
             if(transformer.length != 0) {
                 assetApi.download(listId).then(async (response) => {
@@ -658,7 +656,6 @@ export default {
                             await this.refresh()
                         })
                         .catch((error) => {
-                            console.log(error)
                             this.$message.error(error.message)
                         })
                 })

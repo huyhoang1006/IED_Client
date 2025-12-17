@@ -37,8 +37,7 @@ export default {
                     code : 'v_test',
                     unit : 'V',
                     type : 'analog',
-                }
-                ,
+                },
                 {
                     mrid : '',
                     name : 'R60s',
@@ -226,8 +225,7 @@ export default {
                     name : 'Unit number',
                     code : 'unit_no',
                     type : 'analog',
-                }
-                ,
+                },
                 {
                     mrid : '',
                     name : 'V test',
@@ -328,8 +326,7 @@ export default {
                     name : 'Unit number',
                     code : 'unit_no',
                     type : 'analog',
-                }
-                ,
+                },
                 {
                     mrid : '',
                     name : 'Reference current',

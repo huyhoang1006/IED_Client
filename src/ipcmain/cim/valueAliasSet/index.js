@@ -19,7 +19,6 @@ export const getValueAliasSetByMrid = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 error: error,
                 success: false,
@@ -47,7 +46,6 @@ export const getValueAliasSetAndValueToAliasByMrid = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 error: error,
                 success: false,
@@ -75,7 +73,6 @@ export const getValueAliasSetByMrids = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 error: error,
                 success: false,

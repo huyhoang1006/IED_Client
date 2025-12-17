@@ -51,7 +51,6 @@ export default {
         async uploadReport() {
             if(this.name !== '') {
                 const rs = await window.electronAPI.uploadReport(this.name, this.$store.state.selectedAsset[0], this.$store.state.selectedLocation[0], this.$store.state.selectedJob[0], this.$store.state.user.user_id)
-                console.log(rs)
                 if(rs.success) {
                     this.$message({
                         type: 'success',

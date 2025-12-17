@@ -117,8 +117,6 @@ export default {
                         locationOwnerId = rv.data
                     }
 
-                    console.log(locationOwnerId)
-
                     var location = JSON.parse(JSON.stringify(this.dataLocation))
                     location.properties.mode = 'location'
                     location.properties.id = this.$uuid.newUuid()

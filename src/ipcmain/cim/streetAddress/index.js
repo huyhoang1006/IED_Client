@@ -19,7 +19,6 @@ export const getStreetAddressByMrid = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 error: error,
                 success: false,
@@ -47,7 +46,6 @@ export const insertStreetAddress = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 error: error,
                 success: false,
@@ -74,7 +72,6 @@ export const deleteStreetAddressByMrid = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 error: error,
                 success: false,
@@ -101,7 +98,6 @@ export const updateStreetAddressByMrid = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 error: error,
                 success: false,
