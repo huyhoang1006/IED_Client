@@ -61,7 +61,6 @@ export default {
         async saveSubstation() {
             // Prevent duplicate saves
             if (this.isSaving) {
-                console.warn('Save already in progress, ignoring duplicate save request');
                 return { success: false, message: 'Save already in progress' };
             }
             

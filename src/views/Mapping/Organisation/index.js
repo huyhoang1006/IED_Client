@@ -71,13 +71,17 @@ export const OrgDtoToOrgEntity = (orgDto) => {
         orgEntity.configurationEvent = orgDto.configurationEvent
     }
 
-    if(Array.isArray(orgDto.positionPoints.x) && orgDto.positionPoints.x.length > 0) {
-        for (let i = 0; i < orgDto.positionPoints.x.length; i++) {
+    const xPoints = Array.isArray(orgDto.positionPoints?.x) ? orgDto.positionPoints.x : [];
+    const yPoints = Array.isArray(orgDto.positionPoints?.y) ? orgDto.positionPoints.y : [];
+    const zPoints = Array.isArray(orgDto.positionPoints?.z) ? orgDto.positionPoints.z : [];
+
+    if (xPoints.length > 0) {
+        for (let i = 0; i < xPoints.length; i++) {
             const geoMapPoint = new GeoMap();
-            geoMapPoint.mrid = orgDto.positionPoints.x[i].id || null;
-            geoMapPoint.x = orgDto.positionPoints.x[i].coor || null;
-            geoMapPoint.y = orgDto.positionPoints.y[i].coor || null;
-            geoMapPoint.z = orgDto.positionPoints.z[i].coor || null;
+            geoMapPoint.mrid = xPoints[i]?.id || null;
+            geoMapPoint.x = xPoints[i]?.coor || null;
+            geoMapPoint.y = yPoints[i]?.coor || null;
+            geoMapPoint.z = zPoints[i]?.coor || null;
             geoMapPoint.organisation_id = orgDto.organisationId || null;
             orgEntity.positionPoints.push(geoMapPoint);
         }

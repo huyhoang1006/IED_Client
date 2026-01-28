@@ -19,7 +19,6 @@ export const getPersonRoleByMrid = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 error: error,
                 success: false,
@@ -46,7 +45,6 @@ export const getPersonRoleByPersonId = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 error: error,
                 success: false,
@@ -74,7 +72,6 @@ export const insertPersonRole = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 error: error,
                 success: false,
@@ -100,7 +97,6 @@ export const deletePersonRoleByMrid = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 error: error,
                 success: false,
@@ -127,7 +123,6 @@ export const updatePersonRoleByMrid = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 error: error,
                 success: false,

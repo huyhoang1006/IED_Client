@@ -130,7 +130,7 @@ export default {
         async upload() {
             try {
                 const rs = await window.electronAPI.getAttachmentpath()
-                if (rs.success) {
+                if (rs && rs.success) {
                     if(this.rowData.map(e => e.path.split(/[/\\]/).pop()).includes(rs.path.split(/[/\\]/).pop())) {
                         this.$message.error("Name file exists, please choose another file")
                         return
@@ -144,15 +144,25 @@ export default {
                         message: 'Attachment completed'
                     })
                 } else {
-                    this.$message.error("Attachment cannot completed")
+                    const errorMsg = rs?.message || "Attachment cannot completed"
+                    this.$message.error(errorMsg)
                 }
             } catch (error) {
-                console.log(error)
-                this.$message.error("Some error occurred when uploading attachment")
+                console.error('Upload attachment error:', error)
+                const errorMsg = error?.message || error?.toString() || "Some error occurred when uploading attachment"
+                this.$message.error(errorMsg)
             }
         },
         async openFile() {
-            if(this.rowCurrent !== '') {
+            if (this.rowCurrent === '' || this.rowCurrent === null || this.rowCurrent === undefined) {
+                this.$message.warning("Please select a file to open")
+                return
+            }
+            if (!this.rowData || !this.rowData[this.rowCurrent] || !this.rowData[this.rowCurrent].path) {
+                this.$message.error("Invalid file selected")
+                return
+            }
+            try {
                 let fileName = this.rowData[this.rowCurrent].path
                 let extention_arr = this.rowData[this.rowCurrent].path.split(".")
                 let extention = extention_arr[extention_arr.length -1].toLowerCase()
@@ -175,10 +185,22 @@ export default {
                         message: "File extension don't be supported"
                     })
                 }
+            } catch (error) {
+                console.error('Open file error:', error)
+                this.$message.error(error?.message || "Some error occurred when opening file")
             }
         },
         async launchFile() {
-            await window.electronAPI.openFile(this.rowData[this.rowCurrent].path)
+            if (!this.rowData || !this.rowData[this.rowCurrent] || !this.rowData[this.rowCurrent].path) {
+                this.$message.error("Invalid file selected")
+                return
+            }
+            try {
+                await window.electronAPI.openFile(this.rowData[this.rowCurrent].path)
+            } catch (error) {
+                console.error('Launch file error:', error)
+                this.$message.error(error?.message || "Some error occurred when launching file")
+            }
         },
         async getFileExtension(fileName){
             var  fileExtension;
@@ -206,17 +228,30 @@ export default {
             this.dialogVisible = false
         },
         async downloadItem() {
-            const rs = await window.electronAPI.downloadFile(this.rowData[this.rowCurrent].path)
-            if(rs.success) {
-                this.$message({
+            if (this.rowCurrent === '' || this.rowCurrent === null || this.rowCurrent === undefined) {
+                this.$message.warning("Please select a file to download")
+                return
+            }
+            if (!this.rowData || !this.rowData[this.rowCurrent] || !this.rowData[this.rowCurrent].path) {
+                this.$message.error("Invalid file selected")
+                return
+            }
+            try {
+                const rs = await window.electronAPI.downloadFile(this.rowData[this.rowCurrent].path)
+                if (rs && rs.success) {
+                    this.$message({
                         type: 'success',
                         message: "Download file completed"
                     })
-            } else {
-                this.$message({
+                } else {
+                    this.$message({
                         type: 'error',
-                        message: rs.message
+                        message: rs?.message || "Download file failed"
                     })
+                }
+            } catch (error) {
+                console.error('Download file error:', error)
+                this.$message.error(error?.message || "Some error occurred when downloading file")
             }
         }
         

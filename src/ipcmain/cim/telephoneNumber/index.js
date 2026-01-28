@@ -20,7 +20,6 @@ export const getTelephoneNumberByMrid = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 error: error,
                 success: false,
@@ -49,7 +48,6 @@ export const insertTelephoneNumber = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 error: error,
                 success: false,
@@ -76,7 +74,6 @@ export const deleteTelephoneNumberByMrid = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 error: error,
                 success: false,
@@ -104,7 +101,6 @@ export const updateTelephoneNumberByMrid = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 error: error,
                 success: false,

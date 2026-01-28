@@ -347,7 +347,6 @@ export default {
                         // await this.getOwnerLocation()
                     })
                     .catch((error) => {
-                        console.log(error)
                         this.$message.error(error.message)
                     })
             } else {
@@ -491,7 +490,6 @@ export default {
 
                 this.$message.success("Successful")
             } catch (err) {
-                console.log(err)
                 this.$message.error("Error")
             }
         },
@@ -515,7 +513,6 @@ export default {
                             }
                         })
                         .catch((error) => {
-                            console.log(error)
                             this.$message.error("Some error occur")
                             // this.$message.error(error.message)
                         })

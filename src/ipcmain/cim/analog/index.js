@@ -20,7 +20,6 @@ export const getAnalogByMrid = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 error: error,
                 success: false,
@@ -49,7 +48,6 @@ export const getAllAnalogByProcedure = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 error: error,
                 success: false,
@@ -77,7 +75,6 @@ export const insertAnalog = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 error: error,
                 success: false,
@@ -104,7 +101,6 @@ export const deleteAnalogByMrid = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 error: error,
                 success: false,

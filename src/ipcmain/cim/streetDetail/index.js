@@ -19,7 +19,6 @@ export const getStreetDetailByMrid = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 error: error,
                 success: false,
@@ -46,7 +45,6 @@ export const getStreetDetailByLocationId = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 error: error,
                 success: false,
@@ -75,7 +73,6 @@ export const insertStreetDetail = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 error: error,
                 success: false,
@@ -101,7 +98,6 @@ export const deleteStreetDetailByMrid = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 error: error,
                 success: false,
@@ -128,7 +124,6 @@ export const updateStreetDetailByMrid = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 error: error,
                 success: false,

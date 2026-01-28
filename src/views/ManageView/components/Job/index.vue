@@ -515,7 +515,6 @@ export default {
                     }
                 })
                 .catch((error) => {
-                    console.log(error);
                     this.$message.error(error.message);
                 });
 
@@ -589,7 +588,6 @@ export default {
                         }
 
                     }).catch((error) => {
-                        console.log(error)
                         this.$message.error(error.message)
                     })
                 } else {

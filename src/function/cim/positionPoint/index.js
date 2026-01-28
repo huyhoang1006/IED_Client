@@ -292,23 +292,21 @@ export const deletePositionPointByIdTransaction = async (mrid, dbsql) => {
 // Delete tất cả PositionPoint theo location_id
 export const deletePositionPointByLocationId = async (locationId) => {
     return new Promise((resolve, reject) => {
-        // Lấy tất cả position points của location này
         db.all("SELECT mrid FROM position_point WHERE location = ?", [locationId], async (err, rows) => {
             if (err) {
                 return reject({ success: false, err, message: 'Get position points failed' })
             }
-            
+
             if (!rows || rows.length === 0) {
                 return resolve({ success: true, message: 'No position points to delete' })
             }
 
-            // Xóa từng position point
-            const deletePromises = rows.map(row => deletePositionPointById(row.mrid))
             try {
+                const deletePromises = rows.map(row => deletePositionPointById(row.mrid))
                 await Promise.all(deletePromises)
-                return resolve({ success: true, message: 'Delete position points by location completed' })
+                resolve({ success: true, message: 'Delete position points by location completed' })
             } catch (error) {
-                return reject({ success: false, err: error, message: 'Delete position points failed' })
+                reject({ success: false, err: error, message: 'Delete position points failed' })
             }
         })
     })

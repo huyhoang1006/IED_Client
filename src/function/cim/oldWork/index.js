@@ -141,7 +141,6 @@ export const deleteOldWorkByIdTransaction = async (mrid, dbsql) => {
                     return resolve({ success: true, data: null, message: 'Delete old_work completed' })
                 } catch (workErr) {
                     // Nếu xóa work thất bại, vẫn resolve thành công vì old_work đã được xóa
-                    console.warn('Failed to delete work after deleting old_work:', workErr)
                     return resolve({ success: true, data: null, message: 'Delete old_work completed (work deletion may have failed)' })
                 }
             })

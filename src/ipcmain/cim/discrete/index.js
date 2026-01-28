@@ -18,7 +18,6 @@ export const getDiscreteByMrid = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 error: error,
                 success: false,
@@ -46,7 +45,6 @@ export const getAllDiscreteByProcedure = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 error: error,
                 success: false,
@@ -73,7 +71,6 @@ export const insertDiscrete = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 error: error,
                 success: false,
@@ -99,7 +96,6 @@ export const deleteDiscreteByMrid = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 error: error,
                 success: false,

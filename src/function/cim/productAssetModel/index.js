@@ -20,7 +20,6 @@ export const getProductAssetModelByMrid = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 error: error,
                 success: false,
@@ -49,7 +48,6 @@ export const insertProductAssetModel = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 error: error,
                 success: false,
@@ -77,7 +75,6 @@ export const deleteProductAssetModelByMrid = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 error: error,
                 success: false,
@@ -105,7 +102,6 @@ export const updateProductAssetModelByMrid = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 error: error,
                 success: false,

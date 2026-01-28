@@ -19,7 +19,6 @@ export const getBayByMrid = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 success: false,
                 message: (error && error.message) ? error.message : "Internal error",
@@ -45,7 +44,6 @@ export const getBayByVoltageBySubstationId = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 success: false,
                 message: (error && error.message) ? error.message : "Internal error",
@@ -71,7 +69,6 @@ export const insertBay = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 success: false,
                 message: (error && error.message) ? error.message : "Internal error",
@@ -99,7 +96,6 @@ export const updateBayByMrid = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 success: false,
                 message: (error && error.message) ? error.message : "Internal error",
@@ -124,7 +120,6 @@ export const deleteBayByMrid = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 success: false,
                 message: (error && error.message) ? error.message : "Internal error",

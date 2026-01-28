@@ -184,7 +184,6 @@ export const syncFilesWithFullRollback = (srcList, dest, fatherMrid) => {
 export const backupAllFilesInDir = (srcDir, backupDir, fatherMrid) => {
     srcDir = path.join(srcDir || attachmentContext.getAttachmentDir(), fatherMrid || '');
     backupDir = backupDir || path.join(srcDir, '__backup__');
-    console.log('Backup directory:', backupDir);
     try {
         if (!fs.existsSync(backupDir)) {
             fs.mkdirSync(backupDir, { recursive: true });

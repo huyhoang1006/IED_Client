@@ -323,7 +323,6 @@ export default {
                         return
                     }
                 } else {
-                    console.warn("Unsupported tab mode:", tab.mode);
                     this.$message.warning(`Tab mode '${tab.mode}' is not supported yet`);
                 }
             } catch (error) {
@@ -396,7 +395,6 @@ export default {
                 return 'Bay'
             } else {
                 // Return null for unsupported modes to prevent component rendering errors
-                console.warn('Unsupported tab mode in checkTab:', tab.mode);
                 return null;
             }
         },

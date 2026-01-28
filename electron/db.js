@@ -18,9 +18,7 @@ fs.mkdirSync(path.dirname(dbPath), { recursive: true })
 let db
 try {
   db = new sqlite3.Database(dbPath)
-  console.log('Database connected successfully')
 } catch (error) {
-  console.error('Database connection failed:', error)
   db = null
 }
 
@@ -60,7 +58,7 @@ const execute = (sql, params = []) => {
       resolve({ changes: 0, lastInsertRowid: 0 })
       return
     }
-    db.run(sql, params, function(err) {
+    db.run(sql, params, function (err) {
       if (err) reject(err)
       else resolve({ changes: this.changes, lastInsertRowid: this.lastID })
     })
@@ -78,9 +76,9 @@ const transaction = (queries) => {
       db.run('BEGIN TRANSACTION')
       const results = []
       let completed = 0
-      
+
       queries.forEach((query, index) => {
-        db.run(query.sql, query.params || [], function(err) {
+        db.run(query.sql, query.params || [], function (err) {
           if (err) {
             db.run('ROLLBACK')
             reject(err)
@@ -109,9 +107,9 @@ const batch = (queries) => {
     db.serialize(() => {
       let totalChanges = 0
       let completed = 0
-      
+
       queries.forEach((query, index) => {
-        db.run(query, [], function(err) {
+        db.run(query, [], function (err) {
           if (err) {
             reject(err)
             return
@@ -137,7 +135,6 @@ const getDatabaseInfo = () => ({
 const close = () => {
   if (db) {
     db.close()
-    console.log('Database connection closed')
   }
 }
 

@@ -39,10 +39,7 @@ export const insertSubstationEntity = async (entity) => {
         };
         try {
             if(entity.attachment && entity.attachment.path && entity.attachment.path.length > 0) {
-                console.log('Backing up files...');
                 backupAllFilesInDir(null, null, entity.substation.mrid);
-                console.log('Files backed up successfully');
-                console.log('Syncing files with deletion...');
                 const syncResult = syncFilesWithDeletion(JSON.parse(entity.attachment.path), null, entity.substation.mrid);
                 if (!syncResult.success) {
                     restoreFiles(null, null, entity.substation.mrid);
@@ -64,7 +61,6 @@ export const insertSubstationEntity = async (entity) => {
                     }
                     return result;
                 }
-                console.log('Files synced successfully');
                 
                 await new Promise((resolve, reject) => {
                     db.serialize(async () => {
@@ -311,8 +307,6 @@ export const insertSubstationEntity = async (entity) => {
                 try {
                     restoreFiles(null, null, entity.substation.mrid);
                 } catch(err) {
-                    console.log('Error restoring files:', err);
-                    console.error('Restore files failed:', err);
                     result.error = err.message;
                     result.message = 'Insert SubstationEntity failed and rollback executed';
                     const configEvent = new ConfigurationEvent();
@@ -333,7 +327,6 @@ export const insertSubstationEntity = async (entity) => {
                 }
                     
             }
-            console.error(err);
             result.error = err.message;
             result.message = 'Insert SubstationEntity failed and rollback executed';
             const configEvent = new ConfigurationEvent();
@@ -627,8 +620,9 @@ export const deleteSubstationEntityById = async (data) => {
                     await deleteOrganisationPersonById(entityData.organisationPerson.mrid);
                 }
                 // Xóa positionPoint nếu có location
-                if(entityData.location && entityData.location.mrid) {
-                    await deletePositionPointByLocationIdTransaction(entityData.location.mrid, db);
+                const locationIdToDelete = (entityData.location && entityData.location.mrid) || (entityData.substation && entityData.substation.location);
+                if (locationIdToDelete) {
+                    await deletePositionPointByLocationIdTransaction(locationIdToDelete, db);
                 }
                 // Xóa configurationEvent nếu có
                 if(entityData.configurationEvent && Array.isArray(entityData.configurationEvent) && entityData.configurationEvent.length > 0) {

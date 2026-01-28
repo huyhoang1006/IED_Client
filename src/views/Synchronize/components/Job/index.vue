@@ -378,7 +378,6 @@ export default {
                     await this.getJobs()
                 })
                 .catch((error) => {
-                    console.log(error)
                     this.$message.error(error.message)
                 })
         },
@@ -510,7 +509,6 @@ export default {
                 })
 
                 await jobApi.download(listId).then(async (response) => {
-                    console.log(response)
                     for(let i in response) {
                         await window.electronAPI.saveJobTransformer(response[i].job.job)
                         let testList = response[i].job.listTest
@@ -697,7 +695,6 @@ export default {
                         const listId = this.selectedJob.map((job) => job.id)
                         jobApi.deleteMultiple(listId).then(async (response) => {
                         }).catch((error) => {
-                            console.log(error)
                             this.$message.error(error.message)
                         })
                     } else if(this.$store.state.selectedAssetSync[0].asset == "Circuit breaker") {

@@ -20,7 +20,6 @@ export const getConfigurationEventByMrid = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 error: error,
                 success: false,
@@ -48,7 +47,6 @@ export const getAllConfigurationEvents = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 error: error,
                 success: false,
@@ -77,7 +75,6 @@ export const insertConfigurationEvent = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 error: error,
                 success: false,
@@ -104,7 +101,6 @@ export const deleteConfigurationEventByMrid = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 error: error,
                 success: false,
@@ -132,7 +128,6 @@ export const updateConfigurationEventByMrid = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 error: error,
                 success: false,

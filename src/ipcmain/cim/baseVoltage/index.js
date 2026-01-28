@@ -20,7 +20,6 @@ export const getBaseVoltageByMrid = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 error: error,
                 success: false,
@@ -48,7 +47,6 @@ export const insertBaseVoltage = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 error: error,
                 success: false,
@@ -77,7 +75,6 @@ export const updateBaseVoltageByMrid = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 error: error,
                 success: false,
@@ -104,7 +101,6 @@ export const deleteBaseVoltageByMrid = () => {
                 }
             }
         } catch (error) {
-            console.log(error)
             return {
                 error: error,
                 success: false,
