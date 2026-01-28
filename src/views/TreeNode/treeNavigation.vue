@@ -106,7 +106,7 @@
                         @show-addCircuit="showAddCircuitBreaker" @show-addVt="showAddVt" @show-addCt="showAddCt"
                         @show-addPowerCable="showAddPowerCable" @show-addDisconnector="showAddDisconnector"
                         @show-addRotatingMachine="showAddRotatingMachine" @show-addBay="showAddBay"
-                        @show-data="showDataClient" ref="contextMenuClient">
+                        @select-device="handleSelectDevice" @show-data="showDataClient" ref="contextMenuClient">
                     </contextMenu>
                 </div>
             </div>
@@ -580,6 +580,14 @@
             </template>
         </el-dialog>
 
+        <el-dialog title="Add REF615" v-model="signREF615" width="1000px">
+            <REF615 :parent="parentOrganization" @save-device="handleSaveREF615" ref="ref615"></REF615>
+            <template #footer>
+                <el-button size="small" type="danger" @click="handleREF615Cancel">Cancel</el-button>
+                <el-button size="small" type="primary" @click="handleSaveREF615">Save</el-button>
+            </template>
+        </el-dialog>
+
         <!-- Temporarily commented out until components are created -->
         <!--
         <el-dialog title="Add Transformer" v-model="signTransformer" width="1000px"
@@ -684,7 +692,6 @@ import * as locationApi from '@/api/location.js'
 import spinner from '@/views/Common/Spinner.vue'
 import Tabs from '@/views/Common/Tabs.vue'
 import contextMenu from "@/views/Common/ContextMenu.vue";
-import icon from '@/views/Common/Icon.vue';
 // import * as circuitApi from '@/api/circuit/circuit'
 // import * as currentApi from '@/api/current/current'
 // import * as disconnectorApi from '@/api/disconnector/disconnector'
@@ -713,6 +720,7 @@ import Substation from '@/views/Substation/index.vue'
 import Organisation from '@/views/Organisation/index.vue'
 import VoltageLevel from '@/views/VoltageLevel/index.vue'
 import Bay from '@/views/Bay/index.vue'
+import REF615 from '@/views/AssestView/Device/REF615/index.vue'
 // import Transformer from '@/views/AssetView/Transformer'
 // import Bushing from '@/views/AssetView/Bushing'
 // import SurgeArrester from '@/views/AssetView/SurgeArrester'
@@ -728,6 +736,7 @@ import JobSurgeArrester from '@/views/JobView/SurgeArrester/index.vue'
 import mixin from './mixin/index.js'
 import Attachment from '../Common/Attachment.vue';
 // import * as demoAPI from '@/api/demo'
+import icon from '@/views/Common/Icon.vue';
 
 
 export default {
@@ -744,6 +753,7 @@ export default {
         Organisation,
         VoltageLevel,
         Bay,
+        REF615,
         // Transformer,
         // Bushing,
         // SurgeArrester,
@@ -774,6 +784,7 @@ export default {
             signOrg: false,
             signVoltageLevel: false,
             signBay: false,
+            signREF615: false,
             signTransformer: false,
             signBushing: false,
             signSurge: false,
@@ -921,8 +932,20 @@ export default {
     },
     methods: {
 
+        // HÀM XỬ LÝ KHI CHỌN THIẾT BỊ TỪ CONTEXT MENU
         handleSelectDevice(deviceName) {
-            this.$message.info(`Yêu cầu thêm thiết bị: ${deviceName}`);
+            console.log(`Node được chọn:`, this.selectedNode);
+            console.log(`Thiết bị được yêu cầu thêm: ${deviceName}`);
+
+            // Lưu lại node cha để biết nơi thêm node mới
+            this.parentOrganization = this.selectedNode;
+
+            if (deviceName === 'REF615') {
+                this.signREF615 = true;
+
+            } else {
+                this.$message.info(`Chức năng thêm thiết bị '${deviceName}' chưa được cài đặt.`);
+            }
         },
 
         // Phương thức mới để xử lý các hành động chung
@@ -1022,7 +1045,7 @@ export default {
         async findByLocationId(locationId) {
             return { data: [] }
         },
-        
+
         handleDropdown() {
             // Handle dropdown functionality
             // This method is called when dropdown needs to be triggered
@@ -1200,16 +1223,16 @@ export default {
 
                         // Load children of root (organisations and substations)
                         const userId = this.$store.state.user?.user_id || null;
-                        
+
                         let organisationReturn = { success: false, data: [] };
                         let substationReturn = { success: false, data: [] };
-                        
+
                         try {
                             organisationReturn = await window.electronAPI.getParentOrganizationByParentMrid(this.$constant.ROOT);
                         } catch (error) {
                             this.$message.error('Failed to load organisations: ' + (error?.message || error));
                         }
-                        
+
                         try {
                             substationReturn = await window.electronAPI.getSubstationsInOrganisationForUser(this.$constant.ROOT, userId);
                         } catch (error) {
@@ -1938,27 +1961,27 @@ export default {
         // Helper function to check for circular references
         hasCircularReference(node, parentArr = []) {
             if (!node || !node.mrid) return false;
-            
+
             // Check if current node's mrid already exists in parentArr
             const exists = parentArr.some(parent => parent.mrid === node.mrid);
             if (exists) {
                 return true;
             }
-            
+
             return false;
         },
 
         // Helper function to safely build parentArr
         buildParentArr(clickedRow, newRow) {
             if (!clickedRow || !newRow) return [];
-            
+
             // Check for circular reference
             if (this.hasCircularReference(clickedRow, clickedRow.parentArr || [])) {
                 return [];
             }
-            
+
             const parentArr = [...(clickedRow.parentArr || [])];
-            
+
             // Add current clickedRow to parentArr if not already present
             const alreadyExists = parentArr.some(parent => parent.mrid === clickedRow.mrid);
             if (!alreadyExists) {
@@ -1967,7 +1990,7 @@ export default {
                     parent: clickedRow.name
                 });
             }
-            
+
             return parentArr;
         },
 
@@ -2161,7 +2184,7 @@ export default {
                     if (success) {
                         this.$message.success("Substation saved successfully")
                         this.signSubs = false
-                        
+
                         if (this.organisationClientList && this.organisationClientList.length > 0) {
                             const newRow = {
                                 id: data.mrid || data.id,
@@ -2173,27 +2196,27 @@ export default {
                                 mode: 'substation',
                                 children: [] // Initialize children array for expandable node
                             }
-                            
+
                             const node = this.findNodeById(this.parentOrganization.mrid, this.organisationClientList);
                             if (node) {
                                 // Reload children from database to ensure tree is updated correctly
                                 try {
                                     const userId = this.$store.state.user?.user_id || null;
                                     const substationReturn = await window.electronAPI.getSubstationsInOrganisationForUser(this.parentOrganization.mrid, userId);
-                                    
+
                                     if (substationReturn.success && substationReturn.data) {
                                         // Get existing children (organisations, voltage levels, bays, etc.)
                                         const existingChildren = Array.isArray(node.children) ? node.children : [];
-                                        
+
                                         // Separate substations from other children
                                         const otherChildren = existingChildren.filter(child => child.mode !== 'substation');
-                                        
+
                                         // Prepare new substations from database
                                         const substationChildren = [];
                                         substationReturn.data.forEach(row => {
                                             // Check for duplicates before adding
                                             const exists = substationChildren.some(child => child.mrid === row.mrid || child.id === row.mrid) ||
-                                                          otherChildren.some(child => (child.mrid === row.mrid || child.id === row.mrid) && child.mode === 'substation');
+                                                otherChildren.some(child => (child.mrid === row.mrid || child.id === row.mrid) && child.mode === 'substation');
                                             if (!exists) {
                                                 row.parentId = this.parentOrganization.mrid;
                                                 row.mode = 'substation';
@@ -2204,7 +2227,7 @@ export default {
                                                 substationChildren.push(row);
                                             }
                                         });
-                                        
+
                                         // Combine other children with new substations
                                         node.children = [...otherChildren, ...substationChildren];
                                     } else {
@@ -2249,21 +2272,7 @@ export default {
                     if (success) {
                         this.$message.success("Organisation saved successfully")
                         this.signOrg = false
-                        if (org.properties) {
-                            // Đảm bảo parentId được set đúng - nếu không có parent thì dùng ROOT_ID
-                            const ROOT_ID = this.$constant?.ROOT || '00000000-0000-0000-0000-000000000000'
-                            const parentId = org.properties.parentId || this.parentOrganization?.mrid || ROOT_ID
-                            const savedNode = {
-                                mrid: org.properties.organisationId,
-                                id: org.properties.organisationId,
-                                name: org.properties.name,
-                                mode: 'organisation',
-                                parentId: parentId,
-                                parentName: this.parentOrganization?.name || (parentId === ROOT_ID ? 'Root' : ''),
-                                parentArr: this.parentOrganization?.parentArr || []
-                            }
-                            this.addOrganisationToTree(savedNode)
-                        }
+                        // Note: node is added via organisation-saved event emitted by child → Tabs → here
                     } else {
                         this.$message.error("Failed to save organisation")
                     }
@@ -2317,29 +2326,29 @@ export default {
                 const bay = this.$refs.bay
                 if (bay) {
                     const { success, data } = await bay.saveBay()
-                        if (success) {
-                            this.$message.success("Bay saved successfully")
-                            this.signBay = false
-                            let newRows = []
-                            if (this.organisationClientList && this.organisationClientList.length > 0) {
-                                const newRow = {
-                                    mrid: data.mrid,
-                                    name: data.name,
-                                    parentId: data.parentId || this.parentOrganization.mrid,
-                                    parentName: this.parentOrganization.name,
-                                    parentArr: this.parentOrganization.parentArr || [],
-                                    mode: 'bay',
-                                }
-                                newRows.push(newRow);
-                                const node = this.findNodeById(data.parentId || this.parentOrganization.mrid, this.organisationClientList);
-                                if (node) {
-                                    const children = Array.isArray(node.children) ? node.children : [];
-                                    node.children = [...children, ...newRows];
-                                } else {
-                                    this.$message.error("Parent node not found in tree");
-                                }
+                    if (success) {
+                        this.$message.success("Bay saved successfully")
+                        this.signBay = false
+                        let newRows = []
+                        if (this.organisationClientList && this.organisationClientList.length > 0) {
+                            const newRow = {
+                                mrid: data.mrid,
+                                name: data.name,
+                                parentId: data.parentId || this.parentOrganization.mrid,
+                                parentName: this.parentOrganization.name,
+                                parentArr: this.parentOrganization.parentArr || [],
+                                mode: 'bay',
                             }
-                        } else {
+                            newRows.push(newRow);
+                            const node = this.findNodeById(data.parentId || this.parentOrganization.mrid, this.organisationClientList);
+                            if (node) {
+                                const children = Array.isArray(node.children) ? node.children : [];
+                                node.children = [...children, ...newRows];
+                            } else {
+                                this.$message.error("Parent node not found in tree");
+                            }
+                        }
+                    } else {
                         this.$message.error("Failed to save bay")
                     }
                 }
@@ -2650,6 +2659,21 @@ export default {
             }
         },
 
+        async handleSaveREF615() {
+            try {
+
+                await this.$refs.ref615.saveRef615();
+                this.signREF615 = false;
+                this.$message.success("REF615 saved successfully")
+
+            } catch (error) {
+                console.error("Save error:", error)
+            }
+        },
+
+        handleREF615Cancel() {
+            this.signREF615 = false;
+        },
         async downloadFromServer() {
 
         },
@@ -2907,7 +2931,7 @@ export default {
                     this.tabsClient = newTabs;
                     this.activeTabClient = newNode;
                     this.$refs.clientTabs.selectTab(this.activeTabClient, newTabs.length - 1);
-                    
+
                     // Đợi component được render trước khi load data
                     this.$nextTick(() => {
                         this.$refs.clientTabs.loadData(newNode, newTabs.length - 1);
@@ -3717,7 +3741,7 @@ export default {
 
 .resizable-sidebar {
     display: flex;
-    height: calc(100% - 60px);
+    height: calc(100% - 30px);
 }
 
 .sidebar {
